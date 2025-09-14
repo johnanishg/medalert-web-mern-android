@@ -6,6 +6,66 @@ import { sendMedicationReminder, validatePhoneNumber } from '../services/twilioS
 
 const router = express.Router();
 
+// Helper function to update patient medicine timing
+async function updatePatientMedicineTiming(patient, medicineName, dosage, notificationTimes) {
+  try {
+    console.log('Updating patient medicine timing:', {
+      patientId: patient._id,
+      patientUserId: patient.userId,
+      medicineName,
+      dosage,
+      notificationTimes,
+      currentMedicationsCount: patient.currentMedications?.length || 0
+    });
+
+    // Find all matching medicines in patient's currentMedications (handle duplicates)
+    console.log('Available medicines in patient profile:', patient.currentMedications.map(med => ({
+      name: med.name,
+      dosage: med.dosage,
+      timing: med.timing
+    })));
+    
+    const matchingMedicines = patient.currentMedications
+      .map((med, index) => ({ med, index }))
+      .filter(({ med }) => med.name === medicineName && med.dosage === dosage);
+      
+    console.log('Matching medicines found:', matchingMedicines.length);
+
+    if (matchingMedicines.length > 0) {
+      // Extract timing strings from notification times
+      const timingStrings = notificationTimes.map(time => time.time);
+      
+      // Update all matching medicines
+      matchingMedicines.forEach(({ index }) => {
+        patient.currentMedications[index].timing = timingStrings;
+        patient.currentMedications[index].updatedAt = new Date().toISOString();
+        patient.currentMedications[index].updatedBy = 'Patient';
+      });
+      
+      await patient.save();
+      
+      console.log('Successfully updated medicine timing in patient profile:', {
+        medicineName,
+        dosage,
+        newTiming: timingStrings,
+        updatedCount: matchingMedicines.length
+      });
+    } else {
+      console.log('Medicine not found in patient currentMedications:', {
+        medicineName,
+        dosage,
+        availableMedicines: patient.currentMedications.map(med => ({
+          name: med.name,
+          dosage: med.dosage
+        }))
+      });
+    }
+  } catch (error) {
+    console.error('Error updating patient medicine timing:', error);
+    // Don't throw error to avoid breaking the notification creation
+  }
+}
+
 // Get all medicine notifications for a patient
 router.get('/patient/:patientId', verifyToken, async (req, res) => {
   try {
@@ -68,15 +128,31 @@ router.post('/set-timings', verifyToken, async (req, res) => {
     // Get patient information
     const patientId = req.user.id || req.user.userId;
     
+    console.log('Looking up patient with ID:', patientId);
+    console.log('Request user object:', {
+      id: req.user.id,
+      userId: req.user.userId,
+      role: req.user.role
+    });
+    
     // Try to find patient by MongoDB _id first, then by userId field
     let patient = await Patient.findById(patientId);
     if (!patient) {
+      console.log('Patient not found by _id, trying userId field');
       patient = await Patient.findOne({ userId: patientId });
     }
     
     if (!patient) {
+      console.log('Patient not found with either method');
       return res.status(404).json({ message: 'Patient not found.' });
     }
+    
+    console.log('Found patient:', {
+      _id: patient._id,
+      userId: patient.userId,
+      name: patient.name,
+      currentMedicationsCount: patient.currentMedications?.length || 0
+    });
 
     // Check if notification already exists for this medicine
     let medicineNotification = await MedicineNotification.findOne({
@@ -111,6 +187,11 @@ router.post('/set-timings', verifyToken, async (req, res) => {
     }
 
     await medicineNotification.save();
+
+    // Update the medicine timing in patient's currentMedications
+    console.log('🔄 Calling updatePatientMedicineTiming helper function...');
+    await updatePatientMedicineTiming(patient, medicineName, dosage, notificationTimes);
+    console.log('✅ updatePatientMedicineTiming helper function completed');
 
     res.status(201).json({
       message: 'Medicine notification timings set successfully',
@@ -154,6 +235,12 @@ router.put('/:notificationId/timings', verifyToken, async (req, res) => {
 
     notification.notificationTimes = notificationTimes;
     await notification.save();
+
+    // Update the medicine timing in patient's currentMedications
+    const patient = await Patient.findById(notification.patientId);
+    if (patient) {
+      await updatePatientMedicineTiming(patient, notification.medicineName, notification.dosage, notificationTimes);
+    }
 
     res.status(200).json({
       message: 'Notification timings updated successfully',

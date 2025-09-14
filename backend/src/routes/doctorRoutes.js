@@ -92,6 +92,7 @@ router.get('/search-patient/:patientId', verifyToken, async (req, res) => {
       medicalHistory: patient.medicalHistory,
       allergies: patient.allergies,
       currentMedications: patient.currentMedications,
+      visits: patient.visits || [], // Include visit history for medicine tracking
       isActive: patient.isActive,
       createdAt: patient.createdAt,
       updatedAt: patient.updatedAt
@@ -159,7 +160,7 @@ router.post('/add-medicine/:patientId', verifyToken, async (req, res) => {
     const visitRecord = {
       visitDate: new Date(),
       visitType: 'medicine_prescription',
-      doctorId: req.user._id,
+      doctorId: req.user.userId,
       doctorName: req.user.name,
       diagnosis: req.body.diagnosis || 'Medicine prescription',
       notes: req.body.notes || `Prescribed ${name} - ${dosage}`,

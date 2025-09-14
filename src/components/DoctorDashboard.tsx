@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
-import { LogOut, Sun, Moon, UserPlus, Search, List, CheckCircle, XCircle, ClipboardList, User, Pill, X } from 'lucide-react';
+import { LogOut, Sun, Moon, UserPlus, Search, List, ClipboardList, User, Pill, X, Brain } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import LogToggle from './LogToggle';
 import Chatbot from './Chatbot';
+import AdherenceAnalysisComponent from './AdherenceAnalysis';
 import { DashboardContext } from '../services/geminiService';
 import ProfileEdit from './ProfileEdit';
+import logger from '../services/logger';
 
 const initialPatientDetails = {
   name: '',
@@ -83,23 +84,31 @@ const DoctorDashboard: React.FC = () => {
   const [prescriptionMedicines, setPrescriptionMedicines] = useState<any[]>([]);
   const [editingMedicineIndex, setEditingMedicineIndex] = useState<number | null>(null);
   const token = localStorage.getItem('token');
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-
+  
   // Initialize current user
   useEffect(() => {
-    setCurrentUser(user);
-    logger.info('DoctorDashboard initialized', { user }, 'DoctorDashboard', 'low');
+    try {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const parsedUser = JSON.parse(userData);
+        setCurrentUser(parsedUser);
+        logger.info('DoctorDashboard initialized', { user: parsedUser }, 'DoctorDashboard', 'low');
+      } else {
+        logger.warning('No user data found in localStorage', {}, 'DoctorDashboard', 'medium');
+      }
+    } catch (error) {
+      logger.error('Error parsing user data from localStorage', { error }, 'DoctorDashboard', 'high');
+    }
   }, []);
 
   // Real patient data (empty for now, will be fetched from backend)
   const [patientHistory, setPatientHistory] = useState<any[]>([]);
-  const [medicineAdherence, setMedicineAdherence] = useState<any[]>([]);
   const [diagnosisHistory, setDiagnosisHistory] = useState<any[]>([]);
   const [diagnosisLoading, setDiagnosisLoading] = useState(false);
+  const [showAdherenceAnalysis, setShowAdherenceAnalysis] = useState(false);
 
   useEffect(() => {
     fetchPatients();
-    setCurrentUser(user);
     checkTokenValidity();
   }, []);
 
@@ -145,19 +154,29 @@ const DoctorDashboard: React.FC = () => {
   const fetchDiagnosisHistory = async (patientId: string) => {
     try {
       setDiagnosisLoading(true);
+      console.log('Fetching diagnosis history for patient:', patientId);
+      
       const response = await fetch(`http://localhost:5001/api/diagnosis/patient/${patientId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
+      console.log('Diagnosis history response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
-        setDiagnosisHistory(data.diagnoses);
+        console.log('Diagnosis history data received:', data);
+        setDiagnosisHistory(data.diagnoses || []);
+        logger.info(`Loaded ${data.diagnoses?.length || 0} diagnoses`, 'DoctorDashboard');
       } else {
+        const errorData = await response.json();
+        console.error('Diagnosis history fetch error:', errorData);
         setDiagnosisHistory([]);
+        logger.error(`Failed to fetch diagnosis history: ${errorData.message}`, 'DoctorDashboard');
       }
     } catch (err) {
       console.error('Error fetching diagnosis history:', err);
       setDiagnosisHistory([]);
+      logger.error('Error fetching diagnosis history', 'DoctorDashboard');
     } finally {
       setDiagnosisLoading(false);
     }
@@ -222,11 +241,13 @@ const DoctorDashboard: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         setSelectedPatient(data.patient);
+        console.log('Selected patient data:', data.patient);
+        console.log('Patient _id:', data.patient._id);
+        console.log('Patient userId:', data.patient.userId);
         // Fetch diagnosis history for the patient
         fetchDiagnosisHistory(data.patient._id);
-        // TODO: Fetch patient history and adherence data
+        // TODO: Fetch patient history data
         setPatientHistory([]);
-        setMedicineAdherence([]);
       } else {
         const errorData = await response.json();
         console.log('Error response:', errorData);
@@ -339,6 +360,9 @@ const DoctorDashboard: React.FC = () => {
         });
         setShowMedicineModal(false);
         setAddError('');
+        
+        // Trigger refresh for patient dashboard
+        window.dispatchEvent(new Event('patientDataRefresh'));
       } else {
         const errorData = await response.json();
         setAddError(errorData.message || 'Failed to add medicine');
@@ -471,10 +495,14 @@ const DoctorDashboard: React.FC = () => {
         // Show success message
         alert('Prescription created successfully! Patient has been notified.');
         
-        // Refresh patient data to show the new visit
+        // Refresh patient data to show the new visit and diagnosis
         if (selectedPatient) {
           // Trigger a refresh of the patient data
           window.dispatchEvent(new Event('patientDataRefresh'));
+          // Refresh diagnosis history to show the new diagnosis
+          fetchDiagnosisHistory(selectedPatient._id);
+          // Refresh patient data in doctor dashboard to show new visit
+          handleSearch(); // This will re-fetch the patient data with updated visits
         }
       } else {
         const errorData = await response.json();
@@ -491,12 +519,13 @@ const DoctorDashboard: React.FC = () => {
   };
 
   // Show loading state if no user data
-  if (!user || (!user.id && !user._id && !user.userId)) {
+  if (!currentUser || (!currentUser.id && !currentUser._id && !currentUser.userId)) {
     return (
       <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-50 text-black'}`}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
           <p className="text-lg">Loading...</p>
+          <p className="text-sm text-gray-500 mt-2">Please log in to access the doctor dashboard</p>
         </div>
       </div>
     );
@@ -590,7 +619,7 @@ const DoctorDashboard: React.FC = () => {
       {/* Main Content */}
       <main className="flex-1 p-8">
         <div className="mb-6">
-          <h2 className="text-2xl font-bold mb-2">Welcome, Dr. {user.name || 'Doctor'}</h2>
+          <h2 className="text-2xl font-bold mb-2">Welcome, Dr. {currentUser?.name || 'Doctor'}</h2>
           <p className="text-gray-600 dark:text-gray-300">Manage your patients and prescriptions</p>
         </div>
         
@@ -610,7 +639,7 @@ const DoctorDashboard: React.FC = () => {
         {activeTab === 'profile' && (
           <div className="space-y-6">
             {/* Doctor Information Card */}
-            {user.userId && (
+            {currentUser?.userId && (
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl shadow p-6 border border-blue-200 dark:border-blue-800">
                 <div className="flex items-center justify-between">
                   <div>
@@ -618,7 +647,7 @@ const DoctorDashboard: React.FC = () => {
                     <div className="flex items-center gap-3">
                       <span className="text-sm text-blue-600 dark:text-blue-300">Unique Doctor ID:</span>
                       <code className="bg-white dark:bg-gray-800 px-4 py-2 rounded-lg text-lg font-mono font-bold text-blue-800 dark:text-blue-200 border-2 border-blue-300 dark:border-blue-600 shadow-sm">
-                        {user.userId}
+                        {currentUser?.userId}
                       </code>
                     </div>
                     <p className="text-xs text-blue-500 dark:text-blue-400 mt-2">
@@ -640,27 +669,27 @@ const DoctorDashboard: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">Name</label>
-                  <p className="text-gray-900 dark:text-white">Dr. {user.name || 'Not provided'}</p>
+                  <p className="text-gray-900 dark:text-white">Dr. {currentUser?.name || 'Not provided'}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">Email</label>
-                  <p className="text-gray-900 dark:text-white">{user.email || 'Not provided'}</p>
+                  <p className="text-gray-900 dark:text-white">{currentUser?.email || 'Not provided'}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">Specialization</label>
-                  <p className="text-gray-900 dark:text-white">{user.specialization || 'Not provided'}</p>
+                  <p className="text-gray-900 dark:text-white">{currentUser?.specialization || 'Not provided'}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">License Number</label>
-                  <p className="text-gray-900 dark:text-white">{user.licenseNumber || 'Not provided'}</p>
+                  <p className="text-gray-900 dark:text-white">{currentUser?.licenseNumber || 'Not provided'}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">Phone Number</label>
-                  <p className="text-gray-900 dark:text-white">{user.phoneNumber || 'Not provided'}</p>
+                  <p className="text-gray-900 dark:text-white">{currentUser?.phoneNumber || 'Not provided'}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">Experience</label>
-                  <p className="text-gray-900 dark:text-white">{user.experience || 'Not provided'} years</p>
+                  <p className="text-gray-900 dark:text-white">{currentUser?.experience || 'Not provided'} years</p>
                 </div>
               </div>
             </div>
@@ -769,6 +798,20 @@ const DoctorDashboard: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* Adherence Analysis Button */}
+                  <div className="mt-6">
+                    <button
+                      onClick={() => setShowAdherenceAnalysis(true)}
+                      className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                    >
+                      <Brain className="w-5 h-5" />
+                      AI Adherence Analysis
+                    </button>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                      Get AI-powered insights on patient medication adherence patterns
+                    </p>
+                  </div>
+
                   {/* Medical Information */}
                   <div className="space-y-4">
                     <h4 className="text-lg font-medium text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-600 pb-2">
@@ -791,22 +834,77 @@ const DoctorDashboard: React.FC = () => {
                       )}
                     </div>
 
-                    {/* Current Medications */}
+                    {/* Medicines Overview */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Current Medications</label>
-                      {selectedPatient.currentMedications && selectedPatient.currentMedications.length > 0 ? (
-                        <div className="space-y-2">
-                          {selectedPatient.currentMedications.map((med: any, index: number) => (
-                            <div key={index} className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded border border-blue-200 dark:border-blue-800">
-                              <p className="font-medium text-blue-800 dark:text-blue-200">{med.name}</p>
-                              <p className="text-sm text-blue-600 dark:text-blue-300">Dosage: {med.dosage}</p>
-                              <p className="text-sm text-blue-600 dark:text-blue-300">Frequency: {med.frequency}</p>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-gray-500 dark:text-gray-400">No current medications</p>
-                      )}
+                      <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">Medicines Overview</label>
+                      
+                      {/* Originally Prescribed Medicines */}
+                      <div className="mb-4">
+                        <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                          <Pill size={14} className="mr-1" />
+                          Originally Prescribed Medicines
+                        </h5>
+                        {selectedPatient.visits && selectedPatient.visits.length > 0 ? (
+                          <div className="space-y-2">
+                            {selectedPatient.visits
+                              .filter((visit: any) => visit.medicines && visit.medicines.length > 0)
+                              .map((visit: any, visitIndex: number) => (
+                                <div key={visitIndex} className="bg-green-50 dark:bg-green-900/20 p-3 rounded border border-green-200 dark:border-green-800">
+                                  <p className="text-xs text-green-600 dark:text-green-400 mb-2">
+                                    Prescribed on: {new Date(visit.visitDate).toLocaleDateString()} by Dr. {visit.doctorName}
+                                  </p>
+                                  {visit.medicines.map((med: any, medIndex: number) => (
+                                    <div key={medIndex} className="ml-2 mb-1">
+                                      <p className="font-medium text-green-800 dark:text-green-200">{med.name}</p>
+                                      <p className="text-sm text-green-600 dark:text-green-300">Dosage: {med.dosage} | Frequency: {med.frequency}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              ))}
+                            {selectedPatient.visits.filter((visit: any) => visit.medicines && visit.medicines.length > 0).length === 0 && (
+                              <p className="text-gray-500 dark:text-gray-400 text-sm">No prescribed medicines found in visit history</p>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-gray-500 dark:text-gray-400 text-sm">No visit history available</p>
+                        )}
+                      </div>
+
+                      {/* Current Medications (Patient's Active Medicines) */}
+                      <div>
+                        <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                          <Pill size={14} className="mr-1" />
+                          Current Active Medicines (As Taken by Patient)
+                        </h5>
+                        {selectedPatient.currentMedications && selectedPatient.currentMedications.length > 0 ? (
+                          <div className="space-y-2">
+                            {selectedPatient.currentMedications.map((med: any, index: number) => (
+                              <div key={index} className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded border border-blue-200 dark:border-blue-800">
+                                <div className="flex justify-between items-start">
+                                  <div className="flex-1">
+                                    <p className="font-medium text-blue-800 dark:text-blue-200">{med.name}</p>
+                                    <p className="text-sm text-blue-600 dark:text-blue-300">Dosage: {med.dosage}</p>
+                                    <p className="text-sm text-blue-600 dark:text-blue-300">Frequency: {med.frequency}</p>
+                                    {med.duration && (
+                                      <p className="text-sm text-blue-600 dark:text-blue-300">Duration: {med.duration}</p>
+                                    )}
+                                    {med.instructions && (
+                                      <p className="text-sm text-blue-600 dark:text-blue-300">Instructions: {med.instructions}</p>
+                                    )}
+                                    {med.updatedBy && med.updatedBy !== 'Doctor' && (
+                                      <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                                        ✏️ Modified by patient on {med.updatedAt ? new Date(med.updatedAt).toLocaleDateString() : 'recently'}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-gray-500 dark:text-gray-400 text-sm">No current active medications</p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -856,19 +954,67 @@ const DoctorDashboard: React.FC = () => {
                   </div>
                 )}
 
-                {/* Patient History */}
+                {/* Visit History */}
                 <div className="mt-6">
                   <h4 className="text-lg font-medium text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-600 pb-2 mb-4">
                     <List className="inline mr-2" size={18} /> Visit History
                   </h4>
-                  {patientHistory.length > 0 ? (
-                    <ul className="space-y-2">
-                      {patientHistory.map((h, i) => (
-                        <li key={i} className="bg-gray-50 dark:bg-gray-700 p-3 rounded border border-gray-200 dark:border-gray-600">
-                          <span className="font-medium text-gray-900 dark:text-white">{h.date}:</span> {h.event}
-                        </li>
+                  {selectedPatient.visits && selectedPatient.visits.length > 0 ? (
+                    <div className="space-y-4">
+                      {selectedPatient.visits.map((visit: any, index: number) => (
+                        <div key={index} className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm">
+                          <div className="flex justify-between items-start mb-3">
+                            <div>
+                              <h5 className="font-medium text-gray-900 dark:text-white">
+                                {visit.visitType ? visit.visitType.replace('_', ' ').toUpperCase() : 'Consultation'}
+                              </h5>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                {new Date(visit.visitDate).toLocaleDateString()} • Dr. {visit.doctorName}
+                              </p>
+                            </div>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              {new Date(visit.visitDate).toLocaleTimeString()}
+                            </span>
+                          </div>
+                          
+                          {visit.diagnosis && (
+                            <div className="mb-3">
+                              <h6 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Diagnosis:</h6>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">{visit.diagnosis}</p>
+                            </div>
+                          )}
+                          
+                          {visit.medicines && visit.medicines.length > 0 && (
+                            <div className="mb-3">
+                              <h6 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Medicines Prescribed:</h6>
+                              <div className="space-y-1">
+                                {visit.medicines.map((medicine: any, medIndex: number) => (
+                                  <div key={medIndex} className="text-sm text-gray-600 dark:text-gray-400">
+                                    • {medicine.name} - {medicine.dosage} ({medicine.frequency})
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {visit.notes && (
+                            <div className="mb-3">
+                              <h6 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes:</h6>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">{visit.notes}</p>
+                            </div>
+                          )}
+                          
+                          {visit.followUpDate && (
+                            <div className="mb-3">
+                              <h6 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Follow-up:</h6>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Scheduled for {new Date(visit.followUpDate).toLocaleDateString()}
+                              </p>
+                            </div>
+                          )}
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   ) : (
                     <p className="text-gray-500 dark:text-gray-400">No visit history available</p>
                   )}
@@ -876,9 +1022,22 @@ const DoctorDashboard: React.FC = () => {
 
                 {/* Diagnosis History */}
                 <div className="mt-6">
-                  <h4 className="text-lg font-medium text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-600 pb-2 mb-4">
-                    <ClipboardList className="inline mr-2" size={18} /> Diagnosis History
-                  </h4>
+                  <div className="flex justify-between items-center border-b border-gray-200 dark:border-gray-600 pb-2 mb-4">
+                    <h4 className="text-lg font-medium text-gray-800 dark:text-gray-200">
+                      <ClipboardList className="inline mr-2" size={18} /> Diagnosis History
+                    </h4>
+                    {selectedPatient && (
+                      <button
+                        onClick={() => fetchDiagnosisHistory(selectedPatient._id)}
+                        disabled={diagnosisLoading}
+                        className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 flex items-center gap-1"
+                        title="Refresh diagnosis history"
+                      >
+                        <List size={14} />
+                        {diagnosisLoading ? 'Refreshing...' : 'Refresh'}
+                      </button>
+                    )}
+                  </div>
                   {diagnosisLoading ? (
                     <p className="text-gray-500 dark:text-gray-400">Loading diagnosis history...</p>
                   ) : diagnosisHistory.length > 0 ? (
@@ -954,32 +1113,6 @@ const DoctorDashboard: React.FC = () => {
                   )}
                 </div>
 
-                {/* Medicine Adherence */}
-                <div className="mt-6">
-                  <h4 className="text-lg font-medium text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-600 pb-2 mb-4">
-                    <CheckCircle className="inline mr-2" size={18} /> Medicine Adherence
-                  </h4>
-                  {medicineAdherence.length > 0 ? (
-                    <ul className="space-y-2">
-                      {medicineAdherence.map((m, i) => (
-                        <li key={i} className="bg-gray-50 dark:bg-gray-700 p-3 rounded border border-gray-200 dark:border-gray-600 flex items-center gap-2">
-                          <span className="font-medium text-gray-900 dark:text-white">{m.date}:</span>
-                          {m.taken ? (
-                            <span className="text-green-500 flex items-center gap-1">
-                              <CheckCircle size={16} /> Taken
-                            </span>
-                          ) : (
-                            <span className="text-red-500 flex items-center gap-1">
-                              <XCircle size={16} /> Missed
-                            </span>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-gray-500 dark:text-gray-400">No adherence data available</p>
-                  )}
-                </div>
 
                 {/* Medicine and Prescription Management */}
                 <div className="mt-6">
@@ -1525,11 +1658,17 @@ const DoctorDashboard: React.FC = () => {
         />
       )}
       
-      {/* Log Toggle Button */}
-      <LogToggle />
-      
       {/* Chatbot */}
       <Chatbot dashboardContext={dashboardContext} />
+
+      {/* Adherence Analysis Modal */}
+      {showAdherenceAnalysis && selectedPatient && (
+        <AdherenceAnalysisComponent
+          patientId={selectedPatient._id}
+          patientName={selectedPatient.name}
+          onClose={() => setShowAdherenceAnalysis(false)}
+        />
+      )}
     </div>
   );
 };

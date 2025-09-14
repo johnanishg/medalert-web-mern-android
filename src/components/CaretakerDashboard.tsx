@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
-import { LogOut, Sun, Moon, Users, Bell, Calendar, Clock, Heart, Pill, Phone, User } from 'lucide-react';
+import { LogOut, Sun, Moon, Users, Bell, Calendar, Clock, Heart, Phone, User, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ProfileEdit from './ProfileEdit';
+import logger from '../services/logger';
 
 const CaretakerDashboard: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
+  const [selectedPatientDetails, setSelectedPatientDetails] = useState<any>(null);
+  const [showPatientDetails, setShowPatientDetails] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'profile' | 'overview' | 'patients' | 'search' | 'approvals' | 'notifications'>('profile');
   const [patients, setPatients] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -39,33 +42,55 @@ const CaretakerDashboard: React.FC = () => {
       setLoading(true);
       setError('');
       
+      console.log('🔍 fetchCaretakerData: Starting data fetch...');
+      console.log('🔍 fetchCaretakerData: Token available:', !!token);
+      console.log('🔍 fetchCaretakerData: User data:', user);
+      
       // Fetch approval requests
+      console.log('🔍 fetchCaretakerData: Fetching approval requests...');
       const approvalResponse = await fetch('http://localhost:5001/api/caretakers/approval-requests', {
         headers: { Authorization: `Bearer ${token}` }
       });
       
+      console.log('🔍 fetchCaretakerData: Approval response status:', approvalResponse.status);
+      
       if (approvalResponse.ok) {
         const approvalData = await approvalResponse.json();
-        setApprovalRequests(approvalData.approvalRequests);
+        console.log('🔍 fetchCaretakerData: Approval data received:', approvalData);
+        setApprovalRequests(approvalData.approvalRequests || []);
+      } else {
+        const errorData = await approvalResponse.json();
+        console.error('❌ fetchCaretakerData: Approval error:', errorData);
+        setError(`Approval requests failed: ${errorData.message || 'Unknown error'}`);
       }
       
-      // Fetch approved patients
-      const patientsResponse = await fetch('http://localhost:5001/api/caretakers/approved-patients', {
+      // Fetch assigned patients (both directly assigned and approved)
+      console.log('🔍 fetchCaretakerData: Fetching assigned patients...');
+      const patientsResponse = await fetch('http://localhost:5001/api/caretakers/assigned-patients', {
         headers: { Authorization: `Bearer ${token}` }
       });
       
+      console.log('🔍 fetchCaretakerData: Patients response status:', patientsResponse.status);
+      
       if (patientsResponse.ok) {
         const patientsData = await patientsResponse.json();
-        setApprovedPatients(patientsData.patients);
-        setPatients(patientsData.patients);
+        console.log('🔍 fetchCaretakerData: Patients data received:', patientsData);
+        setApprovedPatients(patientsData.patients || []);
+        setPatients(patientsData.patients || []);
+      } else {
+        const errorData = await patientsResponse.json();
+        console.error('❌ fetchCaretakerData: Patients error:', errorData);
+        setError(`Assigned patients failed: ${errorData.message || 'Unknown error'}`);
       }
       
       // TODO: Implement API calls to fetch notifications
       setNotifications([]);
       
+      console.log('✅ fetchCaretakerData: Data fetch completed successfully');
+      
     } catch (err) {
-      setError('Failed to load caretaker data');
-      console.error('Error fetching caretaker data:', err);
+      console.error('❌ fetchCaretakerData: Network/parsing error:', err);
+      setError(`Failed to load caretaker data: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -112,6 +137,8 @@ const CaretakerDashboard: React.FC = () => {
 
   const handleRequestApproval = async (patientId: string) => {
     try {
+      console.log('Requesting approval for patientId:', patientId);
+      console.log('Token:', token ? 'Present' : 'Missing');
       const response = await fetch(`http://localhost:5001/api/caretakers/request-patient-approval/${patientId}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
@@ -123,11 +150,88 @@ const CaretakerDashboard: React.FC = () => {
         fetchCaretakerData();
       } else {
         const errorData = await response.json();
+        console.log('Request approval error:', errorData);
         setSearchError(errorData.message || 'Failed to request approval');
       }
     } catch (err) {
       setSearchError('Failed to request approval');
       console.error('Error requesting approval:', err);
+    }
+  };
+
+  const handleCaretakerApproval = async (patientId: string, action: 'approved' | 'rejected') => {
+    try {
+      console.log('Handling caretaker approval:', { patientId, action });
+      const response = await fetch(`http://localhost:5001/api/caretakers/approve-patient/${patientId}`, {
+        method: 'PUT',
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: action })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Approval result:', result);
+        // Refresh approval requests
+        fetchCaretakerData();
+      } else {
+        const errorData = await response.json();
+        console.error('Approval error:', errorData);
+      }
+    } catch (err) {
+      console.error('Error updating approval:', err);
+    }
+  };
+
+  const handleViewPatientDetails = async (patient: any) => {
+    try {
+      console.log('Fetching patient details for:', patient.name);
+      const response = await fetch(`http://localhost:5001/api/patients/profile/${patient._id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedPatientDetails(data.patient);
+        setShowPatientDetails(true);
+      } else {
+        const errorData = await response.json();
+        console.error('Error fetching patient details:', errorData);
+      }
+    } catch (err) {
+      console.error('Error fetching patient details:', err);
+    }
+  };
+
+  const handleRemovePatient = async (patientId: string) => {
+    if (!confirm('Are you sure you want to remove this patient from your assigned list?')) {
+      return;
+    }
+
+    try {
+      console.log('Removing patient:', patientId);
+      const response = await fetch(`http://localhost:5001/api/caretakers/remove-patient/${patientId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Patient removed:', result);
+        // Refresh data
+        fetchCaretakerData();
+        setShowPatientDetails(false);
+        setSelectedPatientDetails(null);
+      } else {
+        const errorData = await response.json();
+        console.error('Error removing patient:', errorData);
+        alert('Failed to remove patient: ' + (errorData.message || 'Unknown error'));
+      }
+    } catch (err) {
+      console.error('Error removing patient:', err);
+      alert('Failed to remove patient');
     }
   };
 
@@ -138,6 +242,7 @@ const CaretakerDashboard: React.FC = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
           <p className="text-lg">Loading...</p>
+          <p className="text-sm text-gray-500 mt-2">No user data found</p>
         </div>
       </div>
     );
@@ -271,7 +376,7 @@ const CaretakerDashboard: React.FC = () => {
           <h2 className="text-3xl font-bold mb-2">Welcome, {user.name || 'Caretaker'}</h2>
           <p className="text-gray-600 dark:text-gray-300">Manage and monitor your patients' health and medications</p>
         </div>
-        
+
         {loading && (
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
@@ -281,7 +386,18 @@ const CaretakerDashboard: React.FC = () => {
         
         {error && (
           <div className="bg-red-100 dark:bg-red-900 border border-red-400 text-red-700 dark:text-red-200 px-4 py-3 rounded mb-6">
-            {error}
+            <div className="flex justify-between items-center">
+              <span>{error}</span>
+              <button
+                onClick={() => {
+                  setError('');
+                  fetchCaretakerData();
+                }}
+                className="ml-4 px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700 transition-colors"
+              >
+                Retry
+              </button>
+            </div>
           </div>
         )}
 
@@ -404,13 +520,19 @@ const CaretakerDashboard: React.FC = () => {
                   </div>
                 ) : (
                   notifications.slice(0, 3).map((notification) => (
-                  <div key={notification.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <div>
-                      <p className="font-medium">{notification.patient}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">{notification.message}</p>
+                    <div key={notification.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <div>
+                        <p className="font-medium">{notification.patient}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">{notification.message}</p>
+                      </div>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        notification.type === 'medication' 
+                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                          : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                      }`}>
+                        {notification.type}
+                      </span>
                     </div>
-                    <span className="text-xs text-gray-500">{notification.time}</span>
-                  </div>
                   ))
                 )}
               </div>
@@ -420,76 +542,56 @@ const CaretakerDashboard: React.FC = () => {
 
         {/* Patients Tab */}
         {activeTab === 'patients' && (
-          <div className="space-y-6">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-              <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                <Users size={20} /> Patient List
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {patients.length === 0 ? (
-                  <div className="col-span-2 text-center py-8 text-gray-500 dark:text-gray-400">
-                    <Users size={48} className="mx-auto mb-4 opacity-50" />
-                    <p>No patients assigned yet.</p>
-                    <p className="text-sm">Patients will appear here when assigned to you.</p>
-                  </div>
-                ) : (
-                  patients.map((patient) => (
-                  <div 
-                    key={patient.id} 
-                    className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-                    onClick={() => setSelectedPatient(patient)}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-semibold text-lg">{patient.name}</h4>
-                      <span className="text-sm text-gray-500">ID: {patient.id}</span>
-                    </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">Age: {patient.age} | {patient.condition}</p>
-                    <div className="space-y-1">
-                      <p className="text-sm"><strong>Medications:</strong> {patient.medications.join(', ')}</p>
-                      <p className="text-sm"><strong>Next Appointment:</strong> {patient.nextAppointment}</p>
-                      <p className="text-sm"><strong>Last Medication:</strong> {patient.lastMedication}</p>
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEmergencyCall(patient.emergencyContact);
-                      }}
-                      className="mt-3 flex items-center gap-2 px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700 transition-colors"
-                    >
-                      <Phone size={14} /> Emergency
-                    </button>
-                  </div>
-                  ))
-                )}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+            <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <Users size={20} /> Your Patients
+            </h3>
+            {patients.length === 0 ? (
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                <Users size={48} className="mx-auto mb-4 opacity-50" />
+                <p>No patients assigned yet.</p>
+                <p className="text-sm">Use the Search Patient tab to find and request approval from patients.</p>
               </div>
-            </div>
-
-            {/* Selected Patient Details */}
-            {selectedPatient && (
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-                <h3 className="text-xl font-semibold mb-4">Patient Details: {selectedPatient.name}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="font-semibold mb-2 flex items-center gap-2">
-                      <Pill size={16} /> Current Medications
-                    </h4>
-                    <ul className="space-y-1">
-                      {selectedPatient.medications.map((med: string, index: number) => (
-                        <li key={index} className="text-sm bg-gray-50 dark:bg-gray-700 px-3 py-1 rounded">
-                          {med}
-                        </li>
-                      ))}
-                    </ul>
+            ) : (
+              <div className="space-y-4">
+                {patients.map((patient) => (
+                  <div key={patient._id} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-semibold">{patient.name}</h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">ID: {patient.userId}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Age: {patient.age} | Gender: {patient.gender}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleViewPatientDetails(patient)}
+                          className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                        >
+                          View Details
+                        </button>
+                        <button
+                          onClick={() => handleRemovePatient(patient._id)}
+                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                    {patient.emergencyContact && (
+                      <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Emergency Contact: {patient.emergencyContact.name} - {patient.emergencyContact.phone}
+                        </p>
+                        <button
+                          onClick={() => handleEmergencyCall(patient.emergencyContact.phone)}
+                          className="mt-2 px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700 transition-colors flex items-center gap-1"
+                        >
+                          <Phone size={14} /> Emergency Call
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <h4 className="font-semibold mb-2 flex items-center gap-2">
-                      <Calendar size={16} /> Upcoming Appointments
-                    </h4>
-                    <p className="text-sm bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded">
-                      {selectedPatient.nextAppointment}
-                    </p>
-                  </div>
-                </div>
+                ))}
               </div>
             )}
           </div>
@@ -497,78 +599,57 @@ const CaretakerDashboard: React.FC = () => {
 
         {/* Search Patient Tab */}
         {activeTab === 'search' && (
-          <div className="space-y-6">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-              <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                <Users size={20} /> Search Patient
-              </h3>
-              
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">Patient Unique ID</label>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+            <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <Users size={20} /> Search Patient
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Patient ID</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={searchId}
                     onChange={(e) => setSearchId(e.target.value)}
-                    placeholder="Enter patient ID (e.g., PAT123456)"
-                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    placeholder="Enter patient ID"
+                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
                   <button
                     onClick={handleSearch}
                     disabled={searchLoading}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
+                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors"
                   >
                     {searchLoading ? 'Searching...' : 'Search'}
                   </button>
                 </div>
+                {searchError && (
+                  <p className="text-red-600 dark:text-red-400 text-sm mt-1">{searchError}</p>
+                )}
               </div>
 
-              {searchError && (
-                <div className="mb-4 p-3 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-md">
-                  {searchError}
-                </div>
-              )}
-
               {searchedPatient && (
-                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                  <h4 className="text-lg font-semibold mb-3">Patient Found</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">Name</label>
-                      <p className="text-gray-900 dark:text-white">{searchedPatient.name}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">Patient ID</label>
-                      <p className="text-gray-900 dark:text-white font-mono">{searchedPatient.userId}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">Age</label>
-                      <p className="text-gray-900 dark:text-white">{searchedPatient.age || 'Not provided'}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">Gender</label>
-                      <p className="text-gray-900 dark:text-white">
-                        {searchedPatient.gender ? searchedPatient.gender.charAt(0).toUpperCase() + searchedPatient.gender.slice(1) : 'Not provided'}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">Phone</label>
-                      <p className="text-gray-900 dark:text-white">{searchedPatient.phoneNumber || 'Not provided'}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">Email</label>
-                      <p className="text-gray-900 dark:text-white">{searchedPatient.email}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-4">
-                    <button
-                      onClick={() => handleRequestApproval(searchedPatient.userId)}
-                      className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-                    >
-                      Request Patient Approval
-                    </button>
-                  </div>
+                <div className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                  <h4 className="font-semibold mb-2">{searchedPatient.name}</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">ID: {searchedPatient.userId}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Age: {searchedPatient.age} | Gender: {searchedPatient.gender}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Email: {searchedPatient.email}</p>
+                  {searchedPatient.emergencyContact && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Emergency Contact: {searchedPatient.emergencyContact.name} - {searchedPatient.emergencyContact.phone}
+                    </p>
+                  )}
+                  <button
+                    onClick={() => {
+                      console.log('Searched patient object:', searchedPatient);
+                      console.log('Patient _id:', searchedPatient._id);
+                      console.log('Patient userId:', searchedPatient.userId);
+                      // Use userId instead of _id for the API call
+                      handleRequestApproval(searchedPatient.userId || searchedPatient._id);
+                    }}
+                    className="mt-3 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    Request Approval
+                  </button>
                 </div>
               )}
             </div>
@@ -577,48 +658,43 @@ const CaretakerDashboard: React.FC = () => {
 
         {/* Approvals Tab */}
         {activeTab === 'approvals' && (
-          <div className="space-y-6">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-              <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                <Users size={20} /> Approval Requests
-              </h3>
-              
-              {approvalRequests.length === 0 ? (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  <Users size={48} className="mx-auto mb-4 opacity-50" />
-                  <p>No approval requests found.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {approvalRequests.map((request, index) => (
-                    <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="font-semibold">{request.patientId?.name || 'Unknown Patient'}</h4>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Patient ID: {request.patientId?.userId || 'N/A'}
-                          </p>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Requested: {new Date(request.requestedAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            request.status === 'pending' 
-                              ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                              : request.status === 'approved'
-                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                              : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                          }`}>
-                            {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
-                          </span>
-                        </div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+            <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <Users size={20} /> Approval Requests
+            </h3>
+            {approvalRequests.filter(req => req.status === 'pending').length === 0 ? (
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                <Users size={48} className="mx-auto mb-4 opacity-50" />
+                <p>No pending approval requests.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {approvalRequests.filter(req => req.status === 'pending').map((request, index) => (
+                  <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-semibold">{request.patientId?.name || 'Unknown Patient'}</h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Requested: {new Date(request.requestedAt).toLocaleDateString()}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => handleCaretakerApproval(request.patientId?._id || request.patientId, 'approved')}
+                          className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
+                        >
+                          Approve
+                        </button>
+                        <button 
+                          onClick={() => handleCaretakerApproval(request.patientId?._id || request.patientId, 'rejected')}
+                          className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700 transition-colors"
+                        >
+                          Reject
+                        </button>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -626,39 +702,186 @@ const CaretakerDashboard: React.FC = () => {
         {activeTab === 'notifications' && (
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
             <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <Bell size={20} /> All Notifications
+              <Bell size={20} /> Notifications
             </h3>
-            <div className="space-y-3">
-              {notifications.length === 0 ? (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  <Bell size={48} className="mx-auto mb-4 opacity-50" />
-                  <p>No notifications yet.</p>
-                  <p className="text-sm">Patient notifications will appear here.</p>
-                </div>
-              ) : (
-                notifications.map((notification) => (
-                <div key={notification.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-semibold">{notification.patient}</h4>
-                    <span className="text-xs text-gray-500">{notification.time}</span>
+            {notifications.length === 0 ? (
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                <Bell size={48} className="mx-auto mb-4 opacity-50" />
+                <p>No notifications yet.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {notifications.map((notification) => (
+                  <div key={notification.id} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                    <h4 className="font-semibold">{notification.title}</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {notification.message}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-500">
+                      {new Date(notification.date).toLocaleDateString()}
+                    </p>
                   </div>
-                  <p className="text-gray-600 dark:text-gray-300 mb-2">{notification.message}</p>
-                  <span className={`inline-block px-2 py-1 rounded text-xs ${
-                    notification.type === 'medication' 
-                      ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                      : notification.type === 'appointment'
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                      : 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
-                  }`}>
-                    {notification.type}
-                  </span>
-                </div>
-                ))
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </main>
+
+      {/* Patient Details Modal */}
+      {showPatientDetails && selectedPatientDetails && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Patient Details - {selectedPatientDetails.name}
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowPatientDetails(false);
+                    setSelectedPatientDetails(null);
+                  }}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Basic Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Basic Information</h3>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">Name</label>
+                    <p className="text-gray-900 dark:text-white">{selectedPatientDetails.name}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">Patient ID</label>
+                    <p className="text-gray-900 dark:text-white">{selectedPatientDetails.userId}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">Email</label>
+                    <p className="text-gray-900 dark:text-white">{selectedPatientDetails.email}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">Phone</label>
+                    <p className="text-gray-900 dark:text-white">{selectedPatientDetails.phoneNumber || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">Age</label>
+                    <p className="text-gray-900 dark:text-white">{selectedPatientDetails.age || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">Gender</label>
+                    <p className="text-gray-900 dark:text-white">{selectedPatientDetails.gender || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">Date of Birth</label>
+                    <p className="text-gray-900 dark:text-white">
+                      {selectedPatientDetails.dateOfBirth 
+                        ? new Date(selectedPatientDetails.dateOfBirth).toLocaleDateString() 
+                        : 'Not provided'
+                      }
+                    </p>
+                  </div>
+                </div>
+
+                {/* Emergency Contact */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Emergency Contact</h3>
+                  {selectedPatientDetails.emergencyContact ? (
+                    <div className="space-y-2">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">Name</label>
+                        <p className="text-gray-900 dark:text-white">{selectedPatientDetails.emergencyContact.name}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">Phone</label>
+                        <p className="text-gray-900 dark:text-white">{selectedPatientDetails.emergencyContact.phone}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">Relationship</label>
+                        <p className="text-gray-900 dark:text-white">{selectedPatientDetails.emergencyContact.relationship || 'Not specified'}</p>
+                      </div>
+                      <button
+                        onClick={() => handleEmergencyCall(selectedPatientDetails.emergencyContact.phone)}
+                        className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+                      >
+                        <Phone size={16} /> Emergency Call
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 dark:text-gray-400">No emergency contact provided</p>
+                  )}
+                </div>
+
+                {/* Medical Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Medical Information</h3>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">Allergies</label>
+                    <p className="text-gray-900 dark:text-white">
+                      {selectedPatientDetails.allergies && selectedPatientDetails.allergies.length > 0 
+                        ? selectedPatientDetails.allergies.join(', ') 
+                        : 'None listed'
+                      }
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">Current Medications</label>
+                    <p className="text-gray-900 dark:text-white">
+                      {selectedPatientDetails.currentMedications && selectedPatientDetails.currentMedications.length > 0 
+                        ? `${selectedPatientDetails.currentMedications.length} medication(s)` 
+                        : 'None'
+                      }
+                    </p>
+                  </div>
+                </div>
+
+                {/* Medical History */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Medical History</h3>
+                  {selectedPatientDetails.medicalHistory && selectedPatientDetails.medicalHistory.length > 0 ? (
+                    <div className="space-y-2">
+                      {selectedPatientDetails.medicalHistory.map((condition: any, index: number) => (
+                        <div key={index} className="border border-gray-200 dark:border-gray-600 rounded p-3">
+                          <p className="font-medium text-gray-900 dark:text-white">{condition.condition}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Diagnosed: {condition.diagnosisDate ? new Date(condition.diagnosisDate).toLocaleDateString() : 'Unknown'}
+                          </p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Status: {condition.status || 'Unknown'}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 dark:text-gray-400">No medical history provided</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-4 mt-6 pt-6 border-t border-gray-200 dark:border-gray-600">
+                <button
+                  onClick={() => {
+                    setShowPatientDetails(false);
+                    setSelectedPatientDetails(null);
+                  }}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => handleRemovePatient(selectedPatientDetails._id)}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Remove Patient
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Profile Edit Modal */}
       {showProfileEdit && currentUser && (

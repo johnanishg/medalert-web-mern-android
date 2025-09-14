@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNotification } from '../contexts/NotificationContext';
 import { Eye, EyeOff, Mail, Lock, User, Stethoscope, Building2, GraduationCap, Heart } from 'lucide-react';
@@ -16,6 +16,8 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [userType, setUserType] = useState<'patient' | 'doctor' | 'caretaker'>('patient');
+  const [availableCaretakers, setAvailableCaretakers] = useState<any[]>([]);
+  const [loadingCaretakers, setLoadingCaretakers] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -34,6 +36,8 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
     // Caretaker-specific fields
     experience: '',
     certifications: '',
+    // Patient-specific caretaker selection
+    selectedCaretakerId: '',
   });
 
   const validatePhoneNumber = (phoneNumber: string): boolean => {
@@ -41,6 +45,32 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
     const cleanNumber = phoneNumber.replace(/\D/g, '');
     // Check if it's exactly 10 digits
     return cleanNumber.length === 10;
+  };
+
+  // Fetch available caretakers when user type is patient
+  useEffect(() => {
+    if (userType === 'patient') {
+      fetchCaretakers();
+    }
+  }, [userType]);
+
+  const fetchCaretakers = async () => {
+    try {
+      setLoadingCaretakers(true);
+      const response = await fetch('http://localhost:5001/api/patients/caretakers');
+      if (response.ok) {
+        const data = await response.json();
+        setAvailableCaretakers(data.caretakers || []);
+      } else {
+        console.error('Failed to fetch caretakers');
+        setAvailableCaretakers([]);
+      }
+    } catch (error) {
+      console.error('Error fetching caretakers:', error);
+      setAvailableCaretakers([]);
+    } finally {
+      setLoadingCaretakers(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -80,7 +110,8 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
             dateOfBirth: formData.dateOfBirth,
             age: parseInt(formData.age),
             gender: formData.gender,
-            phoneNumber: formData.phoneNumber
+            phoneNumber: formData.phoneNumber,
+            selectedCaretakerId: formData.selectedCaretakerId
           }),
           ...(userType === 'caretaker' && {
             experience: formData.experience,
@@ -490,6 +521,38 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
                       placeholder="Enter your phone number"
                     />
                   </div>
+                </div>
+                
+                {/* Caretaker Selection */}
+                <div>
+                  <label htmlFor="selectedCaretakerId" className="block text-sm font-medium mb-2">
+                    Select Caretaker (Optional)
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                    <select
+                      id="selectedCaretakerId"
+                      name="selectedCaretakerId"
+                      value={formData.selectedCaretakerId}
+                      onChange={handleInputChange}
+                      className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
+                        theme === 'dark'
+                          ? 'bg-gray-700 border-gray-600 text-gray-100'
+                          : 'bg-white border-gray-300 text-gray-900'
+                      } transition-colors`}
+                      disabled={loadingCaretakers}
+                    >
+                      <option value="">No caretaker selected</option>
+                      {availableCaretakers.map((caretaker) => (
+                        <option key={caretaker.userId} value={caretaker.userId}>
+                          {caretaker.name} ({caretaker.userId}) - {caretaker.experience} years experience
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {loadingCaretakers && (
+                    <p className="text-sm text-gray-500 mt-1">Loading caretakers...</p>
+                  )}
                 </div>
               </>
             )}

@@ -64,6 +64,15 @@ const patientSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
   }],
   
+  // Caretaker assignments
+  selectedCaretaker: {
+    caretakerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Caretaker' },
+    caretakerUserId: { type: String }, // For easy lookup
+    caretakerName: { type: String }, // Caretaker's name for display
+    caretakerEmail: { type: String }, // Caretaker's email for display
+    assignedAt: { type: Date, default: Date.now }
+  },
+  
   // Caretaker approvals
   caretakerApprovals: [{
     caretakerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Caretaker' },

@@ -230,7 +230,7 @@ router.get('/users/:role', verifyAdminToken, async (req, res) => {
 
     switch (role) {
       case 'patients':
-        users = await Patient.find({}, 'userId name email isActive createdAt lastLogin');
+        users = await Patient.find({}, 'userId name email age gender phoneNumber dateOfBirth isActive createdAt lastLogin currentMedications');
         break;
       case 'doctors':
         users = await Doctor.find({}, 'userId name email isApproved isActive createdAt lastLogin licenseNumber specialization hospital');
@@ -488,6 +488,130 @@ router.get('/prescriptions', verifyAdminToken, async (req, res) => {
 
   } catch (error) {
     console.error('Get prescriptions error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Update a specific medication (admin only)
+router.put('/medications/:medicationId', verifyAdminToken, async (req, res) => {
+  try {
+    const { medicationId } = req.params;
+    const updateData = req.body;
+    
+    // Find the patient who has this medication
+    const patient = await Patient.findOne({ 'currentMedications._id': medicationId });
+    if (!patient) {
+      return res.status(404).json({ message: 'Medication not found.' });
+    }
+
+    // Find the medication index
+    const medicationIndex = patient.currentMedications.findIndex(med => med._id.toString() === medicationId);
+    if (medicationIndex === -1) {
+      return res.status(404).json({ message: 'Medication not found in patient record.' });
+    }
+
+    // Update the medication
+    patient.currentMedications[medicationIndex] = {
+      ...patient.currentMedications[medicationIndex],
+      ...updateData,
+      updatedAt: new Date().toISOString(),
+      updatedBy: req.user.name
+    };
+
+    await patient.save();
+
+    res.status(200).json({
+      message: 'Medication updated successfully',
+      medication: patient.currentMedications[medicationIndex]
+    });
+  } catch (error) {
+    console.error('Update medication error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Delete a specific medication (admin only)
+router.delete('/medications/:medicationId', verifyAdminToken, async (req, res) => {
+  try {
+    const { medicationId } = req.params;
+    
+    // Find the patient who has this medication
+    const patient = await Patient.findOne({ 'currentMedications._id': medicationId });
+    if (!patient) {
+      return res.status(404).json({ message: 'Medication not found.' });
+    }
+
+    // Find the medication index
+    const medicationIndex = patient.currentMedications.findIndex(med => med._id.toString() === medicationId);
+    if (medicationIndex === -1) {
+      return res.status(404).json({ message: 'Medication not found in patient record.' });
+    }
+
+    // Remove the medication
+    const deletedMedication = patient.currentMedications[medicationIndex];
+    patient.currentMedications.splice(medicationIndex, 1);
+    await patient.save();
+
+    res.status(200).json({
+      message: 'Medication deleted successfully',
+      deletedMedication: deletedMedication
+    });
+  } catch (error) {
+    console.error('Delete medication error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Update a specific prescription (admin only)
+router.put('/prescriptions/:prescriptionId', verifyAdminToken, async (req, res) => {
+  try {
+    const { prescriptionId } = req.params;
+    const updateData = req.body;
+    
+    const prescription = await Prescription.findById(prescriptionId);
+    if (!prescription) {
+      return res.status(404).json({ message: 'Prescription not found.' });
+    }
+
+    // Update the prescription
+    const updatedPrescription = await Prescription.findByIdAndUpdate(
+      prescriptionId,
+      {
+        ...updateData,
+        updatedAt: new Date(),
+        updatedBy: req.user.name
+      },
+      { new: true }
+    ).populate('patientId', 'name email').populate('doctorId', 'name email');
+
+    res.status(200).json({
+      message: 'Prescription updated successfully',
+      prescription: updatedPrescription
+    });
+  } catch (error) {
+    console.error('Update prescription error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Delete a specific prescription (admin only)
+router.delete('/prescriptions/:prescriptionId', verifyAdminToken, async (req, res) => {
+  try {
+    const { prescriptionId } = req.params;
+    
+    const prescription = await Prescription.findById(prescriptionId);
+    if (!prescription) {
+      return res.status(404).json({ message: 'Prescription not found.' });
+    }
+
+    await Prescription.findByIdAndDelete(prescriptionId);
+
+    res.status(200).json({
+      message: 'Prescription deleted successfully',
+      deletedPrescription: prescription
+    });
+  } catch (error) {
+    console.error('Delete prescription error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

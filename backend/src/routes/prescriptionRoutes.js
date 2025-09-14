@@ -2,6 +2,7 @@ import express from 'express';
 import Prescription from '../models/Prescription.js';
 import Patient from '../models/Patient.js';
 import Doctor from '../models/Doctor.js';
+import Diagnosis from '../models/Diagnosis.js';
 import { verifyToken } from '../middleware/auth.js';
 import { sendGeneralNotification, validatePhoneNumber } from '../services/twilioService.js';
 
@@ -84,6 +85,7 @@ router.post('/create', verifyToken, async (req, res) => {
     }
 
     // Add new medicines to patient's current medications
+    console.log('Current medications before update:', patient.currentMedications?.length || 0);
     medicines.forEach(medicine => {
       const newMedication = {
         name: medicine.name,
@@ -98,8 +100,9 @@ router.post('/create', verifyToken, async (req, res) => {
         prescriptionId: prescription._id
       };
       patient.currentMedications.push(newMedication);
+      console.log('Added medicine to current medications:', newMedication.name);
     });
-    console.log('Patient medications updated');
+    console.log('Patient medications updated. Total medications:', patient.currentMedications.length);
 
     // Create a visit record for this prescription
     console.log('Creating visit record...');
@@ -126,6 +129,37 @@ router.post('/create', verifyToken, async (req, res) => {
       patient.visits = [];
     }
     patient.visits.push(visitRecord);
+
+    // Create a diagnosis record
+    console.log('Creating diagnosis record...');
+    try {
+      const diagnosisRecord = new Diagnosis({
+        patientId: patient._id,
+        patientName: patient.name,
+        doctorId: req.user.userId,
+        doctorName: req.user.name,
+        diagnosis: diagnosis,
+        symptoms: symptoms || [],
+        treatment: treatment || notes || '',
+        medications: medicines.map(med => ({
+          name: med.name,
+          dosage: med.dosage,
+          frequency: med.frequency,
+          duration: med.duration,
+          instructions: med.instructions || ''
+        })),
+        followUpDate: followUpDate ? new Date(followUpDate) : null,
+        notes: notes || '',
+        diagnosisDate: new Date()
+      });
+
+      await diagnosisRecord.save();
+      console.log('✅ Diagnosis record saved successfully:', diagnosisRecord._id);
+    } catch (diagnosisError) {
+      console.error('❌ Error creating diagnosis record:', diagnosisError);
+      console.error('Diagnosis error details:', diagnosisError.message);
+      // Don't fail the entire request if diagnosis creation fails
+    }
 
     console.log('Saving patient with visit record...');
     await patient.save();

@@ -16,6 +16,8 @@ const ProfileEdit: React.FC<ProfileEditProps> = ({ isOpen, onClose, user, userTy
   const { showNotification } = useNotification();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<any>({});
+  const [availableCaretakers, setAvailableCaretakers] = useState<any[]>([]);
+  const [loadingCaretakers, setLoadingCaretakers] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -25,6 +27,35 @@ const ProfileEdit: React.FC<ProfileEditProps> = ({ isOpen, onClose, user, userTy
       console.log('ProfileEdit - No user data received');
     }
   }, [user]);
+
+  // Fetch caretakers for patients
+  useEffect(() => {
+    if (userType === 'patient' && isOpen) {
+      fetchCaretakers();
+    }
+  }, [userType, isOpen]);
+
+  const fetchCaretakers = async () => {
+    try {
+      setLoadingCaretakers(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5001/api/patients/caretakers', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setAvailableCaretakers(data.caretakers || []);
+      } else {
+        console.error('Failed to fetch caretakers');
+        setAvailableCaretakers([]);
+      }
+    } catch (error) {
+      console.error('Error fetching caretakers:', error);
+      setAvailableCaretakers([]);
+    } finally {
+      setLoadingCaretakers(false);
+    }
+  };
 
   const calculateAge = (dateOfBirth: string): number => {
     if (!dateOfBirth) return 0;
@@ -61,6 +92,63 @@ const ProfileEdit: React.FC<ProfileEditProps> = ({ isOpen, onClose, user, userTy
       
       return newData;
     });
+  };
+
+  const handleCaretakerChange = async (caretakerUserId: string) => {
+    if (!caretakerUserId) {
+      // Remove caretaker
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:5001/api/patients/remove-caretaker', {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+          setFormData(prev => ({
+            ...prev,
+            selectedCaretaker: undefined
+          }));
+          showNotification('Caretaker removed successfully', 'success');
+        } else {
+          showNotification('Failed to remove caretaker', 'error');
+        }
+      } catch (error) {
+        console.error('Error removing caretaker:', error);
+        showNotification('Failed to remove caretaker', 'error');
+      }
+    } else {
+      // Assign caretaker
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:5001/api/patients/assign-caretaker', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}` 
+          },
+          body: JSON.stringify({ caretakerUserId })
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setFormData(prev => ({
+            ...prev,
+            selectedCaretaker: {
+              caretakerUserId: data.caretaker.userId,
+              assignedAt: new Date().toISOString()
+            }
+          }));
+          showNotification('Caretaker assigned successfully', 'success');
+        } else {
+          const errorData = await response.json();
+          showNotification(errorData.message || 'Failed to assign caretaker', 'error');
+        }
+      } catch (error) {
+        console.error('Error assigning caretaker:', error);
+        showNotification('Failed to assign caretaker', 'error');
+      }
+    }
   };
 
   const handleArrayChange = (field: string, index: number, value: any) => {
@@ -245,6 +333,34 @@ const ProfileEdit: React.FC<ProfileEditProps> = ({ isOpen, onClose, user, userTy
             <option value="female">Female</option>
             <option value="other">Other</option>
           </select>
+        </div>
+        
+        {/* Caretaker Selection */}
+        <div>
+          <label className="block text-sm font-medium mb-1">Select Caretaker (Optional)</label>
+          <select
+            value={formData.selectedCaretaker?.caretakerUserId || ''}
+            onChange={(e) => handleCaretakerChange(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            disabled={loadingCaretakers}
+          >
+            <option value="">No caretaker selected</option>
+            {availableCaretakers.map((caretaker) => (
+              <option key={caretaker.userId} value={caretaker.userId}>
+                {caretaker.name} ({caretaker.userId}) - {caretaker.experience} years experience
+              </option>
+            ))}
+          </select>
+          {loadingCaretakers && (
+            <p className="text-sm text-gray-500 mt-1">Loading caretakers...</p>
+          )}
+          {formData.selectedCaretaker && (
+            <div className="mt-2 p-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
+              <p className="text-sm text-green-700 dark:text-green-300">
+                Current caretaker: {formData.selectedCaretaker.caretakerUserId}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

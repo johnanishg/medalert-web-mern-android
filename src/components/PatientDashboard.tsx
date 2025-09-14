@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
-import { LogOut, Sun, Moon, Bell, List, Pill, Calendar, Clock, User, Trash2 } from 'lucide-react';
+import { LogOut, Sun, Moon, Bell, List, Pill, Calendar, Clock, User, Trash2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import LogToggle from './LogToggle';
 import Chatbot from './Chatbot';
+import DoseBasedAdherenceTracker from './DoseBasedAdherenceTracker';
 import logger from '../services/logger';
 import { DashboardContext } from '../services/geminiService';
 
@@ -30,8 +30,26 @@ const PatientDashboard: React.FC = () => {
   });
   const [showPresetOptions, setShowPresetOptions] = useState(false);
   
+  // Medicine editing states
+  const [showEditMedicineModal, setShowEditMedicineModal] = useState(false);
+  const [editingMedicine, setEditingMedicine] = useState<any>(null);
+  const [editMedicineForm, setEditMedicineForm] = useState({
+    name: '',
+    dosage: '',
+    frequency: '',
+    duration: '',
+    instructions: '',
+    timing: [] as string[],
+    foodTiming: ''
+  });
+  
   // Active tab state
-  const [activeTab, setActiveTab] = useState<'profile' | 'medicines' | 'visits' | 'notifications'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'medicines' | 'visits' | 'notifications' | 'caretaker'>('profile');
+  
+  // Caretaker selection states
+  const [availableCaretakers, setAvailableCaretakers] = useState<any[]>([]);
+  const [loadingCaretakers, setLoadingCaretakers] = useState(false);
+  const [caretakerSearchTerm, setCaretakerSearchTerm] = useState('');
 
   // Dashboard context for chatbot
   const dashboardContext: DashboardContext = {
@@ -158,12 +176,47 @@ const PatientDashboard: React.FC = () => {
           // Update current user state
           setCurrentUser(updatedUser);
           
-          // Set medicines from current medications
+          // Set medicines from current medications with validation
           const newMedicines = updatedUser.currentMedications || [];
-          setMedicines(newMedicines);
+          console.log('💊 fetchPatientData: Raw medicines data:', newMedicines);
+          console.log('💊 fetchPatientData: Validating medicines:', newMedicines.length);
+          
+          // Validate medicine data
+          const validMedicines = newMedicines.filter((med, index) => {
+            if (!med || typeof med !== 'object') {
+              console.log(`⚠️ fetchPatientData: Invalid medicine object at index ${index}:`, med);
+              return false;
+            }
+            
+            if (!med.name || !med.dosage) {
+              console.log(`⚠️ fetchPatientData: Invalid medicine at index ${index}:`, {
+                name: med.name,
+                dosage: med.dosage,
+                frequency: med.frequency,
+                timing: med.timing
+              });
+              return false;
+            }
+            
+            // Ensure timing is an array
+            if (med.timing && !Array.isArray(med.timing)) {
+              console.log(`⚠️ fetchPatientData: Invalid timing format at index ${index}:`, med.timing);
+              med.timing = [];
+            }
+            
+            return true;
+          });
+          
+          if (validMedicines.length !== newMedicines.length) {
+            console.log(`⚠️ fetchPatientData: Filtered out ${newMedicines.length - validMedicines.length} invalid medicines`);
+          }
+          
+          console.log('💊 fetchPatientData: Valid medicines after filtering:', validMedicines);
+          console.log('💊 fetchPatientData: Setting valid medicines:', validMedicines.length);
+          setMedicines(validMedicines);
           
           // Check for new medicines
-          const currentCount = newMedicines.length;
+          const currentCount = validMedicines.length;
           if (previousMedicineCount > 0 && currentCount > previousMedicineCount) {
             console.log(`New medicine detected! Count increased from ${previousMedicineCount} to ${currentCount}`);
             // You could add a toast notification here
@@ -183,9 +236,10 @@ const PatientDashboard: React.FC = () => {
         }
 
         // Fetch patient visits from patient profile
-        if (userData.visits) {
-          setVisits(userData.visits || []);
-          logger.info('Visits refreshed', { visitCount: userData.visits?.length || 0 }, 'PatientDashboard', 'low');
+        console.log('Patient dashboard - updatedUser.visits:', updatedUser.visits);
+        if (updatedUser.visits) {
+          setVisits(updatedUser.visits || []);
+          logger.info('Visits refreshed', { visitCount: updatedUser.visits?.length || 0 }, 'PatientDashboard', 'low');
         } else {
           // Fallback: fetch from prescriptions endpoint if visits not in profile
           const visitsResponse = await fetch(`http://localhost:5001/api/prescriptions/patient/${userId}`, {
@@ -214,8 +268,19 @@ const PatientDashboard: React.FC = () => {
         }
       }
       
-      // For now, show empty state for notifications
-      setNotifications([]);
+      // Fetch notifications from database
+      const notificationsResponse = await fetch(`http://localhost:5001/api/patients/notifications/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (notificationsResponse.ok) {
+        const notificationsData = await notificationsResponse.json();
+        setNotifications(notificationsData.notifications || []);
+        logger.info('Notifications refreshed', { notificationCount: notificationsData.notifications?.length || 0 }, 'PatientDashboard', 'low');
+      } else {
+        console.log('Failed to fetch notifications, setting empty array');
+        setNotifications([]);
+      }
       
     } catch (err) {
       console.error('Error fetching patient data:', err);
@@ -239,6 +304,150 @@ const PatientDashboard: React.FC = () => {
     logger.info('Manual refresh triggered', null, 'PatientDashboard', 'medium');
     setError(''); // Clear any existing errors
     fetchPatientData();
+  };
+
+  // Sync notification timings to medicine schedule
+  const handleSyncNotifications = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        alert('Please log in again');
+        return;
+      }
+
+      console.log('🔄 Syncing notification timings to medicine schedule...');
+      
+      const response = await fetch('http://localhost:5001/api/patients/sync-notifications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Sync completed:', data);
+        
+        // Refresh patient data to show updated timings
+        await fetchPatientData();
+        
+        alert(`Sync completed! Updated ${data.syncedMedicines} medicine(s) from ${data.totalNotifications} notification(s).`);
+      } else {
+        const errorData = await response.json();
+        console.error('❌ Sync failed:', errorData);
+        alert(errorData.message || 'Failed to sync notifications');
+      }
+    } catch (error) {
+      console.error('❌ Sync error:', error);
+      alert('Failed to sync notifications');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Refresh medicine data (for adherence updates)
+  const refreshMedicineData = async () => {
+    if (!currentUser) {
+      console.log('❌ refreshMedicineData: currentUser is null');
+      return;
+    }
+    
+    // Prevent multiple simultaneous calls
+    if (loading) {
+      console.log('⚠️ refreshMedicineData: Already loading, skipping');
+      return;
+    }
+    
+    try {
+      setLoading(true); // Set loading state
+      
+      const userId = currentUser.id || currentUser._id || currentUser.userId;
+      console.log('🔄 refreshMedicineData: Fetching data for userId:', userId);
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.log('❌ refreshMedicineData: No token found');
+        setLoading(false);
+        return;
+      }
+      
+      const patientResponse = await fetch(`http://localhost:5001/api/patients/profile/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (patientResponse.ok) {
+        const patientData = await patientResponse.json();
+        const updatedUser = patientData.patient || patientData;
+        
+        console.log('📊 refreshMedicineData: Received patient data:', {
+          name: updatedUser.name,
+          medicinesCount: updatedUser.currentMedications?.length || 0,
+          firstMedicine: updatedUser.currentMedications?.[0] ? {
+            name: updatedUser.currentMedications[0].name,
+            timing: updatedUser.currentMedications[0].timing,
+            adherenceCount: updatedUser.currentMedications[0].adherence?.length || 0
+          } : null
+        });
+        
+        // Validate medicine data before setting
+        const newMedicines = updatedUser.currentMedications || [];
+        console.log('💊 refreshMedicineData: Validating medicines:', newMedicines.length);
+        
+        // Check each medicine for required fields
+        const validMedicines = newMedicines.filter((med, index) => {
+          if (!med || typeof med !== 'object') {
+            console.log(`⚠️ refreshMedicineData: Invalid medicine object at index ${index}:`, med);
+            return false;
+          }
+          
+          if (!med.name || !med.dosage) {
+            console.log(`⚠️ refreshMedicineData: Invalid medicine at index ${index}:`, {
+              name: med.name,
+              dosage: med.dosage,
+              frequency: med.frequency,
+              timing: med.timing
+            });
+            return false;
+          }
+          
+          // Ensure timing is an array
+          if (med.timing && !Array.isArray(med.timing)) {
+            console.log(`⚠️ refreshMedicineData: Invalid timing format at index ${index}:`, med.timing);
+            med.timing = [];
+          }
+          
+          return true;
+        });
+        
+        if (validMedicines.length !== newMedicines.length) {
+          console.log(`⚠️ refreshMedicineData: Filtered out ${newMedicines.length - validMedicines.length} invalid medicines`);
+        }
+        
+        console.log('💊 refreshMedicineData: Setting valid medicines:', validMedicines.length);
+        setMedicines(validMedicines);
+        
+        // Update currentUser state as well
+        setCurrentUser(updatedUser);
+        
+        // Update localStorage
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        logger.info('Medicine data refreshed for adherence', 'PatientDashboard');
+        console.log('✅ refreshMedicineData: Successfully refreshed medicine data');
+      } else {
+        const errorData = await patientResponse.json().catch(() => ({ message: 'Unknown error' }));
+        console.log('❌ refreshMedicineData: API response not ok:', patientResponse.status, errorData);
+        logger.error(`Failed to refresh medicine data: ${errorData.message}`, 'PatientDashboard');
+      }
+    } catch (error) {
+      console.log('❌ refreshMedicineData: Error:', error);
+      logger.error('Error refreshing medicine data', 'PatientDashboard');
+    } finally {
+      setLoading(false); // Always reset loading state
+    }
   };
 
   // Medicine notification management functions
@@ -404,10 +613,21 @@ const PatientDashboard: React.FC = () => {
         setNotificationForm({ times: [{ time: '', label: 'Custom', isActive: true }] });
         setShowPresetOptions(false);
         
-        // Refresh data to show updated notifications
-        fetchPatientData();
+        // Add a small delay to ensure backend has processed the update
+        console.log('🔄 Waiting for backend to process notification sync...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
-        alert('Medicine notification timings set successfully!');
+        // Refresh data to show updated notifications and sync with Dose Schedule & Adherence
+        console.log('🔄 Refreshing patient data after notification timing update');
+        await fetchPatientData();
+        
+        // Force a second refresh to ensure data is synced
+        console.log('🔄 Second refresh to ensure sync is complete...');
+        setTimeout(async () => {
+          await fetchPatientData();
+        }, 500);
+        
+        alert('Medicine notification timings set successfully! The schedule has been updated.');
       } else {
         const errorData = await response.json();
         logger.error('Error setting notification timings', errorData, 'PatientDashboard');
@@ -459,6 +679,89 @@ const PatientDashboard: React.FC = () => {
     } catch (err) {
       logger.error('Error deleting notification', err, 'PatientDashboard');
       alert('Failed to delete notification');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Medicine editing functions
+  const openEditMedicineModal = (medicine: any, index: number) => {
+    setEditingMedicine({ ...medicine, index });
+    setEditMedicineForm({
+      name: medicine.name || '',
+      dosage: medicine.dosage || '',
+      frequency: medicine.frequency || '',
+      duration: medicine.duration || '',
+      instructions: medicine.instructions || '',
+      timing: medicine.timing || [],
+      foodTiming: medicine.foodTiming || ''
+    });
+    setShowEditMedicineModal(true);
+  };
+
+  const handleEditMedicine = async () => {
+    if (!editingMedicine) return;
+
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`http://localhost:5001/api/patients/medicines/${editingMedicine.index}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(editMedicineForm)
+      });
+
+      if (response.ok) {
+        // Refresh patient data
+        fetchPatientData();
+        setShowEditMedicineModal(false);
+        setEditingMedicine(null);
+        logger.success('Medicine updated successfully', { medicine: editMedicineForm.name }, 'PatientDashboard', 'medium');
+      } else {
+        const errorData = await response.json();
+        logger.error('Failed to update medicine', { error: errorData.message }, 'PatientDashboard', 'high');
+        alert(errorData.message || 'Failed to update medicine');
+      }
+    } catch (err) {
+      logger.error('Error updating medicine', err, 'PatientDashboard', 'high');
+      alert('Failed to update medicine');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteMedicine = async (medicine: any, index: number) => {
+    if (!confirm(`Are you sure you want to delete ${medicine.name}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`http://localhost:5001/api/patients/medicines/${index}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        // Refresh patient data
+        fetchPatientData();
+        logger.success('Medicine deleted successfully', { medicine: medicine.name }, 'PatientDashboard', 'medium');
+      } else {
+        const errorData = await response.json();
+        logger.error('Failed to delete medicine', { error: errorData.message }, 'PatientDashboard', 'high');
+        alert(errorData.message || 'Failed to delete medicine');
+      }
+    } catch (err) {
+      logger.error('Error deleting medicine', err, 'PatientDashboard', 'high');
+      alert('Failed to delete medicine');
     } finally {
       setLoading(false);
     }
@@ -563,6 +866,142 @@ const PatientDashboard: React.FC = () => {
     }
   };
 
+  // Caretaker management functions
+  const fetchCaretakers = async (searchTerm = '') => {
+    try {
+      setLoadingCaretakers(true);
+      const token = localStorage.getItem('token');
+      const url = searchTerm 
+        ? `http://localhost:5001/api/patients/caretakers?search=${encodeURIComponent(searchTerm)}`
+        : 'http://localhost:5001/api/patients/caretakers';
+        
+      const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setAvailableCaretakers(data.caretakers || []);
+      } else {
+        console.error('Failed to fetch caretakers');
+        setAvailableCaretakers([]);
+      }
+    } catch (error) {
+      console.error('Error fetching caretakers:', error);
+      setAvailableCaretakers([]);
+    } finally {
+      setLoadingCaretakers(false);
+    }
+  };
+
+  const handleCaretakerSearch = (searchTerm: string) => {
+    setCaretakerSearchTerm(searchTerm);
+    fetchCaretakers(searchTerm);
+  };
+
+  const handleRemoveCaretaker = async () => {
+    if (!confirm('Are you sure you want to remove your current caretaker? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5001/api/patients/remove-caretaker', {
+        method: 'DELETE',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}` 
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Remove caretaker response:', data);
+        
+        // Refresh user data
+        await fetchPatientData();
+        
+        alert('Caretaker removed successfully!');
+      } else {
+        const errorData = await response.json();
+        alert(errorData.message || 'Failed to remove caretaker');
+      }
+    } catch (error) {
+      console.error('Error removing caretaker:', error);
+      alert('Error removing caretaker');
+    }
+  };
+
+
+  const handleCaretakerChange = async (caretakerUserId: string) => {
+    if (!caretakerUserId) {
+      // Remove caretaker
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:5001/api/patients/remove-caretaker', {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+          // Update current user state
+          setCurrentUser(prev => ({
+            ...prev,
+            selectedCaretaker: undefined
+          }));
+          alert('Caretaker removed successfully');
+          // Refresh patient data
+          await fetchPatientData();
+        } else {
+          alert('Failed to remove caretaker');
+        }
+      } catch (error) {
+        console.error('Error removing caretaker:', error);
+        alert('Failed to remove caretaker');
+      }
+    } else {
+      // Assign caretaker
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:5001/api/patients/direct-assign-caretaker', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}` 
+          },
+          body: JSON.stringify({ caretakerUserId })
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          // Update current user state
+          setCurrentUser(prev => ({
+            ...prev,
+            selectedCaretaker: {
+              caretakerUserId: data.caretaker.userId,
+              assignedAt: new Date().toISOString()
+            }
+          }));
+          alert('Caretaker assigned successfully');
+          // Refresh patient data
+          await fetchPatientData();
+        } else {
+          const errorData = await response.json();
+          alert(errorData.message || 'Failed to assign caretaker');
+        }
+      } catch (error) {
+        console.error('Error assigning caretaker:', error);
+        alert('Failed to assign caretaker');
+      }
+    }
+  };
+
+  // Fetch caretakers when caretaker tab is selected
+  useEffect(() => {
+    if (activeTab === 'caretaker') {
+      fetchCaretakers();
+    }
+  }, [activeTab]);
+
   // Show loading state if no user data
   if (!user || (!user.id && !user._id && !user.userId)) {
     return (
@@ -632,6 +1071,18 @@ const PatientDashboard: React.FC = () => {
             }`}
           >
             <Bell size={18} /> Notifications
+          </button>
+          <button
+            onClick={() => setActiveTab('caretaker')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium w-full transition-colors duration-200 ${
+              activeTab === 'caretaker'
+                ? 'bg-primary-600 text-white'
+                : theme === 'dark'
+                  ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <User size={18} /> Caretaker
           </button>
         </div>
 
@@ -871,6 +1322,7 @@ const PatientDashboard: React.FC = () => {
           </div>
         )}
 
+
         {activeTab === 'medicines' && (
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
             <div className="flex justify-between items-center mb-4">
@@ -884,25 +1336,37 @@ const PatientDashboard: React.FC = () => {
                   </p>
                 )}
               </div>
-              <button
-                onClick={handleRefresh}
-                disabled={loading}
-                className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 text-sm"
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Refreshing...
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    Refresh
-                  </>
-                )}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleRefresh}
+                  disabled={loading}
+                  className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 text-sm"
+                >
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Refreshing...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Refresh
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={handleSyncNotifications}
+                  disabled={loading}
+                  className="flex items-center gap-2 px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50 text-sm"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Sync
+                </button>
+              </div>
             </div>
             {medicines.length === 0 ? (
               <div className="text-center py-8 text-gray-500 dark:text-gray-400">
@@ -915,17 +1379,44 @@ const PatientDashboard: React.FC = () => {
                     <span className="text-sm">Checking for new medications...</span>
                   </div>
                 )}
+                <div className="mt-4 text-xs text-gray-400">
+                  Debug: medicines.length = {medicines.length}, loading = {loading.toString()}
+                </div>
               </div>
             ) : (
               <div className={`space-y-4 transition-opacity duration-300 ${loading ? 'opacity-75' : 'opacity-100'}`}>
-                {medicines.map((medicine, index) => (
-                  <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-blue-50 dark:bg-blue-900/20">
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-semibold text-blue-800 dark:text-blue-200">{medicine.name}</h4>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {medicine.prescribedDate ? new Date(medicine.prescribedDate).toLocaleDateString() : 'Recently prescribed'}
-                      </span>
-                    </div>
+                {medicines.map((medicine, index) => {
+                  // Debug: Log medicine data
+                  console.log(`🔍 PatientDashboard: Rendering medicine ${index}:`, {
+                    name: medicine?.name,
+                    dosage: medicine?.dosage,
+                    frequency: medicine?.frequency,
+                    timing: medicine?.timing,
+                    prescribedBy: medicine?.prescribedBy,
+                    prescribedDate: medicine?.prescribedDate
+                  });
+
+                  // Validate medicine data before rendering
+                  if (!medicine || !medicine.name || !medicine.dosage) {
+                    console.log(`⚠️ PatientDashboard: Invalid medicine at index ${index}:`, medicine);
+                    return (
+                      <div key={index} className="border border-red-200 dark:border-red-600 rounded-lg p-4 bg-red-50 dark:bg-red-900/20">
+                        <div className="text-red-600 dark:text-red-400">
+                          <h4 className="font-semibold">Invalid Medicine Data</h4>
+                          <p className="text-sm">This medicine has missing or corrupted data. Please contact support.</p>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-blue-50 dark:bg-blue-900/20">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-semibold text-blue-800 dark:text-blue-200">{medicine.name}</h4>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {medicine.prescribedDate ? new Date(medicine.prescribedDate).toLocaleDateString() : 'Recently prescribed'}
+                        </span>
+                      </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                       <div>
                         <span className="font-medium text-gray-700 dark:text-gray-300">Dosage:</span>
@@ -941,7 +1432,9 @@ const PatientDashboard: React.FC = () => {
                       </div>
                       <div>
                         <span className="font-medium text-gray-700 dark:text-gray-300">Prescribed by:</span>
-                        <span className="ml-2 text-gray-600 dark:text-gray-400">Dr. {medicine.prescribedBy}</span>
+                        <span className="ml-2 text-gray-600 dark:text-gray-400">
+                          {medicine.prescribedBy ? `Dr. ${medicine.prescribedBy}` : 'Not specified'}
+                        </span>
                       </div>
                     </div>
                     
@@ -1002,6 +1495,22 @@ const PatientDashboard: React.FC = () => {
                             <Bell size={14} className="inline mr-1" />
                             Set Notifications
                           </button>
+                          <button
+                            onClick={() => openEditMedicineModal(medicine, index)}
+                            className="px-3 py-1 bg-blue-500 text-white text-xs rounded-md hover:bg-blue-600 transition-colors"
+                            title="Edit medicine"
+                          >
+                            <User size={14} className="inline mr-1" />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteMedicine(medicine, index)}
+                            className="px-3 py-1 bg-red-500 text-white text-xs rounded-md hover:bg-red-600 transition-colors"
+                            title="Delete medicine"
+                          >
+                            <Trash2 size={14} className="inline mr-1" />
+                            Delete
+                          </button>
                           {(() => {
                             const existingNotification = medicineNotifications.find(
                               notif => notif.medicineName === medicine.name && notif.dosage === medicine.dosage
@@ -1010,11 +1519,11 @@ const PatientDashboard: React.FC = () => {
                               return (
                                 <button
                                   onClick={() => handleDeleteNotification(existingNotification._id)}
-                                  className="px-3 py-1 bg-red-500 text-white text-xs rounded-md hover:bg-red-600 transition-colors"
+                                  className="px-3 py-1 bg-orange-500 text-white text-xs rounded-md hover:bg-orange-600 transition-colors"
                                   title="Delete notification"
                                 >
                                   <Trash2 size={14} className="inline mr-1" />
-                                  Delete
+                                  Delete Notification
                                 </button>
                               );
                             }
@@ -1023,8 +1532,17 @@ const PatientDashboard: React.FC = () => {
                         </div>
                       </div>
                     </div>
+
+                    {/* Dose-Based Adherence Tracker */}
+                    <DoseBasedAdherenceTracker
+                      medicine={medicine}
+                      medicineIndex={index}
+                      patientId={currentUser?.id || currentUser?._id || currentUser?.userId || ''}
+                      onAdherenceUpdate={refreshMedicineData}
+                    />
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -1056,6 +1574,11 @@ const PatientDashboard: React.FC = () => {
                 )}
               </button>
             </div>
+            {(() => {
+              console.log('Patient dashboard - visits state:', visits);
+              console.log('Patient dashboard - visits length:', visits.length);
+              return null;
+            })()}
             {visits.length === 0 ? (
               <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 <Calendar size={48} className="mx-auto mb-4 opacity-50" />
@@ -1076,11 +1599,11 @@ const PatientDashboard: React.FC = () => {
                         </p>
                       </div>
                       <span className={`px-2 py-1 rounded text-xs ${
-                        visit.status === 'active' 
+                        visit.visitType === 'consultation' 
                           ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                          : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                          : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
                       }`}>
-                        {visit.status}
+                        {visit.visitType ? visit.visitType.replace('_', ' ').toUpperCase() : 'VISIT'}
                       </span>
                     </div>
                     
@@ -1155,6 +1678,376 @@ const PatientDashboard: React.FC = () => {
                     </p>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'caretaker' && (
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold flex items-center gap-2">
+                <User size={20} /> Caretaker Management
+              </h3>
+              <button
+                onClick={handleRefresh}
+                className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+              >
+                Refresh
+              </button>
+            </div>
+            
+            {/* Current Caretaker Display */}
+            {currentUser?.selectedCaretaker ? (
+              <div className="mb-6 p-6 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800 rounded-xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                        <User size={24} className="text-green-600 dark:text-green-400" />
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-semibold text-green-800 dark:text-green-200">Your Current Caretaker</h4>
+                        <p className="text-sm text-green-600 dark:text-green-300">
+                          {currentUser.selectedCaretaker.caretakerName || 'Caretaker Name'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-medium text-green-600 dark:text-green-300">Caretaker ID:</span>
+                          <code className="bg-white dark:bg-gray-800 px-3 py-1 rounded text-sm font-mono font-bold text-green-800 dark:text-green-200 border border-green-300 dark:border-green-600">
+                            {currentUser.selectedCaretaker.caretakerUserId || 'ID Not Available'}
+                          </code>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-medium text-green-600 dark:text-green-300">Email:</span>
+                          <span className="text-sm text-green-700 dark:text-green-300">
+                            {currentUser.selectedCaretaker.caretakerEmail || 'N/A'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-medium text-green-600 dark:text-green-300">Assigned:</span>
+                          <span className="text-sm text-green-700 dark:text-green-300">
+                            {currentUser.selectedCaretaker.assignedAt ? new Date(currentUser.selectedCaretaker.assignedAt).toLocaleDateString() : 'Unknown'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-medium text-green-600 dark:text-green-300">Status:</span>
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                            ✓ Active
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-3">
+                    <div className="text-green-400 dark:text-green-500">
+                      <User size={48} className="opacity-60" />
+                    </div>
+                    <button
+                      onClick={() => handleRemoveCaretaker()}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+                    >
+                      Remove Caretaker
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : currentUser?.caretakerApprovals?.some(approval => approval.status === 'pending') ? (
+              <div className="mb-6 space-y-4">
+                <div className="p-6 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-3">Caretaker Approval Requests</h4>
+                      <p className="text-yellow-700 dark:text-yellow-300">
+                        You have pending caretaker approval requests. Review and accept or reject them below.
+                      </p>
+                    </div>
+                    <div className="text-yellow-400 dark:text-yellow-500">
+                      <User size={48} className="opacity-60" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pending Approval Requests */}
+                <div className="space-y-4">
+                  {currentUser.caretakerApprovals
+                    .filter(approval => approval.status === 'pending')
+                    .map((approval, index) => (
+                      <div key={index} className="p-6 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-sm">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                                <User size={24} className="text-blue-600 dark:text-blue-400" />
+                              </div>
+                              <div>
+                                <h5 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                  {approval.caretakerId?.name || 'Unknown Caretaker'}
+                                </h5>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                  Caretaker ID: {approval.caretakerId?.userId || 'N/A'}
+                                </p>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                              <div>
+                                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Email:</span>
+                                <p className="text-sm text-gray-900 dark:text-white">{approval.caretakerId?.email || 'N/A'}</p>
+                              </div>
+                              <div>
+                                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Experience:</span>
+                                <p className="text-sm text-gray-900 dark:text-white">{approval.caretakerId?.experience || 'N/A'} years</p>
+                              </div>
+                              <div>
+                                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Requested:</span>
+                                <p className="text-sm text-gray-900 dark:text-white">{new Date(approval.requestedAt).toLocaleDateString()}</p>
+                              </div>
+                              <div>
+                                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Status:</span>
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                                  ⏳ Pending
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex flex-col gap-2 ml-6">
+                            <button
+                              onClick={() => handleCaretakerApproval(approval.caretakerId._id, 'approved')}
+                              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center gap-2"
+                            >
+                              <span>✓</span> Accept
+                            </button>
+                            <button
+                              onClick={() => handleCaretakerApproval(approval.caretakerId._id, 'rejected')}
+                              className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center gap-2"
+                            >
+                              <span>✗</span> Reject
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+
+                {/* Approval History */}
+                {currentUser.caretakerApprovals.some(approval => approval.status !== 'pending') && (
+                  <div className="mt-8">
+                    <h5 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Approval History</h5>
+                    <div className="space-y-3">
+                      {currentUser.caretakerApprovals
+                        .filter(approval => approval.status !== 'pending')
+                        .map((approval, index) => (
+                          <div key={index} className="p-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center">
+                                  <User size={16} className="text-gray-600 dark:text-gray-400" />
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-900 dark:text-white">
+                                    {approval.caretakerId?.name || 'Unknown Caretaker'}
+                                  </p>
+                                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                                    {approval.caretakerId?.userId || 'N/A'} • {new Date(approval.requestedAt).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                  approval.status === 'approved' 
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                    : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                }`}>
+                                  {approval.status === 'approved' ? '✓ Approved' : '✗ Rejected'}
+                                </span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                  {approval.status === 'approved' && approval.approvedAt 
+                                    ? new Date(approval.approvedAt).toLocaleDateString()
+                                    : approval.rejectedAt 
+                                    ? new Date(approval.rejectedAt).toLocaleDateString()
+                                    : ''
+                                  }
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="mb-6 p-6 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-900/20 dark:to-slate-900/20 border border-gray-200 dark:border-gray-800 rounded-xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                        <User size={24} className="text-gray-600 dark:text-gray-400" />
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200">No Caretaker Assigned</h4>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">You don't have a caretaker yet</p>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-gray-600 dark:text-gray-400">
+                        You don't have a caretaker assigned yet. You can:
+                      </p>
+                      <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1 ml-4">
+                        <li>• Search for available caretakers below</li>
+                        <li>• Wait for a caretaker to send you a request</li>
+                        <li>• Contact support for assistance</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div className="text-gray-400 dark:text-gray-500 ml-4">
+                    <User size={48} className="opacity-60" />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Caretaker Search and Selection */}
+            {!currentUser?.selectedCaretaker && (
+              <div className="space-y-6">
+                {/* Search Bar */}
+                <div>
+                  <label className="block text-sm font-medium mb-3 text-gray-700 dark:text-gray-300">
+                    Search Caretakers
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search by name, ID, or email..."
+                      value={caretakerSearchTerm}
+                      onChange={(e) => handleCaretakerSearch(e.target.value)}
+                      className={`w-full px-4 py-3 pl-10 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
+                        theme === 'dark'
+                          ? 'bg-gray-700 border-gray-600 text-gray-100'
+                          : 'bg-white border-gray-300 text-gray-900'
+                      } transition-colors`}
+                    />
+                    <User size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  </div>
+                </div>
+
+                {/* Caretaker Selection Dropdown */}
+                <div>
+                  <label className="block text-sm font-medium mb-3 text-gray-700 dark:text-gray-300">
+                    Select a Caretaker
+                  </label>
+                  <select
+                    value={currentUser?.selectedCaretaker?.caretakerUserId || ''}
+                    onChange={(e) => handleCaretakerChange(e.target.value)}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-lg ${
+                      theme === 'dark'
+                        ? 'bg-gray-700 border-gray-600 text-gray-100'
+                        : 'bg-white border-gray-300 text-gray-900'
+                    } transition-colors`}
+                    disabled={loadingCaretakers}
+                  >
+                    <option value="">Choose a caretaker...</option>
+                    {availableCaretakers.map((caretaker) => (
+                      <option key={caretaker.userId} value={caretaker.userId}>
+                        {caretaker.name} ({caretaker.userId})
+                      </option>
+                    ))}
+                  </select>
+                  {loadingCaretakers && (
+                    <div className="flex items-center gap-2 mt-2 text-sm text-gray-500 dark:text-gray-400">
+                      <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+                      <span>Searching for caretakers...</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Available Caretakers List */}
+                {availableCaretakers.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold mb-3 text-gray-700 dark:text-gray-300">
+                      Available Caretakers ({availableCaretakers.length})
+                    </h4>
+                    <div className="space-y-3 max-h-60 overflow-y-auto">
+                      {availableCaretakers.map((caretaker) => (
+                        <div key={caretaker.userId} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <h5 className="font-semibold text-gray-900 dark:text-white">{caretaker.name}</h5>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                <strong>ID:</strong> {caretaker.userId}
+                              </p>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                <strong>Experience:</strong> {caretaker.experience} years
+                              </p>
+                              {caretaker.specializations && caretaker.specializations.length > 0 && (
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                  <strong>Specializations:</strong> {caretaker.specializations.join(', ')}
+                                </p>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => handleCaretakerChange(caretaker.userId)}
+                              className="ml-4 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
+                            >
+                              Select
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {loadingCaretakers && availableCaretakers.length === 0 && (
+                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                    <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+                    </div>
+                    <h4 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Searching for caretakers...
+                    </h4>
+                    <p className="text-sm">Please wait while we find available caretakers for you.</p>
+                  </div>
+                )}
+
+                {availableCaretakers.length === 0 && !loadingCaretakers && (
+                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                    <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <User size={32} className="opacity-50" />
+                    </div>
+                    <h4 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {caretakerSearchTerm ? 'No caretakers found' : 'No caretakers available'}
+                    </h4>
+                    {caretakerSearchTerm ? (
+                      <div className="space-y-2">
+                        <p className="text-sm">No caretakers match your search criteria.</p>
+                        <p className="text-sm">Try searching with different terms or contact support.</p>
+                        <button
+                          onClick={() => {
+                            setCaretakerSearchTerm('');
+                            fetchCaretakers('');
+                          }}
+                          className="mt-3 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
+                        >
+                          Clear Search
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <p className="text-sm">There are currently no caretakers available in the system.</p>
+                        <p className="text-sm">Please contact support or try again later.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -1412,9 +2305,127 @@ const PatientDashboard: React.FC = () => {
           </div>
         </div>
       )}
-      
-      {/* Log Toggle Button */}
-      <LogToggle />
+
+      {/* Edit Medicine Modal */}
+      {showEditMedicineModal && editingMedicine && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Edit Medicine: {editingMedicine.name}
+              </h3>
+              <button
+                onClick={() => setShowEditMedicineModal(false)}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Medicine Name
+                </label>
+                <input
+                  type="text"
+                  value={editMedicineForm.name}
+                  onChange={(e) => setEditMedicineForm({ ...editMedicineForm, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  placeholder="Enter medicine name"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Dosage
+                  </label>
+                  <input
+                    type="text"
+                    value={editMedicineForm.dosage}
+                    onChange={(e) => setEditMedicineForm({ ...editMedicineForm, dosage: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    placeholder="e.g., 500mg"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Frequency
+                  </label>
+                  <input
+                    type="text"
+                    value={editMedicineForm.frequency}
+                    onChange={(e) => setEditMedicineForm({ ...editMedicineForm, frequency: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    placeholder="e.g., Twice daily"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Duration
+                </label>
+                <input
+                  type="text"
+                  value={editMedicineForm.duration}
+                  onChange={(e) => setEditMedicineForm({ ...editMedicineForm, duration: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  placeholder="e.g., 7 days, As prescribed"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Food Timing
+                </label>
+                <select
+                  value={editMedicineForm.foodTiming}
+                  onChange={(e) => setEditMedicineForm({ ...editMedicineForm, foodTiming: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="">Select timing</option>
+                  <option value="before">Before food</option>
+                  <option value="after">After food</option>
+                  <option value="with">With food</option>
+                  <option value="empty">Empty stomach</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Instructions
+                </label>
+                <textarea
+                  value={editMedicineForm.instructions}
+                  onChange={(e) => setEditMedicineForm({ ...editMedicineForm, instructions: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  rows={3}
+                  placeholder="Special instructions for taking this medicine"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowEditMedicineModal(false)}
+                className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditMedicine}
+                disabled={loading || !editMedicineForm.name.trim() || !editMedicineForm.dosage.trim()}
+                className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
+              >
+                {loading ? 'Updating...' : 'Update Medicine'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Chatbot */}
       <Chatbot dashboardContext={dashboardContext} />

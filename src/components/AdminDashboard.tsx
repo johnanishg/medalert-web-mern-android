@@ -3,7 +3,6 @@ import { User, Users, Pill, Stethoscope, Tablet, ClipboardList, Cpu, Bell, LogOu
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import ProfileEdit from './ProfileEdit';
-import LogToggle from './LogToggle';
 import Chatbot from './Chatbot';
 import logger from '../services/logger';
 import { DashboardContext } from '../services/geminiService';
@@ -449,6 +448,12 @@ const AdminDashboard = () => {
         case 'employees':
           endpoint = `http://localhost:5001/api/management/update-user/${selectedItem._id}`;
           break;
+        case 'medications':
+          endpoint = `http://localhost:5001/api/admin/medications/${selectedItem._id}`;
+          break;
+        case 'prescriptions':
+          endpoint = `http://localhost:5001/api/admin/prescriptions/${selectedItem._id}`;
+          break;
         default:
           throw new Error('Update not supported for this section');
       }
@@ -480,6 +485,14 @@ const AdminDashboard = () => {
           break;
         case 'employees':
           setEmployees(prev => prev.map(e => e._id === selectedItem._id ? { ...e, ...updateData } : e));
+          break;
+        case 'medications':
+          // Refresh medications data
+          fetchSectionData('medications');
+          break;
+        case 'prescriptions':
+          // Refresh prescriptions data
+          fetchSectionData('prescriptions');
           break;
       }
 
@@ -515,6 +528,12 @@ const AdminDashboard = () => {
         case 'employees':
           endpoint = `http://localhost:5001/api/management/delete-user/${selectedItem._id}`;
           break;
+        case 'medications':
+          endpoint = `http://localhost:5001/api/admin/medications/${selectedItem._id}`;
+          break;
+        case 'prescriptions':
+          endpoint = `http://localhost:5001/api/admin/prescriptions/${selectedItem._id}`;
+          break;
         default:
           throw new Error('Delete not supported for this section');
       }
@@ -544,6 +563,14 @@ const AdminDashboard = () => {
           break;
         case 'employees':
           setEmployees(prev => prev.filter(e => e._id !== selectedItem._id));
+          break;
+        case 'medications':
+          // Refresh medications data
+          fetchSectionData('medications');
+          break;
+        case 'prescriptions':
+          // Refresh prescriptions data
+          fetchSectionData('prescriptions');
           break;
       }
 
@@ -687,6 +714,30 @@ const AdminDashboard = () => {
     } finally {
       setMutationLoading(false);
     }
+  };
+
+  // Handle medicine edit/delete for medications section
+  const handleEditMedicine = async (medicine: any) => {
+    setSelectedItem(medicine);
+    setEditForm({ ...medicine });
+    setShowEditModal(true);
+  };
+
+  const handleDeleteMedicineFromList = async (medicine: any) => {
+    setSelectedItem(medicine);
+    setShowDeleteModal(true);
+  };
+
+  // Handle prescription edit/delete for prescriptions section
+  const handleEditPrescription = async (prescription: any) => {
+    setSelectedItem(prescription);
+    setEditForm({ ...prescription });
+    setShowEditModal(true);
+  };
+
+  const handleDeletePrescriptionFromList = async (prescription: any) => {
+    setSelectedItem(prescription);
+    setShowDeleteModal(true);
   };
 
   const renderSection = () => {
@@ -1156,16 +1207,26 @@ const AdminDashboard = () => {
                       <td className={`py-2 px-4 ${theme === 'dark' ? 'dark:text-white' : 'text-black'}`}>{med.strength}</td>
                       <td className={`py-2 px-4 ${theme === 'dark' ? 'dark:text-white' : 'text-black'}`}>{med.form}</td>
                       <td className="py-2 px-4 flex gap-2">
-                        <button className={`py-1 px-3 rounded font-semibold transition-colors duration-200 text-xs text-center ${
-                          theme === 'dark' 
-                            ? 'bg-primary-400 text-black hover:bg-primary-500' 
-                            : 'bg-primary-700 text-white hover:bg-primary-800'
-                        }`}>Edit</button>
-                        <button className={`py-1 px-3 rounded font-semibold transition-colors duration-200 text-xs text-center ${
-                          theme === 'dark' 
-                            ? 'bg-red-400 text-black hover:bg-red-500' 
-                            : 'bg-red-700 text-white hover:bg-red-800'
-                        }`}>Delete</button>
+                        <button 
+                          onClick={() => handleEditMedicine(med)}
+                          className={`py-1 px-3 rounded font-semibold transition-colors duration-200 text-xs text-center ${
+                            theme === 'dark' 
+                              ? 'bg-primary-400 text-black hover:bg-primary-500' 
+                              : 'bg-primary-700 text-white hover:bg-primary-800'
+                          }`}
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteMedicineFromList(med)}
+                          className={`py-1 px-3 rounded font-semibold transition-colors duration-200 text-xs text-center ${
+                            theme === 'dark' 
+                              ? 'bg-red-400 text-black hover:bg-red-500' 
+                              : 'bg-red-700 text-white hover:bg-red-800'
+                          }`}
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))
@@ -1205,16 +1266,26 @@ const AdminDashboard = () => {
                       <td className={`py-2 px-4 ${theme === 'dark' ? 'dark:text-white' : 'text-black'}`}>{rx.dosage}</td>
                       <td className={`py-2 px-4 ${theme === 'dark' ? 'dark:text-white' : 'text-black'}`}>{rx.active ? 'Yes' : 'No'}</td>
                       <td className="py-2 px-4 flex gap-2">
-                        <button className={`py-1 px-3 rounded font-semibold transition-colors duration-200 text-xs text-center ${
-                          theme === 'dark' 
-                            ? 'bg-primary-400 text-black hover:bg-primary-500' 
-                            : 'bg-primary-700 text-white hover:bg-primary-800'
-                        }`}>Edit</button>
-                        <button className={`py-1 px-3 rounded font-semibold transition-colors duration-200 text-xs text-center ${
-                          theme === 'dark' 
-                            ? 'bg-red-400 text-black hover:bg-red-500' 
-                            : 'bg-red-700 text-white hover:bg-red-800'
-                        }`}>Delete</button>
+                        <button 
+                          onClick={() => handleEditPrescription(rx)}
+                          className={`py-1 px-3 rounded font-semibold transition-colors duration-200 text-xs text-center ${
+                            theme === 'dark' 
+                              ? 'bg-primary-400 text-black hover:bg-primary-500' 
+                              : 'bg-primary-700 text-white hover:bg-primary-800'
+                          }`}
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          onClick={() => handleDeletePrescriptionFromList(rx)}
+                          className={`py-1 px-3 rounded font-semibold transition-colors duration-200 text-xs text-center ${
+                            theme === 'dark' 
+                              ? 'bg-red-400 text-black hover:bg-red-500' 
+                              : 'bg-red-700 text-white hover:bg-red-800'
+                          }`}
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))
@@ -2896,9 +2967,6 @@ const EmployeeEditForm = ({ editForm, setEditForm, theme }: { editForm: any, set
           </label>
         </div>
       </div>
-      
-      {/* Log Toggle Button */}
-      <LogToggle />
       
       {/* Chatbot */}
       <Chatbot dashboardContext={dashboardContext} />

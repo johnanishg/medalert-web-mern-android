@@ -80,17 +80,54 @@ router.post('/login', async (req, res) => {
       { expiresIn: '7d' }
     );
 
+    // Prepare user response based on role
+    let userResponse = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      userId: user.userId,
+      isApproved: user.isApproved || true // Default to true for non-doctors
+    };
+
+    // Add role-specific fields
+    if (role === 'caretaker') {
+      userResponse = {
+        ...userResponse,
+        experience: user.experience,
+        hourlyRate: user.hourlyRate,
+        certifications: user.certifications,
+        specializations: user.specializations,
+        availability: user.availability
+      };
+    } else if (role === 'doctor') {
+      userResponse = {
+        ...userResponse,
+        licenseNumber: user.licenseNumber,
+        specialization: user.specialization,
+        hospital: user.hospital,
+        experience: user.experience,
+        consultationFee: user.consultationFee,
+        qualifications: user.qualifications
+      };
+    } else if (role === 'patient') {
+      userResponse = {
+        ...userResponse,
+        dateOfBirth: user.dateOfBirth,
+        age: user.age,
+        gender: user.gender,
+        phoneNumber: user.phoneNumber,
+        emergencyContact: user.emergencyContact,
+        medicalHistory: user.medicalHistory,
+        allergies: user.allergies,
+        selectedCaretaker: user.selectedCaretaker
+      };
+    }
+
     res.status(200).json({
       message: 'Login successful',
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        userId: user.userId,
-        isApproved: user.isApproved || true // Default to true for non-doctors
-      }
+      user: userResponse
     });
 
   } catch (error) {
@@ -151,6 +188,32 @@ router.post('/register', async (req, res) => {
     // Create new user
     const user = new Model(userData);
     await user.save();
+
+    // Handle caretaker assignment for patients
+    if (role === 'patient' && roleSpecificData.selectedCaretakerId) {
+      try {
+        const caretaker = await Caretaker.findOne({ userId: roleSpecificData.selectedCaretakerId });
+        if (caretaker) {
+          // Update patient's selected caretaker
+          user.selectedCaretaker = {
+            caretakerId: caretaker._id,
+            caretakerUserId: caretaker.userId,
+            assignedAt: new Date()
+          };
+
+          // Add patient to caretaker's assigned patients
+          if (!caretaker.assignedPatients.includes(user._id)) {
+            caretaker.assignedPatients.push(user._id);
+            await caretaker.save();
+          }
+
+          await user.save();
+        }
+      } catch (error) {
+        console.error('Error assigning caretaker during registration:', error);
+        // Don't fail registration if caretaker assignment fails
+      }
+    }
 
     // Generate JWT token
     const token = jwt.sign(

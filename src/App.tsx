@@ -5,7 +5,6 @@ import MainLayout from './layouts/MainLayout';
 import Hero from './components/Hero';
 import Features from './components/Features';
 import Hardware from './components/Hardware';
-import Demo from './components/Demo';
 import Team from './components/Team';
 import PatientDashboard from './components/PatientDashboard';
 import DoctorDashboard from './components/DoctorDashboard';
@@ -24,7 +23,6 @@ function App() {
                 <Hero />
                 <Features />
                 <Hardware />
-                <Demo />
                 <Team />
               </MainLayout>
             } />

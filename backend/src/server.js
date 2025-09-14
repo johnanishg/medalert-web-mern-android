@@ -12,6 +12,7 @@ import diagnosisRoutes from './routes/diagnosisRoutes.js';
 import prescriptionRoutes from './routes/prescriptionRoutes.js';
 import medicineNotificationRoutes from './routes/medicineNotificationRoutes.js';
 import adminMutationRoutes from './routes/adminMutationRoutes.js';
+import adherenceRoutes from './routes/adherenceRoutes.js';
 import { scheduleFollowUpReminders } from './services/followUpScheduler.js';
 import { schedulePatientMedicineReminders } from './services/patientMedicineScheduler.js';
 
@@ -69,6 +70,7 @@ app.use('/api/diagnosis', diagnosisRoutes);
 app.use('/api/prescriptions', prescriptionRoutes);
 app.use('/api/medicine-notifications', medicineNotificationRoutes);
 app.use('/api/admin-mutations', adminMutationRoutes);
+app.use('/api/adherence', adherenceRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
