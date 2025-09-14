@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-50: 255 242 235;
+  --primary-100: 255 229 214;
+  --primary-200: 255 204 179;
+  --primary-300: 255 166 128;
+  --primary-400: 255 115 64;
+  --primary-500: 255 77 0;
+  --primary-600: 230 69 0;
+  --primary-700: 191 58 0;
+  --primary-800: 153 46 0;
+  --primary-900: 128 38 0;
+  --primary-950: 77 23 0;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply antialiased;
+  }
+  
+  .dark {
+    color-scheme: dark;
+  }
+}
+
+.aspect-w-16 {
+  position: relative;
+  padding-bottom: calc(var(--tw-aspect-h) / var(--tw-aspect-w) * 100%);
+}
+
+.aspect-w-16.aspect-h-9 {
+  --tw-aspect-w: 16;
+  --tw-aspect-h: 9;
+}
+
+.aspect-w-16 > * {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}

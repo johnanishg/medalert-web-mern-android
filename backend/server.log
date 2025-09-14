@@ -1,0 +1,5402 @@
+nohup: ignoring input
+✅ Twilio client initialized successfully
+🔑 JWT_SECRET loaded: YES
+🔑 JWT_SECRET value: medalert_j...
+🚀 MedAlert Backend Server running on port 5001
+📊 Database: medalert
+🌐 API Base URL: http://localhost:5001/api
+📅 Follow-up reminder scheduler started (daily at 9 AM)
+⏰ Patient medicine reminder scheduler started (every minute)
+(node:178701) [DEP0170] DeprecationWarning: The URL mongodb://johnanish2874:00090@ac-emjfsr8-shard-00-02.on0nxrx.mongodb.net:27017,ac-emjfsr8-shard-00-00.on0nxrx.mongodb.net:27017,ac-emjfsr8-shard-00-01.on0nxrx.mongodb.net:27017/medalert?authSource=admin&replicaSet=atlas-8kxndo-shard-0&ssl=true is invalid. Future versions of Node.js will throw an error.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+✅ MongoDB connected successfully to medalert database
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+💊 Checking for patient medicine reminders...
+Current time: 19:18, 30 minutes ago: 18:48
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+💊 Checking for patient medicine reminders...
+Current time: 19:19, 30 minutes ago: 18:49
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+💊 Checking for patient medicine reminders...
+Current time: 19:20, 30 minutes ago: 18:50
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+💊 Checking for patient medicine reminders...
+Current time: 19:21, 30 minutes ago: 18:51
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+✅ Removed medicine Dolo (650) from patient's currentMedications
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+💊 Checking for patient medicine reminders...
+Current time: 19:22, 30 minutes ago: 18:52
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+💊 Checking for patient medicine reminders...
+Current time: 19:23, 30 minutes ago: 18:53
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+💊 Checking for patient medicine reminders...
+Current time: 19:24, 30 minutes ago: 18:54
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+💊 Checking for patient medicine reminders...
+Current time: 19:25, 30 minutes ago: 18:55
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+💊 Checking for patient medicine reminders...
+Current time: 19:26, 30 minutes ago: 18:56
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+💊 Checking for patient medicine reminders...
+Current time: 19:27, 30 minutes ago: 18:57
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+✅ Removed medicine Citrezine (10) from patient's currentMedications
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+💊 Checking for patient medicine reminders...
+Current time: 19:28, 30 minutes ago: 18:58
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+💊 Checking for patient medicine reminders...
+Current time: 19:29, 30 minutes ago: 18:59
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+💊 Checking for patient medicine reminders...
+Current time: 19:30, 30 minutes ago: 19:00
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+💊 Checking for patient medicine reminders...
+Current time: 19:31, 30 minutes ago: 19:01
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+💊 Checking for patient medicine reminders...
+Current time: 19:32, 30 minutes ago: 19:02
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+💊 Checking for patient medicine reminders...
+Current time: 19:33, 30 minutes ago: 19:03
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+💊 Checking for patient medicine reminders...
+Current time: 19:34, 30 minutes ago: 19:04
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+💊 Checking for patient medicine reminders...
+Current time: 19:35, 30 minutes ago: 19:05
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+💊 Checking for patient medicine reminders...
+Current time: 19:36, 30 minutes ago: 19:06
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+💊 Checking for patient medicine reminders...
+Current time: 19:37, 30 minutes ago: 19:07
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+💊 Checking for patient medicine reminders...
+Current time: 19:38, 30 minutes ago: 19:08
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+💊 Checking for patient medicine reminders...
+Current time: 19:39, 30 minutes ago: 19:09
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+💊 Checking for patient medicine reminders...
+Current time: 19:40, 30 minutes ago: 19:10
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+💊 Checking for patient medicine reminders...
+Current time: 19:41, 30 minutes ago: 19:11
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+💊 Checking for patient medicine reminders...
+Current time: 19:42, 30 minutes ago: 19:12
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c5336547a011bb8fa3f9a3',
+  email: 'johnanish2874@gmail.com',
+  role: 'patient',
+  name: 'John Anish G',
+  iat: 1757765009,
+  exp: 1758369809
+}
+💊 Checking for patient medicine reminders...
+Current time: 19:43, 30 minutes ago: 19:13
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c532cb47a011bb8fa3f995',
+  email: 'doc1@test.com',
+  role: 'doctor',
+  name: 'Doctor 1',
+  iat: 1757772761,
+  exp: 1758377561
+}
+JWT_SECRET in middleware: medalert_jwt_secret_key_2025_secure_random_string
+Token to verify: eyJhbGciOiJIUzI1NiIs...
+Token decoded successfully: {
+  userId: '68c532cb47a011bb8fa3f995',
+  email: 'doc1@test.com',
+  role: 'doctor',
+  name: 'Doctor 1',
+  iat: 1757772761,
+  exp: 1758377561
+}
+💊 Checking for patient medicine reminders...
+Current time: 19:44, 30 minutes ago: 19:14
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 19:45, 30 minutes ago: 19:15
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 19:46, 30 minutes ago: 19:16
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 19:47, 30 minutes ago: 19:17
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 19:48, 30 minutes ago: 19:18
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 19:49, 30 minutes ago: 19:19
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 19:50, 30 minutes ago: 19:20
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 19:51, 30 minutes ago: 19:21
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 19:52, 30 minutes ago: 19:22
+💊 Checking for patient medicine reminders...
+Current time: 19:53, 30 minutes ago: 19:23
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 19:54, 30 minutes ago: 19:24
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 19:55, 30 minutes ago: 19:25
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 19:56, 30 minutes ago: 19:26
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 19:57, 30 minutes ago: 19:27
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 19:58, 30 minutes ago: 19:28
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 19:59, 30 minutes ago: 19:29
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:00, 30 minutes ago: 19:30
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:01, 30 minutes ago: 19:31
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:02, 30 minutes ago: 19:32
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:03, 30 minutes ago: 19:33
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:04, 30 minutes ago: 19:34
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:05, 30 minutes ago: 19:35
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:06, 30 minutes ago: 19:36
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:07, 30 minutes ago: 19:37
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:08, 30 minutes ago: 19:38
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:09, 30 minutes ago: 19:39
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:10, 30 minutes ago: 19:40
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:11, 30 minutes ago: 19:41
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:12, 30 minutes ago: 19:42
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:13, 30 minutes ago: 19:43
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:14, 30 minutes ago: 19:44
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:15, 30 minutes ago: 19:45
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:16, 30 minutes ago: 19:46
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:17, 30 minutes ago: 19:47
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:18, 30 minutes ago: 19:48
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:19, 30 minutes ago: 19:49
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:20, 30 minutes ago: 19:50
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:21, 30 minutes ago: 19:51
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:22, 30 minutes ago: 19:52
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:23, 30 minutes ago: 19:53
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:24, 30 minutes ago: 19:54
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:25, 30 minutes ago: 19:55
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:26, 30 minutes ago: 19:56
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:27, 30 minutes ago: 19:57
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:28, 30 minutes ago: 19:58
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:29, 30 minutes ago: 19:59
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:30, 30 minutes ago: 20:00
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:31, 30 minutes ago: 20:01
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:32, 30 minutes ago: 20:02
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
+💊 Checking for patient medicine reminders...
+Current time: 20:33, 30 minutes ago: 20:03
+💊 Medicine reminder check completed: 0 exact reminders, 0 advance reminders sent
