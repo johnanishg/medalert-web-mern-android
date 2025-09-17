@@ -115,7 +115,35 @@ const prescriptionSchema = new mongoose.Schema({
   },
   followUpNotificationDate: {
     type: Date
-  }
+  },
+  
+  // Edit tracking
+  lastEditedBy: {
+    type: String
+  },
+  lastEditedAt: {
+    type: Date
+  },
+  editHistory: [{
+    medicines: [{
+      name: String,
+      dosage: String,
+      frequency: String,
+      duration: String,
+      instructions: String,
+      timing: [String],
+      foodTiming: String
+    }],
+    diagnosis: String,
+    symptoms: [String],
+    treatment: String,
+    notes: String,
+    followUpDate: Date,
+    followUpRequired: Boolean,
+    followUpNotes: String,
+    visitType: String,
+    updatedAt: Date
+  }]
 }, {
   timestamps: true
 });

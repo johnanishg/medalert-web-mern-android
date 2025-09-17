@@ -345,7 +345,7 @@ const DoseBasedAdherenceTracker: React.FC<DoseBasedAdherenceTrackerProps> = ({
         medicineIndex
       });
       
-      const response = await fetch(`http://localhost:5001/api/adherence/record/${patientId}/${medicineIndex}`, {
+      const response = await fetch(`http://localhost:5001/api/adherence/record/${medicineIndex}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

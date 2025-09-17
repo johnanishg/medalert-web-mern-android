@@ -159,3 +159,45 @@ test-results.xml
 
 # Local development
 .local/
+
+# Android specific
+android-app/build/
+android-app/.gradle/
+android-app/caches/
+android-app/daemon/
+android-app/native/
+android-app/wrapper/dists/
+android-app/app/build/
+android-app/.idea/
+android-app/local.properties
+android-app/*.iml
+android-app/app/*.iml
+android-app/gradle.properties
+android-app/gradlew
+android-app/gradlew.bat
+android-app/gradle/wrapper/gradle-wrapper.jar
+android-app/gradle/wrapper/gradle-wrapper.properties
+android-app/.gradle/
+android-app/build/
+android-app/captures/
+android-app/.externalNativeBuild/
+android-app/.cxx/
+android-app/local.properties
+android-app/keystore.properties
+android-app/release/
+android-app/debug/
+android-app/profile/
+android-app/test/
+android-app/androidTest/
+android-app/.gradle/
+android-app/build/
+android-app/captures/
+android-app/.externalNativeBuild/
+android-app/.cxx/
+android-app/local.properties
+android-app/keystore.properties
+android-app/release/
+android-app/debug/
+android-app/profile/
+android-app/test/
+android-app/androidTest/

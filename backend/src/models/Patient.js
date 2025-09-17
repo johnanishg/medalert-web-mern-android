@@ -41,7 +41,17 @@ const patientSchema = new mongoose.Schema({
     foodTiming: String, // 'Before', 'After', 'With'
     prescribedBy: String,
     prescribedDate: String,
-    prescriptionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Prescription' }
+    prescriptionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Prescription' },
+    scheduleExplanation: String, // Explanation of how the schedule was generated
+    smartScheduled: { type: Boolean, default: false }, // Whether schedule was auto-generated
+    adherence: [{
+      timestamp: { type: Date, default: Date.now },
+      taken: { type: Boolean, required: true },
+      notes: String,
+      recordedBy: String
+    }],
+    lastEditedBy: String,
+    lastEditedAt: Date
   }],
   
   // Visit history

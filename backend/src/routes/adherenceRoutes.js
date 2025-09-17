@@ -5,21 +5,18 @@ import { verifyToken } from '../middleware/auth.js';
 const router = express.Router();
 
 // Record medicine adherence (taken/not taken)
-router.post('/record/:patientId/:medicineIndex', verifyToken, async (req, res) => {
+router.post('/record/:medicineIndex', verifyToken, async (req, res) => {
   try {
-    const { patientId, medicineIndex } = req.params;
+    const { medicineIndex } = req.params;
     const { taken, timestamp, notes } = req.body;
 
-    // Verify the user is the patient or has access
-    if (req.user.userId !== patientId && req.user.role !== 'doctor' && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Access denied' });
+    // Verify the user is a patient
+    if (req.user.role !== 'patient') {
+      return res.status(403).json({ message: 'Access denied. Only patients can record adherence.' });
     }
 
-    // Find the patient by ID or userId
-    let patient = await Patient.findById(patientId);
-    if (!patient) {
-      patient = await Patient.findOne({ userId: patientId });
-    }
+    // Find the patient - req.user.userId is the MongoDB _id
+    const patient = await Patient.findById(req.user.userId);
     if (!patient) {
       return res.status(404).json({ message: 'Patient not found' });
     }
@@ -68,20 +65,17 @@ router.post('/record/:patientId/:medicineIndex', verifyToken, async (req, res) =
 });
 
 // Get adherence history for a medicine
-router.get('/history/:patientId/:medicineIndex', verifyToken, async (req, res) => {
+router.get('/history/:medicineIndex', verifyToken, async (req, res) => {
   try {
-    const { patientId, medicineIndex } = req.params;
+    const { medicineIndex } = req.params;
 
-    // Verify access
-    if (req.user.userId !== patientId && req.user.role !== 'doctor' && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Access denied' });
+    // Verify the user is a patient
+    if (req.user.role !== 'patient') {
+      return res.status(403).json({ message: 'Access denied. Only patients can view adherence history.' });
     }
 
-    // Find the patient by ID or userId
-    let patient = await Patient.findById(patientId);
-    if (!patient) {
-      patient = await Patient.findOne({ userId: patientId });
-    }
+    // Find the patient - req.user.userId is the MongoDB _id
+    const patient = await Patient.findById(req.user.userId);
     if (!patient) {
       return res.status(404).json({ message: 'Patient not found' });
     }
@@ -119,11 +113,8 @@ router.get('/patient/:patientId', verifyToken, async (req, res) => {
       return res.status(403).json({ message: 'Access denied. Doctor or Admin privileges required.' });
     }
 
-    // Find the patient by ID or userId
-    let patient = await Patient.findById(patientId);
-    if (!patient) {
-      patient = await Patient.findOne({ userId: patientId });
-    }
+    // Find the patient - req.user.userId is the MongoDB _id
+    const patient = await Patient.findById(req.user.userId);
     if (!patient) {
       return res.status(404).json({ message: 'Patient not found' });
     }

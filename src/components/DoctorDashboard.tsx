@@ -38,6 +38,15 @@ const DoctorDashboard: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [showMedicineModal, setShowMedicineModal] = useState(false);
   const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
+  const [showPrescriptionHistory, setShowPrescriptionHistory] = useState(false);
+  const [prescriptions, setPrescriptions] = useState<any[]>([]);
+  const [editingPrescription, setEditingPrescription] = useState<any>(null);
+  const [showEditPrescriptionModal, setShowEditPrescriptionModal] = useState(false);
+  const [patientSearchId, setPatientSearchId] = useState('');
+  const [searchedPatient, setSearchedPatient] = useState<any>(null);
+  const [patientPrescriptions, setPatientPrescriptions] = useState<any[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState('');
 
   // Dashboard context for chatbot
   const dashboardContext: DashboardContext = {
@@ -51,8 +60,8 @@ const DoctorDashboard: React.FC = () => {
     availableFeatures: [
       'View Profile',
       'Search Patients',
-      'Add Medicines',
-      'Create Prescriptions',
+      'Add Single Medicine',
+      'Create Full Prescription',
       'View Patient History',
       'Manage Patient Data'
     ]
@@ -93,6 +102,8 @@ const DoctorDashboard: React.FC = () => {
         const parsedUser = JSON.parse(userData);
         setCurrentUser(parsedUser);
         logger.info('DoctorDashboard initialized', { user: parsedUser }, 'DoctorDashboard', 'low');
+        // Fetch prescriptions when user is loaded
+        fetchPrescriptions(parsedUser.id || parsedUser._id || parsedUser.userId);
       } else {
         logger.warning('No user data found in localStorage', {}, 'DoctorDashboard', 'medium');
       }
@@ -100,6 +111,154 @@ const DoctorDashboard: React.FC = () => {
       logger.error('Error parsing user data from localStorage', { error }, 'DoctorDashboard', 'high');
     }
   }, []);
+
+  // Fetch prescriptions for the current doctor
+  const fetchPrescriptions = async (doctorId: string) => {
+    try {
+      const response = await fetch(`http://localhost:5001/api/prescriptions/doctor/${doctorId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setPrescriptions(data.prescriptions || []);
+        logger.info('Prescriptions fetched successfully', { count: data.prescriptions?.length || 0 }, 'DoctorDashboard', 'low');
+      } else {
+        console.error('Failed to fetch prescriptions:', response.status);
+      }
+    } catch (error) {
+      console.error('Error fetching prescriptions:', error);
+      logger.error('Error fetching prescriptions', { error }, 'DoctorDashboard', 'medium');
+    }
+  };
+
+  // Edit prescription function
+  const handleEditPrescription = (prescription: any) => {
+    setEditingPrescription(prescription);
+    setPrescriptionForm({
+      patientId: prescription.patientId._id || prescription.patientId,
+      medicines: prescription.medicines,
+      diagnosis: prescription.diagnosis,
+      notes: prescription.notes,
+      followUpDate: prescription.followUpDate ? new Date(prescription.followUpDate).toISOString().split('T')[0] : ''
+    });
+    setPrescriptionMedicines(prescription.medicines);
+    setShowEditPrescriptionModal(true);
+  };
+
+  // Update prescription function
+  const handleUpdatePrescription = async () => {
+    if (!editingPrescription) return;
+
+    try {
+      setLoading(true);
+      const response = await fetch(`http://localhost:5001/api/prescriptions/update/${editingPrescription._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          medicines: prescriptionMedicines,
+          diagnosis: prescriptionForm.diagnosis,
+          notes: prescriptionForm.notes,
+          followUpDate: prescriptionForm.followUpDate
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        logger.success('Prescription updated successfully', { prescriptionId: editingPrescription._id }, 'DoctorDashboard', 'medium');
+        
+        // Refresh prescriptions list
+        if (currentUser) {
+          await fetchPrescriptions(currentUser.id || currentUser._id || currentUser.userId);
+        }
+        
+        // Refresh patient prescriptions if we're in search mode
+        if (searchedPatient) {
+          await searchPatientPrescriptions(patientSearchId);
+        }
+        
+        setShowEditPrescriptionModal(false);
+        setEditingPrescription(null);
+        alert('Prescription updated successfully!');
+      } else {
+        const errorData = await response.json();
+        logger.error('Failed to update prescription', { error: errorData.message }, 'DoctorDashboard', 'high');
+        alert(errorData.message || 'Failed to update prescription');
+      }
+    } catch (error) {
+      console.error('Error updating prescription:', error);
+      logger.error('Error updating prescription', { error }, 'DoctorDashboard', 'high');
+      alert('Failed to update prescription');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Search patient prescriptions function
+  const searchPatientPrescriptions = async (patientId: string) => {
+    if (!patientId.trim() || !currentUser) return;
+
+    try {
+      setSearchLoading(true);
+      setSearchError('');
+      
+      const doctorId = currentUser.id || currentUser._id || currentUser.userId;
+      const response = await fetch(`http://localhost:5001/api/prescriptions/patient/${patientId}/doctor/${doctorId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setSearchedPatient(data.patient);
+        setPatientPrescriptions(data.prescriptions || []);
+        logger.info('Patient prescriptions found', { 
+          patientId, 
+          patientName: data.patient.name, 
+          prescriptionCount: data.prescriptions?.length || 0 
+        }, 'DoctorDashboard', 'low');
+      } else {
+        const errorData = await response.json();
+        setSearchError(errorData.message || 'Patient not found or no prescriptions found');
+        setSearchedPatient(null);
+        setPatientPrescriptions([]);
+        logger.warning('Patient search failed', { patientId, error: errorData.message }, 'DoctorDashboard', 'medium');
+      }
+    } catch (error) {
+      console.error('Error searching patient prescriptions:', error);
+      setSearchError('Failed to search patient prescriptions');
+      setSearchedPatient(null);
+      setPatientPrescriptions([]);
+      logger.error('Error searching patient prescriptions', { error }, 'DoctorDashboard', 'medium');
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // Handle patient search
+  const handlePatientSearch = () => {
+    if (patientSearchId.trim()) {
+      searchPatientPrescriptions(patientSearchId.trim());
+    }
+  };
+
+  // Clear patient search
+  const clearPatientSearch = () => {
+    setPatientSearchId('');
+    setSearchedPatient(null);
+    setPatientPrescriptions([]);
+    setSearchError('');
+  };
+
+  // Clear manage patients search
+  const clearManagePatientSearch = () => {
+    setSearchId('');
+    setSelectedPatient(null);
+    setPatientPrescriptions([]);
+    setAddError('');
+  };
 
   // Real patient data (empty for now, will be fetched from backend)
   const [patientHistory, setPatientHistory] = useState<any[]>([]);
@@ -114,7 +273,7 @@ const DoctorDashboard: React.FC = () => {
 
   const checkTokenValidity = () => {
     if (!token) {
-      console.log('No token found in localStorage');
+      console.log("No token found in localStorage");
       return;
     }
     
@@ -246,6 +405,10 @@ const DoctorDashboard: React.FC = () => {
         console.log('Patient userId:', data.patient.userId);
         // Fetch diagnosis history for the patient
         fetchDiagnosisHistory(data.patient._id);
+        // Fetch patient's prescriptions from this doctor
+        if (currentUser) {
+          await searchPatientPrescriptions(data.patient.userId);
+        }
         // TODO: Fetch patient history data
         setPatientHistory([]);
       } else {
@@ -385,7 +548,7 @@ const DoctorDashboard: React.FC = () => {
       instructions: '',
       timing: [] as string[],
       foodTiming: '',
-      durationType: 'days',
+      durationType: 'dateRange',
       startDate: '',
       endDate: '',
       totalTablets: '',
@@ -398,6 +561,46 @@ const DoctorDashboard: React.FC = () => {
     const updatedMedicines = [...prescriptionMedicines];
     updatedMedicines[index] = { ...updatedMedicines[index], [field]: value };
     setPrescriptionMedicines(updatedMedicines);
+  };
+
+  // Helper function for timing changes in prescription medicines
+  const handlePrescriptionTimingChange = (index: number, timing: string) => {
+    const medicine = prescriptionMedicines[index];
+    const currentTiming = medicine.timing || [];
+    const newTiming = currentTiming.includes(timing)
+      ? currentTiming.filter(t => t !== timing)
+      : [...currentTiming, timing];
+    updatePrescriptionMedicine(index, 'timing', newTiming);
+  };
+
+  // Helper function to calculate duration for prescription medicines
+  const calculatePrescriptionDuration = (medicine: any) => {
+    // If manual duration is provided, use it
+    if (medicine.duration && medicine.duration.trim() !== '') {
+      return medicine.duration;
+    }
+    
+    // Calculate from date range
+    if (medicine.durationType === 'dateRange' && medicine.startDate && medicine.endDate) {
+      const start = new Date(medicine.startDate);
+      const end = new Date(medicine.endDate);
+      const diffTime = Math.abs(end.getTime() - start.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+      return `${diffDays} days`;
+    } 
+    
+    // Calculate from tablet count
+    if (medicine.durationType === 'tabletCount' && medicine.totalTablets && medicine.tabletsPerDay) {
+      const totalTablets = parseInt(medicine.totalTablets);
+      const tabletsPerDay = parseInt(medicine.tabletsPerDay);
+      if (totalTablets && tabletsPerDay) {
+        const days = Math.ceil(totalTablets / tabletsPerDay);
+        return `${days} days (${totalTablets} tablets, ${tabletsPerDay} per day)`;
+      }
+    }
+    
+    // Fallback to a default duration
+    return 'As prescribed';
   };
 
   const deletePrescriptionMedicine = (index: number) => {
@@ -453,15 +656,33 @@ const DoctorDashboard: React.FC = () => {
         setAddError(`Please fill all required fields for medicine ${i + 1}`);
         return;
       }
+      
+      // Duration will be automatically calculated or set to default, so no need for strict validation
+      // The calculatePrescriptionDuration function will handle all cases
     }
 
     try {
       setLoading(true);
       setAddError('');
 
+      // Process medicines to ensure duration field is properly set
+      const processedMedicines = prescriptionMedicines.map(medicine => {
+        let duration = medicine.duration;
+        
+        // If duration is empty, calculate it from the duration type fields
+        if (!duration || duration.trim() === '') {
+          duration = calculatePrescriptionDuration(medicine);
+        }
+        
+        return {
+          ...medicine,
+          duration: duration
+        };
+      });
+
       const prescriptionData = {
         patientId: selectedPatient._id,
-        medicines: prescriptionMedicines, // Use prescription medicines
+        medicines: processedMedicines, // Use processed medicines with proper duration
         diagnosis: prescriptionForm.diagnosis,
         symptoms: [], // Can be enhanced later
         treatment: prescriptionForm.notes,
@@ -727,6 +948,14 @@ const DoctorDashboard: React.FC = () => {
                     'Search'
                   )}
                 </button>
+                {selectedPatient && (
+                  <button
+                    onClick={clearManagePatientSearch}
+                    className="px-4 py-2 rounded font-semibold transition-colors duration-200 bg-gray-500 text-white hover:bg-gray-600 flex items-center gap-2"
+                  >
+                    Clear
+                  </button>
+                )}
               </div>
               {addError && (
                 <div className="bg-red-100 dark:bg-red-900 border border-red-400 text-red-700 dark:text-red-200 px-4 py-3 rounded mt-2">
@@ -1117,45 +1346,81 @@ const DoctorDashboard: React.FC = () => {
                 {/* Medicine and Prescription Management */}
                 <div className="mt-6">
                   <h4 className="text-lg font-medium text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-600 pb-2 mb-4">
-                    Medical Management
+                    Medicine Management
                   </h4>
-                  <div className="flex gap-4">
-                    <button
-                      onClick={() => setShowMedicineModal(true)}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                    >
-                      <Pill size={16} />
-                      Add Medicine
-                    </button>
-                    <button
-                      onClick={() => {
-                        // Initialize prescription medicines with current patient medications
-                        if (selectedPatient && selectedPatient.currentMedications) {
-                          const existingMedicines = selectedPatient.currentMedications.map((med: any) => ({
-                            name: med.name || '',
-                            dosage: med.dosage || '',
-                            frequency: med.frequency || '',
-                            duration: med.duration || '',
-                            instructions: med.instructions || '',
-                            timing: med.timing || [],
-                            foodTiming: med.foodTiming || '',
-                            durationType: 'days',
-                            startDate: '',
-                            endDate: '',
-                            totalTablets: '',
-                            tabletsPerDay: ''
-                          }));
-                          setPrescriptionMedicines(existingMedicines);
-                        } else {
-                          setPrescriptionMedicines([]);
-                        }
-                        setShowPrescriptionModal(true);
-                      }}
-                      className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                    >
-                      <ClipboardList size={16} />
-                      Create Prescription
-                    </button>
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                            <Pill size={20} className="text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <div>
+                            <h5 className="font-medium text-gray-900 dark:text-gray-100">Single Medicine</h5>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Quick addition</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setShowMedicineModal(true)}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                        >
+                          <Pill size={16} />
+                          Add Single Medicine
+                        </button>
+                      </div>
+                      
+                      <div className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                            <ClipboardList size={20} className="text-green-600 dark:text-green-400" />
+                          </div>
+                          <div>
+                            <h5 className="font-medium text-gray-900 dark:text-gray-100">Full Prescription</h5>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Complete treatment</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            // Initialize prescription medicines with current patient medications
+                            if (selectedPatient && selectedPatient.currentMedications) {
+                              const existingMedicines = selectedPatient.currentMedications.map((med: any) => ({
+                                name: med.name || '',
+                                dosage: med.dosage || '',
+                                frequency: med.frequency || '',
+                                duration: med.duration || '',
+                                instructions: med.instructions || '',
+                                timing: med.timing || [],
+                                foodTiming: med.foodTiming || '',
+                                durationType: 'days',
+                                startDate: '',
+                                endDate: '',
+                                totalTablets: '',
+                                tabletsPerDay: ''
+                              }));
+                              setPrescriptionMedicines(existingMedicines);
+                            } else {
+                              setPrescriptionMedicines([]);
+                            }
+                            setPrescriptionForm({
+                              ...prescriptionForm,
+                              patientId: selectedPatient._id,
+                              diagnosis: '',
+                              notes: '',
+                              followUpDate: ''
+                            });
+                            setShowPrescriptionModal(true);
+                          }}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                        >
+                          <ClipboardList size={16} />
+                          Create Full Prescription
+                        </button>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 space-y-1">
+                      <p><strong>Add Single Medicine:</strong> Add one medicine directly to patient's current medications with smart scheduling.</p>
+                      <p><strong>Create Full Prescription:</strong> Create a complete prescription with multiple medicines, diagnosis, and follow-up appointment.</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1194,6 +1459,103 @@ const DoctorDashboard: React.FC = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Prescription Search and Edit Section - Only shown when patient is selected */}
+            {selectedPatient && (
+              <div className="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+                <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <ClipboardList size={20} /> 
+                  Prescriptions for {selectedPatient.name}
+                </h3>
+                
+                <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <div className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
+                    <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                    <span className="text-sm font-medium">Showing prescriptions for this patient only</span>
+                  </div>
+                </div>
+
+                {(() => {
+                  // Use the patientPrescriptions state which should be populated when patient is searched
+                  const displayPrescriptions = patientPrescriptions;
+                  
+                  if (displayPrescriptions.length === 0) {
+                    return (
+                      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                        <ClipboardList size={48} className="mx-auto mb-4 opacity-50" />
+                        <p>No prescriptions found for {selectedPatient.name}</p>
+                        <p className="text-sm mt-2">This patient has no prescriptions from you</p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="space-y-4">
+                      {displayPrescriptions.map((prescription, index) => (
+                        <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700">
+                          <div className="flex justify-between items-start mb-3">
+                            <div>
+                              <h4 className="font-semibold text-gray-900 dark:text-white">
+                                Prescription from {new Date(prescription.visitDate).toLocaleDateString()}
+                              </h4>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                {new Date(prescription.visitDate).toLocaleDateString()}
+                              </p>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Diagnosis: {prescription.diagnosis}
+                              </p>
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleEditPrescription(prescription)}
+                                className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                              >
+                                Edit
+                              </button>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <div>
+                              <span className="font-medium text-gray-700 dark:text-gray-300">Medicines:</span>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {prescription.medicines.map((medicine: any, medIndex: number) => (
+                                  <span key={medIndex} className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded">
+                                    {medicine.name} ({medicine.dosage})
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                            
+                            {prescription.notes && (
+                              <div>
+                                <span className="font-medium text-gray-700 dark:text-gray-300">Notes:</span>
+                                <p className="text-gray-600 dark:text-gray-400 text-sm">{prescription.notes}</p>
+                              </div>
+                            )}
+                            
+                            {prescription.followUpDate && (
+                              <div>
+                                <span className="font-medium text-gray-700 dark:text-gray-300">Follow-up:</span>
+                                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                                  {new Date(prescription.followUpDate).toLocaleDateString()}
+                                </p>
+                              </div>
+                            )}
+                            
+                            {prescription.lastEditedAt && (
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                                Last edited: {new Date(prescription.lastEditedAt).toLocaleString()} by {prescription.lastEditedBy}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
           </>
         )}
         {activeTab === 'register' && (
@@ -1250,6 +1612,7 @@ const DoctorDashboard: React.FC = () => {
           </div>
         )}
 
+
       </main>
 
       {/* Add Medicine Modal */}
@@ -1257,7 +1620,7 @@ const DoctorDashboard: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold">Add Medicine</h3>
+              <h3 className="text-xl font-bold">Add Single Medicine</h3>
               <button
                 onClick={() => setShowMedicineModal(false)}
                 className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -1441,7 +1804,7 @@ const DoctorDashboard: React.FC = () => {
                 disabled={loading}
                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
               >
-                {loading ? 'Adding...' : 'Add Medicine'}
+                {loading ? 'Adding...' : 'Add Single Medicine'}
               </button>
             </div>
           </div>
@@ -1453,7 +1816,7 @@ const DoctorDashboard: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold">Create Prescription</h3>
+              <h3 className="text-xl font-bold">Create Full Prescription</h3>
               <button
                 onClick={() => setShowPrescriptionModal(false)}
                 className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -1500,14 +1863,14 @@ const DoctorDashboard: React.FC = () => {
                       onClick={addPrescriptionMedicine}
                       className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
                     >
-                      + Add Medicine
+                      + Add Medicine to Prescription
                     </button>
                   </div>
                 </div>
                 
                 {prescriptionMedicines.length === 0 ? (
                   <div className="text-gray-500 text-sm italic p-4 border border-gray-300 dark:border-gray-600 rounded-md">
-                    No medicines added yet. Click "Add Medicine" to start.
+                    No medicines added yet. Click "Add Medicine to Prescription" to start.
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -1540,63 +1903,198 @@ const DoctorDashboard: React.FC = () => {
                           </div>
                         </div>
                         
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-4">
+                          {/* Basic Information */}
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-xs font-medium mb-1">Medicine Name *</label>
+                              <input
+                                type="text"
+                                value={medicine.name}
+                                onChange={(e) => updatePrescriptionMedicine(index, 'name', e.target.value)}
+                                disabled={editingMedicineIndex !== index}
+                                className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600"
+                                placeholder="e.g., Paracetamol"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium mb-1">Dosage *</label>
+                              <input
+                                type="text"
+                                value={medicine.dosage}
+                                onChange={(e) => updatePrescriptionMedicine(index, 'dosage', e.target.value)}
+                                disabled={editingMedicineIndex !== index}
+                                className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600"
+                                placeholder="e.g., 500mg"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium mb-1">Frequency *</label>
+                              <input
+                                type="text"
+                                value={medicine.frequency}
+                                onChange={(e) => updatePrescriptionMedicine(index, 'frequency', e.target.value)}
+                                disabled={editingMedicineIndex !== index}
+                                className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600"
+                                placeholder="e.g., Twice daily"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium mb-1">Food Timing</label>
+                              <select
+                                value={medicine.foodTiming}
+                                onChange={(e) => updatePrescriptionMedicine(index, 'foodTiming', e.target.value)}
+                                disabled={editingMedicineIndex !== index}
+                                className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600"
+                              >
+                                <option value="">Select timing</option>
+                                <option value="Before">Before food</option>
+                                <option value="After">After food</option>
+                                <option value="With">With food</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium mb-1">Duration (Manual)</label>
+                              <input
+                                type="text"
+                                value={medicine.duration}
+                                onChange={(e) => updatePrescriptionMedicine(index, 'duration', e.target.value)}
+                                disabled={editingMedicineIndex !== index}
+                                className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600"
+                                placeholder="e.g., 7 days, 2 weeks"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Timing Selection */}
                           <div>
-                            <label className="block text-xs font-medium mb-1">Medicine Name *</label>
-                            <input
-                              type="text"
-                              value={medicine.name}
-                              onChange={(e) => updatePrescriptionMedicine(index, 'name', e.target.value)}
+                            <label className="block text-xs font-medium mb-2">When to take</label>
+                            <div className="grid grid-cols-3 gap-2">
+                              {['morning', 'afternoon', 'night'].map((timing) => (
+                                <button
+                                  key={timing}
+                                  type="button"
+                                  onClick={() => handlePrescriptionTimingChange(index, timing)}
+                                  disabled={editingMedicineIndex !== index}
+                                  className={`px-2 py-1 rounded text-xs font-medium transition-colors disabled:opacity-50 ${
+                                    (medicine.timing || []).includes(timing)
+                                      ? 'bg-blue-500 text-white border-blue-500'
+                                      : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                                  }`}
+                                >
+                                  {timing.charAt(0).toUpperCase() + timing.slice(1)}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Duration Type Selection */}
+                          <div>
+                            <label className="block text-xs font-medium mb-2">Duration Type</label>
+                            <div className="flex gap-4 mb-2">
+                              <label className="flex items-center text-xs">
+                                <input
+                                  type="radio"
+                                  name={`durationType-${index}`}
+                                  value="dateRange"
+                                  checked={medicine.durationType === 'dateRange'}
+                                  onChange={(e) => updatePrescriptionMedicine(index, 'durationType', e.target.value)}
+                                  disabled={editingMedicineIndex !== index}
+                                  className="mr-1"
+                                />
+                                Date Range
+                              </label>
+                              <label className="flex items-center text-xs">
+                                <input
+                                  type="radio"
+                                  name={`durationType-${index}`}
+                                  value="tabletCount"
+                                  checked={medicine.durationType === 'tabletCount'}
+                                  onChange={(e) => updatePrescriptionMedicine(index, 'durationType', e.target.value)}
+                                  disabled={editingMedicineIndex !== index}
+                                  className="mr-1"
+                                />
+                                Tablet Count
+                              </label>
+                            </div>
+
+                            {/* Date Range */}
+                            {medicine.durationType === 'dateRange' && (
+                              <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                  <label className="block text-xs font-medium mb-1">Start Date</label>
+                                  <input
+                                    type="date"
+                                    value={medicine.startDate}
+                                    onChange={(e) => updatePrescriptionMedicine(index, 'startDate', e.target.value)}
+                                    disabled={editingMedicineIndex !== index}
+                                    className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium mb-1">End Date</label>
+                                  <input
+                                    type="date"
+                                    value={medicine.endDate}
+                                    onChange={(e) => updatePrescriptionMedicine(index, 'endDate', e.target.value)}
+                                    disabled={editingMedicineIndex !== index}
+                                    className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600"
+                                  />
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Tablet Count */}
+                            {medicine.durationType === 'tabletCount' && (
+                              <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                  <label className="block text-xs font-medium mb-1">Total Tablets</label>
+                                  <input
+                                    type="number"
+                                    value={medicine.totalTablets}
+                                    onChange={(e) => updatePrescriptionMedicine(index, 'totalTablets', e.target.value)}
+                                    disabled={editingMedicineIndex !== index}
+                                    className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600"
+                                    placeholder="e.g., 30"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium mb-1">Tablets per Day</label>
+                                  <input
+                                    type="number"
+                                    value={medicine.tabletsPerDay}
+                                    onChange={(e) => updatePrescriptionMedicine(index, 'tabletsPerDay', e.target.value)}
+                                    disabled={editingMedicineIndex !== index}
+                                    className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600"
+                                    placeholder="e.g., 2"
+                                  />
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Duration Preview */}
+                            {(medicine.durationType === 'dateRange' && medicine.startDate && medicine.endDate) ||
+                             (medicine.durationType === 'tabletCount' && medicine.totalTablets && medicine.tabletsPerDay) ? (
+                              <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs">
+                                <span className="text-blue-700 dark:text-blue-300">
+                                  Duration: {calculatePrescriptionDuration(medicine)}
+                                </span>
+                              </div>
+                            ) : null}
+                          </div>
+
+                          {/* Instructions */}
+                          <div>
+                            <label className="block text-xs font-medium mb-1">Special Instructions</label>
+                            <textarea
+                              value={medicine.instructions}
+                              onChange={(e) => updatePrescriptionMedicine(index, 'instructions', e.target.value)}
                               disabled={editingMedicineIndex !== index}
                               className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600"
-                              placeholder="e.g., Paracetamol"
+                              placeholder="Any special instructions for the patient"
+                              rows={2}
                             />
                           </div>
-                          <div>
-                            <label className="block text-xs font-medium mb-1">Dosage *</label>
-                            <input
-                              type="text"
-                              value={medicine.dosage}
-                              onChange={(e) => updatePrescriptionMedicine(index, 'dosage', e.target.value)}
-                              disabled={editingMedicineIndex !== index}
-                              className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600"
-                              placeholder="e.g., 500mg"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium mb-1">Frequency *</label>
-                            <input
-                              type="text"
-                              value={medicine.frequency}
-                              onChange={(e) => updatePrescriptionMedicine(index, 'frequency', e.target.value)}
-                              disabled={editingMedicineIndex !== index}
-                              className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600"
-                              placeholder="e.g., Twice daily"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium mb-1">Duration</label>
-                            <input
-                              type="text"
-                              value={medicine.duration}
-                              onChange={(e) => updatePrescriptionMedicine(index, 'duration', e.target.value)}
-                              disabled={editingMedicineIndex !== index}
-                              className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600"
-                              placeholder="e.g., 7 days"
-                            />
-                          </div>
-                        </div>
-                        
-                        <div className="mt-3">
-                          <label className="block text-xs font-medium mb-1">Instructions</label>
-                          <textarea
-                            value={medicine.instructions}
-                            onChange={(e) => updatePrescriptionMedicine(index, 'instructions', e.target.value)}
-                            disabled={editingMedicineIndex !== index}
-                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600"
-                            placeholder="Additional instructions for the patient"
-                            rows={2}
-                          />
                         </div>
                       </div>
                     ))}
@@ -1637,7 +2135,166 @@ const DoctorDashboard: React.FC = () => {
                 disabled={loading}
                 className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
               >
-                {loading ? 'Creating...' : 'Create Prescription'}
+                {loading ? 'Creating...' : 'Create Full Prescription'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Prescription Modal */}
+      {showEditPrescriptionModal && editingPrescription && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">Edit Prescription</h3>
+              <button
+                onClick={() => setShowEditPrescriptionModal(false)}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {/* Patient Info (Read-only) */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Patient</label>
+                <input
+                  type="text"
+                  value={editingPrescription.patientId?.name || 'Unknown Patient'}
+                  disabled
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
+                />
+              </div>
+
+              {/* Diagnosis */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Diagnosis *</label>
+                <input
+                  type="text"
+                  value={prescriptionForm.diagnosis}
+                  onChange={(e) => setPrescriptionForm(prev => ({ ...prev, diagnosis: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  placeholder="Enter diagnosis"
+                />
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Notes</label>
+                <textarea
+                  value={prescriptionForm.notes}
+                  onChange={(e) => setPrescriptionForm(prev => ({ ...prev, notes: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  rows={3}
+                  placeholder="Additional notes"
+                />
+              </div>
+
+              {/* Follow-up Date */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Follow-up Date</label>
+                <input
+                  type="date"
+                  value={prescriptionForm.followUpDate}
+                  onChange={(e) => setPrescriptionForm(prev => ({ ...prev, followUpDate: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
+
+              {/* Medicines */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Medicines</label>
+                <div className="space-y-3">
+                  {prescriptionMedicines.map((medicine, index) => (
+                    <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-700">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium mb-1">Medicine Name</label>
+                          <input
+                            type="text"
+                            value={medicine.name}
+                            onChange={(e) => {
+                              const updated = [...prescriptionMedicines];
+                              updated[index].name = e.target.value;
+                              setPrescriptionMedicines(updated);
+                            }}
+                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium mb-1">Dosage</label>
+                          <input
+                            type="text"
+                            value={medicine.dosage}
+                            onChange={(e) => {
+                              const updated = [...prescriptionMedicines];
+                              updated[index].dosage = e.target.value;
+                              setPrescriptionMedicines(updated);
+                            }}
+                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium mb-1">Frequency</label>
+                          <input
+                            type="text"
+                            value={medicine.frequency}
+                            onChange={(e) => {
+                              const updated = [...prescriptionMedicines];
+                              updated[index].frequency = e.target.value;
+                              setPrescriptionMedicines(updated);
+                            }}
+                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium mb-1">Duration</label>
+                          <input
+                            type="text"
+                            value={medicine.duration}
+                            onChange={(e) => {
+                              const updated = [...prescriptionMedicines];
+                              updated[index].duration = e.target.value;
+                              setPrescriptionMedicines(updated);
+                            }}
+                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          />
+                        </div>
+                      </div>
+                      <div className="mt-2">
+                        <label className="block text-xs font-medium mb-1">Instructions</label>
+                        <textarea
+                          value={medicine.instructions || ''}
+                          onChange={(e) => {
+                            const updated = [...prescriptionMedicines];
+                            updated[index].instructions = e.target.value;
+                            setPrescriptionMedicines(updated);
+                          }}
+                          className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          rows={2}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-2 mt-6">
+              <button
+                onClick={() => setShowEditPrescriptionModal(false)}
+                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdatePrescription}
+                disabled={loading}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+              >
+                {loading ? 'Updating...' : 'Update Prescription'}
               </button>
             </div>
           </div>

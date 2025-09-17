@@ -31,24 +31,39 @@ export class DoseScheduler {
   static generateDoses(medicine: any): Dose[] {
     const doses: Dose[] = [];
     
+    console.log('💊 DoseScheduler: generateDoses called for medicine:', medicine.name);
+    
     // Parse timing from frequency if timing array is empty
     const timing = this.parseTimingFromFrequency(medicine);
+    console.log('💊 DoseScheduler: Parsed timing:', timing);
     
     if (!timing || timing.length === 0) {
+      console.log('💊 DoseScheduler: No timing found, returning empty doses');
       return doses;
     }
 
     // Parse duration to get number of days
     const days = this.parseDuration(medicine.duration);
+    console.log('💊 DoseScheduler: Parsed duration days:', days);
     
     if (days <= 0) {
+      console.log('💊 DoseScheduler: Invalid duration, returning empty doses');
       return doses;
     }
 
     // Get prescribed date
-    const prescribedDate = new Date(medicine.prescribedDate);
+    let prescribedDate: Date;
+    if (medicine.prescribedDate) {
+      prescribedDate = new Date(medicine.prescribedDate);
+    } else {
+      // Fallback to current date if no prescribed date
+      prescribedDate = new Date();
+      console.log('💊 DoseScheduler: No prescribed date, using current date');
+    }
+    
     const startDate = new Date(prescribedDate);
     startDate.setHours(0, 0, 0, 0);
+    console.log('💊 DoseScheduler: Start date set to:', startDate);
 
     // Generate doses for each day
     for (let day = 0; day < days; day++) {
@@ -81,7 +96,9 @@ export class DoseScheduler {
       });
     }
 
-    return doses.sort((a, b) => a.scheduledTime.getTime() - b.scheduledTime.getTime());
+    const sortedDoses = doses.sort((a, b) => a.scheduledTime.getTime() - b.scheduledTime.getTime());
+    console.log('💊 DoseScheduler: Generated', sortedDoses.length, 'doses for', medicine.name);
+    return sortedDoses;
   }
 
   /**
@@ -89,37 +106,60 @@ export class DoseScheduler {
    */
   static parseTimingFromFrequency(medicine: any): string[] {
     try {
+      console.log('🕐 DoseScheduler: parseTimingFromFrequency called with medicine:', {
+        name: medicine.name,
+        timing: medicine.timing,
+        frequency: medicine.frequency
+      });
+      
       // If timing array exists and has values, use it
       if (medicine.timing && medicine.timing.length > 0) {
+        console.log('🕐 DoseScheduler: Using existing timing array:', medicine.timing);
         return medicine.timing;
       }
 
       // Parse from frequency field
-      if (!medicine.frequency) return ['08:00']; // Default to morning if no frequency
-
-    const frequency = medicine.frequency.toLowerCase();
-    const timing: string[] = [];
-
-    // Common timing patterns
-    if (frequency.includes('morning')) {
-      timing.push('08:00');
-    }
-    if (frequency.includes('afternoon')) {
-      timing.push('14:00');
-    }
-    if (frequency.includes('night') || frequency.includes('evening')) {
-      timing.push('20:00');
-    }
-
-    // If no standard timings found, try to extract times from the string
-    if (timing.length === 0) {
-      const timeMatches = frequency.match(/(\d{1,2}):(\d{2})/g);
-      if (timeMatches) {
-        timing.push(...timeMatches);
+      if (!medicine.frequency) {
+        console.log('🕐 DoseScheduler: No frequency, using default timing');
+        return ['08:00']; // Default to morning if no frequency
       }
-    }
 
-    return timing;
+      const frequency = medicine.frequency.toLowerCase();
+      const timing: string[] = [];
+      
+      console.log('🕐 DoseScheduler: Parsing frequency:', frequency);
+
+      // Common timing patterns
+      if (frequency.includes('morning')) {
+        timing.push('08:00');
+        console.log('🕐 DoseScheduler: Added morning timing');
+      }
+      if (frequency.includes('afternoon')) {
+        timing.push('14:00');
+        console.log('🕐 DoseScheduler: Added afternoon timing');
+      }
+      if (frequency.includes('night') || frequency.includes('evening')) {
+        timing.push('20:00');
+        console.log('🕐 DoseScheduler: Added night/evening timing');
+      }
+
+      // If no standard timings found, try to extract times from the string
+      if (timing.length === 0) {
+        const timeMatches = frequency.match(/(\d{1,2}):(\d{2})/g);
+        if (timeMatches) {
+          timing.push(...timeMatches);
+          console.log('🕐 DoseScheduler: Extracted times from frequency:', timeMatches);
+        }
+      }
+
+      // If still no timing found, use default
+      if (timing.length === 0) {
+        console.log('🕐 DoseScheduler: No timing patterns found, using default');
+        timing.push('08:00');
+      }
+
+      console.log('🕐 DoseScheduler: Final timing array:', timing);
+      return timing;
     } catch (error) {
       console.error('Error parsing timing from frequency:', error);
       return ['08:00']; // Default fallback
@@ -129,25 +169,39 @@ export class DoseScheduler {
   /**
    * Parse duration string to get number of days
    */
-  private static parseDuration(duration: string): number {
-    if (!duration) return 0;
+  static parseDuration(duration: string): number {
+    console.log('📅 DoseScheduler: parseDuration called with:', duration);
+    
+    if (!duration) {
+      console.log('📅 DoseScheduler: No duration provided, returning 0');
+      return 0;
+    }
     
     const lowerDuration = duration.toLowerCase();
+    console.log('📅 DoseScheduler: Lowercase duration:', lowerDuration);
     
     // Extract number from duration string
     const match = lowerDuration.match(/(\d+)/);
-    if (!match) return 0;
+    if (!match) {
+      console.log('📅 DoseScheduler: No number found in duration, returning 0');
+      return 0;
+    }
     
     const number = parseInt(match[1]);
+    console.log('📅 DoseScheduler: Extracted number:', number);
     
     if (lowerDuration.includes('day')) {
+      console.log('📅 DoseScheduler: Duration is in days:', number);
       return number;
     } else if (lowerDuration.includes('week')) {
+      console.log('📅 DoseScheduler: Duration is in weeks:', number * 7);
       return number * 7;
     } else if (lowerDuration.includes('month')) {
+      console.log('📅 DoseScheduler: Duration is in months:', number * 30);
       return number * 30;
     }
     
+    console.log('📅 DoseScheduler: Default duration (days):', number);
     return number; // Default to days
   }
 

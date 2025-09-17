@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Bot, User, Settings, AlertCircle } from 'lucide-react';
+import { MessageCircle, X, Send, Bot, User, Settings, AlertCircle, BarChart3, Heart } from 'lucide-react';
 import geminiService, { ChatMessage, DashboardContext } from '../services/geminiService';
 import logger from '../services/logger';
 
@@ -105,6 +105,47 @@ const Chatbot: React.FC<ChatbotProps> = ({ dashboardContext }) => {
     logger.userAction('Chatbot', 'Cleared chat history', {}, 'low');
   };
 
+  const handleComprehensiveAnalysis = async () => {
+    if (isLoading || !isAvailable) return;
+
+    setIsLoading(true);
+
+    try {
+      logger.apiCall('Gemini API', 'Requesting comprehensive health analysis', { 
+        dashboardType: dashboardContext.dashboardType 
+      }, 'high');
+
+      const analysis = await geminiService.analyzeHealthData(dashboardContext);
+
+      const analysisMessage: ChatMessage = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: `## 📊 Comprehensive Health Analysis\n\n${analysis}`,
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, analysisMessage]);
+      
+      logger.apiResponse('Gemini API', 'Received comprehensive health analysis', { 
+        analysisLength: analysis.length 
+      }, 'high');
+
+    } catch (error) {
+      logger.error('Chatbot Error', 'Failed to get health analysis from Gemini', error, 'high');
+      
+      const errorMessage: ChatMessage = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: "I'm sorry, I encountered an error while analyzing your health data. Please try again.",
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (!isAvailable) {
     return (
       <div className="fixed bottom-4 right-4 z-50">
@@ -142,6 +183,14 @@ const Chatbot: React.FC<ChatbotProps> = ({ dashboardContext }) => {
               <span className="font-semibold">MedAlert AI</span>
             </div>
             <div className="flex items-center space-x-2">
+              <button
+                onClick={handleComprehensiveAnalysis}
+                disabled={isLoading}
+                className="text-blue-200 hover:text-white transition-colors disabled:opacity-50"
+                title="Comprehensive Health Analysis"
+              >
+                <BarChart3 className="h-4 w-4" />
+              </button>
               <button
                 onClick={clearChat}
                 className="text-blue-200 hover:text-white transition-colors"
@@ -226,6 +275,32 @@ const Chatbot: React.FC<ChatbotProps> = ({ dashboardContext }) => {
                 className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white p-2 rounded-lg transition-colors duration-200"
               >
                 <Send className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-1 mt-2">
+              <button
+                onClick={() => setInputMessage("Analyze my medication adherence patterns")}
+                className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 transition-colors"
+              >
+                📊 Adherence
+              </button>
+              <button
+                onClick={() => setInputMessage("Review my medical history and diagnoses")}
+                className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200 transition-colors"
+              >
+                🏥 History
+              </button>
+              <button
+                onClick={() => setInputMessage("Optimize my medication schedule")}
+                className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded hover:bg-purple-200 transition-colors"
+              >
+                ⏰ Schedule
+              </button>
+              <button
+                onClick={() => setInputMessage("Analyze my health trends")}
+                className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded hover:bg-orange-200 transition-colors"
+              >
+                📈 Trends
               </button>
             </div>
             <p className="text-xs text-gray-500 mt-1">

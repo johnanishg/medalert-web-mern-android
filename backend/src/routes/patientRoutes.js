@@ -231,11 +231,8 @@ router.put('/medicines/:medicineIndex', verifyToken, async (req, res) => {
     const { medicineIndex } = req.params;
     const updateData = req.body;
     
-    // Get the current user (patient) - try both _id and userId
-    let patient = await Patient.findById(req.user.userId);
-    if (!patient) {
-      patient = await Patient.findOne({ userId: req.user.userId });
-    }
+    // Get the current user (patient) - req.user.userId is the MongoDB _id
+    const patient = await Patient.findById(req.user.userId);
     if (!patient) {
       return res.status(404).json({ message: 'Patient not found.' });
     }
@@ -299,11 +296,8 @@ router.delete('/medicines/:medicineIndex', verifyToken, async (req, res) => {
   try {
     const { medicineIndex } = req.params;
     
-    // Get the current user (patient) - try both _id and userId
-    let patient = await Patient.findById(req.user.userId);
-    if (!patient) {
-      patient = await Patient.findOne({ userId: req.user.userId });
-    }
+    // Get the current user (patient) - req.user.userId is the MongoDB _id
+    const patient = await Patient.findById(req.user.userId);
     if (!patient) {
       return res.status(404).json({ message: 'Patient not found.' });
     }
