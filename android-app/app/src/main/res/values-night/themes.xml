@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme for dark mode. -->
+    <style name="Base.Theme.MedAlert" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Material Design 3 color tokens for dark theme -->
+        <item name="colorPrimary">@color/medalert_primary</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorPrimaryContainer">@color/medalert_primary_dark</item>
+        <item name="colorOnPrimaryContainer">@color/white</item>
+        <item name="colorSecondary">@color/medalert_secondary</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorSecondaryContainer">@color/medalert_secondary</item>
+        <item name="colorOnSecondaryContainer">@color/white</item>
+        <item name="colorTertiary">@color/medalert_success</item>
+        <item name="colorOnTertiary">@color/white</item>
+        <item name="colorError">@color/medalert_error</item>
+        <item name="colorOnError">@color/white</item>
+        <item name="colorErrorContainer">@color/medalert_error</item>
+        <item name="colorOnErrorContainer">@color/white</item>
+        <item name="colorSurface">@color/surface_dark</item>
+        <item name="colorOnSurface">@color/white</item>
+        <item name="colorSurfaceVariant">@color/surface_dark</item>
+        <item name="colorOnSurfaceVariant">@color/white</item>
+        <item name="colorOutline">@color/medalert_primary</item>
+        <item name="colorOnBackground">@color/white</item>
+        <item name="android:statusBarColor">@color/medalert_primary</item>
+    </style>
+
+    <style name="Theme.MedAlert" parent="Base.Theme.MedAlert" />
+</resources>

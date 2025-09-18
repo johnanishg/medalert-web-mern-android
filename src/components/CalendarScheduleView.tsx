@@ -46,6 +46,8 @@ const CalendarScheduleView: React.FC<CalendarScheduleViewProps> = ({
   const [daySchedules, setDaySchedules] = useState<DaySchedule[]>([]);
   const [recording, setRecording] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [editingTiming, setEditingTiming] = useState<{medicine: Medicine, timeIndex: number, currentTime: string} | null>(null);
+  const [newTime, setNewTime] = useState('');
 
   // Generate schedules for all medicines
   useEffect(() => {
@@ -345,6 +347,78 @@ const CalendarScheduleView: React.FC<CalendarScheduleViewProps> = ({
     testDoseScheduler();
   }, []);
 
+  // Edit timing functions
+  const editTiming = (medicine: Medicine, timeIndex: number, currentTime: string) => {
+    setEditingTiming({ medicine, timeIndex, currentTime });
+    setNewTime(currentTime);
+  };
+
+  const addTiming = (medicine: Medicine) => {
+    setEditingTiming({ medicine, timeIndex: -1, currentTime: '' });
+    setNewTime('');
+  };
+
+  const saveTiming = async () => {
+    if (!editingTiming || !newTime) return;
+
+    // Validate time format (HH:MM)
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!timeRegex.test(newTime)) {
+      alert('Please enter time in HH:MM format (e.g., 08:00)');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Please log in again');
+        return;
+      }
+
+      // Update the medicine timing
+      const updatedTiming = [...editingTiming.medicine.timing];
+      if (editingTiming.timeIndex === -1) {
+        // Add new timing
+        updatedTiming.push(newTime);
+      } else {
+        // Update existing timing
+        updatedTiming[editingTiming.timeIndex] = newTime;
+      }
+
+      const response = await fetch(`http://localhost:5001/api/patients/medicines/${editingTiming.medicine._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          ...editingTiming.medicine,
+          timing: updatedTiming
+        })
+      });
+
+      if (response.ok) {
+        logger.success('Timing updated successfully', 'CalendarScheduleView');
+        onAdherenceUpdate(); // Refresh the data
+        setEditingTiming(null);
+        setNewTime('');
+      } else {
+        const errorData = await response.json();
+        logger.warning(`Failed to update timing: ${errorData.message}`, 'CalendarScheduleView');
+        alert(`Failed to update timing: ${errorData.message}`);
+      }
+    } catch (error) {
+      console.error('Error updating timing:', error);
+      logger.error('Error updating timing', 'CalendarScheduleView');
+      alert('Error updating timing');
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditingTiming(null);
+    setNewTime('');
+  };
+
   if (medicines.length === 0) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
@@ -540,34 +614,50 @@ const CalendarScheduleView: React.FC<CalendarScheduleViewProps> = ({
                         return (
                           <div
                             key={`${medicine}-${doseIndex}`}
-                            className={`p-2 rounded border text-xs ${getDoseStatusColor(dose)}`}
+                            className={`p-3 rounded-lg border-2 text-xs ${getDoseStatusColor(dose)} shadow-sm`}
                           >
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="font-medium text-gray-800 dark:text-gray-200 truncate">
-                                {medicine}
-                              </span>
+                            {/* Medicine Name - More Prominent */}
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                <span className="font-bold text-gray-900 dark:text-gray-100 truncate text-sm">
+                                  {medicine}
+                                </span>
+                              </div>
                               <button
                                 onClick={() => recordDoseAdherence(dose, !dose.taken)}
                                 disabled={recording || dose.id.startsWith('adherence-') || !dose.isActive}
-                                className={`flex items-center justify-center w-4 h-4 rounded border ${
+                                className={`flex items-center justify-center w-5 h-5 rounded-full border-2 ${
                                   dose.taken
                                     ? 'bg-green-600 border-green-600 text-white'
                                     : dose.isActive
-                                    ? 'border-gray-300 dark:border-gray-600 hover:border-green-500'
+                                    ? 'border-gray-300 dark:border-gray-600 hover:border-green-500 hover:bg-green-50'
                                     : 'border-gray-200 dark:border-gray-700 opacity-50'
-                                }`}
+                                } transition-colors`}
                               >
-                                {dose.taken && <CheckCircle className="w-2 h-2" />}
+                                {dose.taken && <CheckCircle className="w-3 h-3" />}
                               </button>
                             </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-gray-600 dark:text-gray-400">
-                                {formatTime(new Date(dose.scheduledTime))}
-                              </span>
+                            
+                            {/* Time - More Prominent */}
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <Clock className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                                <span className="font-semibold text-gray-800 dark:text-gray-200 text-sm">
+                                  {formatTime(new Date(dose.scheduledTime))}
+                                </span>
+                              </div>
                               {getDoseStatusIcon(dose)}
                             </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                              {getDoseStatusText(dose)}
+                            
+                            {/* Status */}
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                {getDoseStatusText(dose)}
+                              </span>
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                {dose.dosage || 'Dose'}
+                              </span>
                             </div>
                           </div>
                         );
@@ -597,9 +687,12 @@ const CalendarScheduleView: React.FC<CalendarScheduleViewProps> = ({
             }) || [];
 
             return (
-              <div key={index} className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600">
-                <div className="flex items-center justify-between mb-2">
-                  <h5 className="font-medium text-gray-900 dark:text-white">{medicine.name}</h5>
+              <div key={index} className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                    <h5 className="font-bold text-gray-900 dark:text-white text-lg">{medicine.name}</h5>
+                  </div>
                   <div className="flex items-center gap-1">
                     {onEditMedicine && (
                       <button
@@ -621,22 +714,109 @@ const CalendarScheduleView: React.FC<CalendarScheduleViewProps> = ({
                     )}
                   </div>
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  {medicine.dosage} • {medicine.frequency}
+                
+                {/* Dosage and Frequency */}
+                <div className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                  <span className="font-semibold">{medicine.dosage}</span> • <span className="font-medium">{medicine.frequency}</span>
                 </div>
-                <div className="text-xs text-gray-500 dark:text-gray-500">
-                  Today: {todayDoses.length} doses
-                  {schedule && (
-                    <span className="ml-2">
-                      • {schedule.adherenceRate}% adherence
-                    </span>
-                  )}
+                
+                {/* Timings - More Prominent */}
+                {(() => {
+                  // Parse timing to get actual times
+                  const parsedTiming = DoseScheduler.parseTimingFromFrequency(medicine);
+                  return parsedTiming && parsedTiming.length > 0 && (
+                    <div className="mb-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Daily Timings:</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {parsedTiming.map((time, timeIndex) => (
+                          <div 
+                            key={timeIndex}
+                            className="flex items-center gap-2 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded-full text-sm font-medium"
+                          >
+                            <span>{time}</span>
+                            <button
+                              onClick={() => editTiming(medicine, timeIndex, time)}
+                              className="hover:bg-blue-200 dark:hover:bg-blue-800 rounded-full p-1 transition-colors"
+                              title="Edit timing"
+                            >
+                              <Edit size={12} />
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          onClick={() => addTiming(medicine)}
+                          className="flex items-center gap-1 px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-full text-sm font-medium hover:bg-green-200 dark:hover:bg-green-800 transition-colors"
+                          title="Add timing"
+                        >
+                          <Plus size={12} />
+                          <span>Add</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
+                
+                {/* Today's Summary */}
+                <div className="text-xs text-gray-500 dark:text-gray-500 border-t border-gray-200 dark:border-gray-600 pt-2">
+                  <div className="flex items-center justify-between">
+                    <span>Today: <span className="font-semibold">{todayDoses.length} doses</span></span>
+                    {schedule && (
+                      <span className="font-semibold text-green-600 dark:text-green-400">
+                        {schedule.adherenceRate}% adherence
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             );
           })}
         </div>
       </div>
+
+      {/* Edit Timing Modal */}
+      {editingTiming && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+              {editingTiming.timeIndex === -1 ? 'Add Timing' : 'Edit Timing'}
+            </h3>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Medicine: {editingTiming.medicine.name}
+              </label>
+              <input
+                type="time"
+                value={newTime}
+                onChange={(e) => setNewTime(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                placeholder="HH:MM"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Enter time in 24-hour format (e.g., 08:00, 14:30)
+              </p>
+            </div>
+            
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={cancelEdit}
+                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveTiming}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                {editingTiming.timeIndex === -1 ? 'Add' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

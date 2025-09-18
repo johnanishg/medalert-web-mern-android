@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MedAlert Patient</string>
+    <string name="login_title">Sign In to MedAlert</string>
+    <string name="register_title">Create Patient Account</string>
+    <string name="dashboard_title">Dashboard</string>
+    <string name="medications_title">My Medications</string>
+    <string name="profile_title">My Profile</string>
+    <string name="notifications_title">Notifications</string>
+    
+    <!-- Login/Register -->
+    <string name="email_hint">Enter your email</string>
+    <string name="password_hint">Enter your password</string>
+    <string name="confirm_password_hint">Confirm your password</string>
+    <string name="first_name_hint">First name</string>
+    <string name="last_name_hint">Last name</string>
+    <string name="phone_hint">Phone number</string>
+    <string name="date_of_birth_hint">Date of birth</string>
+    
+    <!-- Dashboard -->
+    <string name="welcome_back">Welcome back,</string>
+    <string name="total_medications">Total Medications</string>
+    <string name="active_medications">Active Medications</string>
+    <string name="missed_doses">Missed Doses</string>
+    <string name="adherence_rate">Adherence Rate</string>
+    <string name="upcoming_reminders">Upcoming Reminders</string>
+    <string name="current_medications">Current Medications</string>
+    <string name="patient_id">Your Patient ID</string>
+    <string name="share_id_message">Share this ID with your doctor for prescriptions</string>
+    
+    <!-- Medications -->
+    <string name="no_medications">No medications yet</string>
+    <string name="no_medications_message">Your prescribed medications will appear here</string>
+    <string name="record_adherence">Record</string>
+    <string name="edit_timing">Timing</string>
+    <string name="delete_medication">Delete</string>
+    <string name="medication_taken">Taken</string>
+    <string name="medication_missed">Missed</string>
+    
+    <!-- Notifications -->
+    <string name="medication_reminder">Medication Reminder</string>
+    <string name="time_to_take">Time to take %s</string>
+    <string name="mark_as_taken">Mark as Taken</string>
+    <string name="mark_as_missed">Mark as Missed</string>
+    <string name="no_notifications">No notifications set</string>
+    <string name="set_timings_message">Set medication timings to receive reminders</string>
+    
+    <!-- Profile -->
+    <string name="basic_information">Basic Information</string>
+    <string name="emergency_contact">Emergency Contact</string>
+    <string name="medical_information">Medical Information</string>
+    <string name="assigned_caretaker">Assigned Caretaker</string>
+    <string name="emergency_call">Emergency Call</string>
+    
+    <!-- Common -->
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    <string name="refresh">Refresh</string>
+    <string name="back">Back</string>
+    <string name="logout">Logout</string>
+    <string name="loading">Loading...</string>
+    <string name="error_occurred">An error occurred</string>
+    <string name="try_again">Try Again</string>
+</resources>

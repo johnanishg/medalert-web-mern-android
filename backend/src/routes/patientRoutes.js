@@ -5,6 +5,59 @@ import { verifyToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
+// Test endpoint to add sample visit data
+router.post('/test-visits/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Try to find patient by MongoDB _id first, then by userId field
+    let patient = await Patient.findById(id);
+    if (!patient) {
+      patient = await Patient.findOne({ userId: id });
+    }
+    
+    if (!patient) {
+      return res.status(404).json({ message: 'Patient not found' });
+    }
+
+    // Add sample visit data
+    if (!patient.visits) {
+      patient.visits = [];
+    }
+    
+    const sampleVisit = {
+      visitDate: new Date(),
+      visitType: 'consultation',
+      doctorName: 'Dr. Test',
+      diagnosis: 'Test diagnosis',
+      notes: 'This is a test visit',
+      medicines: [
+        {
+          name: 'Test Medicine',
+          dosage: '500mg',
+          frequency: 'twice daily',
+          duration: '7 days',
+          instructions: 'Take with food'
+        }
+      ],
+      followUpRequired: false,
+      createdAt: new Date()
+    };
+    
+    patient.visits.push(sampleVisit);
+    await patient.save();
+    
+    res.status(200).json({
+      message: 'Sample visit added successfully',
+      visit: sampleVisit,
+      totalVisits: patient.visits.length
+    });
+  } catch (error) {
+    console.error('Add test visit error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // Get patient profile
 router.get('/profile/:id', verifyToken, async (req, res) => {
   try {
@@ -23,7 +76,9 @@ router.get('/profile/:id', verifyToken, async (req, res) => {
     console.log('Patient profile found:', {
       name: patient.name,
       userId: patient.userId,
-      currentMedicationsCount: patient.currentMedications?.length || 0
+      currentMedicationsCount: patient.currentMedications?.length || 0,
+      visitsCount: patient.visits?.length || 0,
+      visits: patient.visits
     });
 
     res.status(200).json({

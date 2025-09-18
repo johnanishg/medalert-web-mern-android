@@ -13,7 +13,6 @@ const PatientDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [medicines, setMedicines] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
-  const [visits, setVisits] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -144,10 +143,10 @@ const PatientDashboard: React.FC = () => {
     userInfo: currentUser,
     currentData: {
       medicines: medicines,
-      visits: visits,
+      visits: currentUser?.visits || [],
       notifications: medicineNotifications,
       caretakerApprovals: currentUser?.caretakerApprovals || [],
-      diagnoses: visits.flatMap(visit => 
+      diagnoses: (currentUser?.visits || []).flatMap((visit: any) => 
         visit.diagnosis ? [{
           condition: visit.diagnosis,
           date: visit.visitDate,
@@ -156,7 +155,7 @@ const PatientDashboard: React.FC = () => {
           notes: visit.notes
         }] : []
       ),
-      medicalHistory: visits.map(visit => ({
+      medicalHistory: (currentUser?.visits || []).map((visit: any) => ({
         date: visit.visitDate,
         description: visit.diagnosis || 'Visit without diagnosis',
         doctor: visit.doctorName,
@@ -173,7 +172,7 @@ const PatientDashboard: React.FC = () => {
         prescribedDate: medicine.prescribedDate,
         prescribedBy: medicine.prescribedBy
       })),
-      prescriptions: visits.flatMap(visit => visit.medicines || [])
+      prescriptions: (currentUser?.visits || []).flatMap((visit: any) => visit.medicines || [])
     },
     availableFeatures: [
       'View Profile',
@@ -198,6 +197,16 @@ const PatientDashboard: React.FC = () => {
   const [previousMedicineCount, setPreviousMedicineCount] = useState(0);
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+  
+  // Debug: Log the initial user data
+  console.log('🔍 PatientDashboard initial user data:', {
+    token: token ? 'Present' : 'Missing',
+    user: user,
+    userKeys: Object.keys(user),
+    hasId: !!user.id,
+    has_id: !!user._id,
+    hasUserId: !!user.userId
+  });
 
   useEffect(() => {
     // Check if user is properly logged in
@@ -220,47 +229,69 @@ const PatientDashboard: React.FC = () => {
     logger.info('PatientDashboard initialized', { user }, 'PatientDashboard', 'low');
     setCurrentUser(user);
     
-    // Listen for prescription creation events
-    const handlePatientDataRefresh = () => {
-      logger.info('Patient data refresh event received', {}, 'PatientDashboard', 'low');
-      fetchPatientData();
-    };
+    // Listen for prescription creation events (disabled to prevent loops)
+    // const handlePatientDataRefresh = () => {
+    //   logger.info('Patient data refresh event received', {}, 'PatientDashboard', 'low');
+    //   fetchPatientData();
+    // };
     
-    window.addEventListener('patientDataRefresh', handlePatientDataRefresh);
+    // window.addEventListener('patientDataRefresh', handlePatientDataRefresh);
     
-    return () => {
-      window.removeEventListener('patientDataRefresh', handlePatientDataRefresh);
-    };
+    // return () => {
+    //   window.removeEventListener('patientDataRefresh', handlePatientDataRefresh);
+    // };
   }, []);
 
-  // Auto-refresh medicines every 30 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      logger.debug('Auto-refreshing patient data...', null, 'PatientDashboard', 'low');
-      fetchPatientData();
-    }, 30000); // 30 seconds
+  // Auto-refresh medicines every 30 seconds (disabled to prevent loops)
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     logger.debug('Auto-refreshing patient data...', null, 'PatientDashboard', 'low');
+  //     fetchPatientData();
+  //   }, 30000); // 30 seconds
 
-    return () => clearInterval(interval);
-  }, []);
+  //   return () => clearInterval(interval);
+  // }, []);
 
-  // Refresh data when switching to medicines or schedule tab
+  // Initial data fetch when component mounts
   useEffect(() => {
-    if (activeTab === 'medicines' || activeTab === 'schedule') {
-      logger.debug(`Switched to ${activeTab} tab, refreshing data...`, null, 'PatientDashboard', 'low');
+    console.log('🚀 PatientDashboard mounted, user:', user);
+    console.log('🚀 User object keys:', user ? Object.keys(user) : 'No user');
+    console.log('🚀 User ID fields:', {
+      id: user?.id,
+      _id: user?._id,
+      userId: user?.userId
+    });
+    if (user && (user.id || user._id || user.userId)) {
+      console.log('🚀 User data available, fetching patient data...');
       fetchPatientData();
+    } else {
+      console.log('🚨 No user data available for initial fetch');
     }
-  }, [activeTab]);
+  }, []); // Remove user dependency to prevent loop
 
-  // Refresh data when window regains focus (user switches back to tab)
+  // Refresh data when switching to medicines, schedule, or visits tab
   useEffect(() => {
-    const handleFocus = () => {
-      logger.debug('Window focused, refreshing patient data...', null, 'PatientDashboard', 'low');
-      fetchPatientData();
-    };
+    if (activeTab === 'medicines' || activeTab === 'schedule' || activeTab === 'visits') {
+      console.log(`🔄 Switched to ${activeTab} tab, refreshing data...`);
+      logger.debug(`Switched to ${activeTab} tab, refreshing data...`, null, 'PatientDashboard', 'low');
+      // Only fetch if we have user data
+      if (user && (user.id || user._id || user.userId)) {
+        fetchPatientData();
+      }
+    }
+  }, [activeTab]); // Keep activeTab dependency but add user check
 
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, []);
+
+  // Refresh data when window regains focus (disabled to prevent loops)
+  // useEffect(() => {
+  //   const handleFocus = () => {
+  //     logger.debug('Window focused, refreshing patient data...', null, 'PatientDashboard', 'low');
+  //     fetchPatientData();
+  //   };
+
+  //   window.addEventListener('focus', handleFocus);
+  //   return () => window.removeEventListener('focus', handleFocus);
+  // }, []);
 
   const fetchPatientData = async () => {
     try {
@@ -294,9 +325,11 @@ const PatientDashboard: React.FC = () => {
       }
       
       // Fetch updated patient data including medications
-      const userId = user.id || user._id || user.userId;
+      // Use MongoDB ObjectId for API calls (like Android app does)
+      const userId = user._id || user.id || user.userId;
       
       console.log('👤 Patient profile fetch - userId:', userId);
+      console.log('👤 User object details:', { _id: user._id, id: user.id, userId: user.userId });
       
       if (!userId) {
         throw new Error('User ID not found. Please log in again.');
@@ -304,16 +337,20 @@ const PatientDashboard: React.FC = () => {
       
       if (userId) {
         console.log('📞 Fetching patient profile for userId:', userId);
+        console.log('📞 User object:', user);
+        console.log('📞 Token available:', !!token);
+        console.log('📞 Token value:', token);
         const patientResponse = await fetch(`http://localhost:5001/api/patients/profile/${userId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
         console.log('📞 Patient profile response status:', patientResponse.status);
+        console.log('📞 Patient profile response headers:', Object.fromEntries(patientResponse.headers.entries()));
         
         if (patientResponse.ok) {
           const patientData = await patientResponse.json();
-          console.log('📞 Patient profile data received:', patientData);
           const updatedUser = patientData.patient || patientData;
+          console.log('📞 Patient profile loaded - visits count:', updatedUser?.visits?.length || 0);
           
           // Update current user state
           setCurrentUser(updatedUser);
@@ -381,23 +418,8 @@ const PatientDashboard: React.FC = () => {
           // Clear any previous errors since data loaded successfully
           setError('');
 
-          // Fetch patient visits from patient profile
-          console.log('Patient dashboard - updatedUser.visits:', updatedUser.visits);
-          if (updatedUser.visits) {
-            setVisits(updatedUser.visits || []);
-            logger.info('Visits refreshed', { visitCount: updatedUser.visits?.length || 0 }, 'PatientDashboard', 'low');
-          } else {
-            // Fallback: fetch from prescriptions endpoint if visits not in profile
-            const visitsResponse = await fetch(`http://localhost:5001/api/prescriptions/patient/${userId}`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            
-            if (visitsResponse.ok) {
-              const visitsData = await visitsResponse.json();
-              setVisits(visitsData.prescriptions || []);
-              logger.info('Visits refreshed from prescriptions', { visitCount: visitsData.prescriptions?.length || 0 }, 'PatientDashboard', 'low');
-            }
-          }
+          // Visits data is now included in the patient profile response
+          console.log('🔍 Patient dashboard - visits from profile:', updatedUser.visits?.length || 0);
           
           // Clear error if we successfully loaded patient data
           setError('');
@@ -514,7 +536,7 @@ const PatientDashboard: React.FC = () => {
     try {
       setLoading(true); // Set loading state
       
-      const userId = currentUser.id || currentUser._id || currentUser.userId;
+      const userId = currentUser._id || currentUser.id || currentUser.userId;
       console.log('🔄 refreshMedicineData: Fetching data for userId:', userId);
       
       const token = localStorage.getItem('token');
@@ -960,7 +982,7 @@ const PatientDashboard: React.FC = () => {
     }
 
     try {
-      const userId = user.id || user._id;
+      const userId = user._id || user.id;
       
       if (!userId) {
         throw new Error('User ID not found. Please log in again.');
@@ -1153,11 +1175,13 @@ const PatientDashboard: React.FC = () => {
 
   // Show loading state if no user data
   if (!user || (!user.id && !user._id && !user.userId)) {
+    console.log('🚨 No user data available:', { user, hasId: !!user?.id, has_id: !!user?._id, hasUserId: !!user?.userId });
     return (
       <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-50 text-black'}`}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
           <p className="text-lg">Loading...</p>
+          <p className="text-sm text-gray-500 mt-2">User data: {JSON.stringify(user)}</p>
         </div>
       </div>
     );
@@ -1824,36 +1848,32 @@ const PatientDashboard: React.FC = () => {
                 </div>
               </div>
               
-              {/* Debug Information */}
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-4">
-                <h4 className="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">
-                  🔍 Schedule Debug Information
-                </h4>
-                <div className="text-xs text-yellow-700 dark:text-yellow-300 space-y-1">
-                  <div>Medicines count: {medicines.length}</div>
-                  <div>Date range: {dateRange.from ? new Date(dateRange.from).toLocaleDateString() : 'Not set'} to {dateRange.to ? new Date(dateRange.to).toLocaleDateString() : 'Not set'}</div>
-                  <div>Current user ID: {currentUser?.id || currentUser?._id || currentUser?.userId || 'Not available'}</div>
-                  {medicines.length > 0 && (
-                    <div>
-                      <div>Sample medicine: {medicines[0]?.name} ({medicines[0]?.dosage})</div>
-                      <div>Medicine timing: {medicines[0]?.timing?.join(', ') || 'No timing set'}</div>
-                      <div>Medicine duration: {medicines[0]?.duration || 'No duration set'}</div>
-                      <div>Medicine frequency: {medicines[0]?.frequency || 'No frequency set'}</div>
-                      <div>Medicine prescribed date: {medicines[0]?.prescribedDate || 'No prescribed date'}</div>
-                    </div>
-                  )}
-                </div>
-              </div>
 
               {/* Calendar Schedule View */}
-              <CalendarScheduleView
-                medicines={medicines}
-                patientId={currentUser?.id || currentUser?._id || currentUser?.userId || ''}
-                onAdherenceUpdate={refreshMedicineData}
-                onEditMedicine={openEditMedicineModal}
-                onDeleteMedicine={handleDeleteMedicine}
-                dateRange={dateRange}
-              />
+              {medicines.length > 0 ? (
+                <CalendarScheduleView
+                  medicines={medicines}
+                  patientId={currentUser?._id || currentUser?.id || currentUser?.userId || ''}
+                  onAdherenceUpdate={refreshMedicineData}
+                  onEditMedicine={openEditMedicineModal}
+                  onDeleteMedicine={handleDeleteMedicine}
+                  dateRange={dateRange}
+                />
+              ) : (
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <Calendar size={48} className="mx-auto mb-4 opacity-50" />
+                    <p>No medications found</p>
+                    <p className="text-sm mt-2">Your prescribed medications will appear here</p>
+                    <button
+                      onClick={handleRefresh}
+                      className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                    >
+                      Refresh Medications
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -1883,20 +1903,32 @@ const PatientDashboard: React.FC = () => {
                   )}
                 </button>
               </div>
-              {(() => {
-                console.log('Patient dashboard - visits state:', visits);
-                console.log('Patient dashboard - visits length:', visits.length);
-                return null;
-              })()}
-              {visits.length === 0 ? (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  <Calendar size={48} className="mx-auto mb-4 opacity-50" />
-                  <p>No visits recorded yet.</p>
-                  <p className="text-sm mt-2">Your visit history will appear here after consultations.</p>
+              
+
+
+              {/* Debug: Show visits data */}
+              <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
+                  🔍 Visits Debug Info
+                </h4>
+                <div className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
+                  <div>Current user visits: {currentUser?.visits?.length || 0}</div>
+                  <div>Current user ID: {currentUser?._id || currentUser?.id || currentUser?.userId || 'Not available'}</div>
+                  <div>Loading state: {loading ? 'Yes' : 'No'}</div>
+                  <div>Error state: {error || 'None'}</div>
+                  <div>User object keys: {currentUser ? Object.keys(currentUser).join(', ') : 'No user'}</div>
+                  <div>User object: {JSON.stringify(currentUser, null, 2)}</div>
+                  {currentUser?.visits && currentUser.visits.length > 0 && (
+                    <div>
+                      <div>First visit: {JSON.stringify(currentUser.visits[0], null, 2)}</div>
+                    </div>
+                  )}
                 </div>
-              ) : (
+              </div>
+
+              {(currentUser?.visits && currentUser.visits.length > 0) ? (
                 <div className="space-y-4">
-                  {visits.map((visit, index) => (
+                  {currentUser.visits.map((visit, index) => (
                     <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-green-50 dark:bg-green-900/20">
                       <div className="flex justify-between items-start mb-3">
                         <div>
@@ -1959,6 +1991,161 @@ const PatientDashboard: React.FC = () => {
                       </div>
                     </div>
                   ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <Calendar size={48} className="mx-auto mb-4 opacity-50" />
+                  <p>No visits recorded yet.</p>
+                  <p className="text-sm mt-2">Your visit history will appear here after consultations.</p>
+                  <div className="flex gap-2 justify-center mt-4">
+                    <button
+                      onClick={handleRefresh}
+                      className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                    >
+                      Refresh Visits
+                    </button>
+                    <button
+                      onClick={() => {
+                        // Test with sample data
+                        const sampleVisits = [
+                          {
+                            visitDate: new Date().toISOString(),
+                            visitType: 'consultation',
+                            doctorName: 'Dr. Smith',
+                            diagnosis: 'Regular checkup',
+                            notes: 'Patient is doing well',
+                            medicines: [
+                              { name: 'Vitamin D', dosage: '1000mg', frequency: 'once daily' }
+                            ],
+                            followUpRequired: false
+                          }
+                        ];
+                        console.log('🧪 Setting sample visits:', sampleVisits);
+                        setCurrentUser(prev => ({ ...prev, visits: sampleVisits }));
+                      }}
+                      className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
+                    >
+                      Test with Sample Data
+                    </button>
+                    <button
+                      onClick={async () => {
+                        // Add sample visit to database
+                        try {
+                          const token = localStorage.getItem('token');
+                          const userId = currentUser?._id || currentUser?.id || currentUser?.userId;
+                          
+                          if (!token || !userId) {
+                            alert('Please log in again');
+                            return;
+                          }
+                          
+                          console.log('🧪 Adding sample visit to database for userId:', userId);
+                          
+                          const response = await fetch(`http://localhost:5001/api/patients/test-visits/${userId}`, {
+                            method: 'POST',
+                            headers: {
+                              'Authorization': `Bearer ${token}`
+                            }
+                          });
+                          
+                          if (response.ok) {
+                            const result = await response.json();
+                            console.log('✅ Sample visit added:', result);
+                            alert('Sample visit added to database!');
+                            handleRefresh(); // Refresh the data
+                          } else {
+                            const error = await response.json();
+                            console.error('❌ Failed to add sample visit:', error);
+                            alert('Failed to add sample visit: ' + error.message);
+                          }
+                        } catch (error) {
+                          console.error('❌ Error adding sample visit:', error);
+                          alert('Error adding sample visit');
+                        }
+                      }}
+                      className="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors"
+                    >
+                      Add Sample Visit to DB
+                    </button>
+                    <button
+                      onClick={() => {
+                        console.log('🔧 Manual fetch triggered');
+                        fetchPatientData();
+                      }}
+                      className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
+                    >
+                      Debug Fetch
+                    </button>
+                    <button
+                      onClick={async () => {
+                        // Test API call directly
+                        try {
+                          const token = localStorage.getItem('token');
+                          const userId = currentUser?._id || currentUser?.id || currentUser?.userId;
+                          
+                          if (!token || !userId) {
+                            alert('Please log in again');
+                            return;
+                          }
+                          
+                          console.log('🧪 Testing API call directly for userId:', userId);
+                          
+                          const response = await fetch(`http://localhost:5001/api/patients/profile/${userId}`, {
+                            headers: { Authorization: `Bearer ${token}` }
+                          });
+                          
+                          console.log('🧪 API Response status:', response.status);
+                          const responseData = await response.json();
+                          console.log('🧪 API Response data:', responseData);
+                          console.log('🧪 Patient visits:', responseData.patient?.visits || responseData.visits);
+                          
+                          alert(`API Response: ${response.status}\nVisits count: ${(responseData.patient?.visits || responseData.visits || []).length}`);
+                        } catch (error) {
+                          console.error('❌ Error testing API:', error);
+                          alert('Error testing API: ' + error);
+                        }
+                      }}
+                      className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                    >
+                      Test API Direct
+                    </button>
+                    <button
+                      onClick={() => {
+                        // Check localStorage data
+                        const token = localStorage.getItem('token');
+                        const userData = localStorage.getItem('user');
+                        const parsedUser = userData ? JSON.parse(userData) : null;
+                        
+                        console.log('🔍 localStorage check:');
+                        console.log('Token:', token ? 'Present' : 'Missing');
+                        console.log('User data:', userData);
+                        console.log('Parsed user:', parsedUser);
+                        console.log('User keys:', parsedUser ? Object.keys(parsedUser) : 'No user');
+                        
+                        alert(`Token: ${token ? 'Present' : 'Missing'}\nUser: ${userData || 'Missing'}\nUser keys: ${parsedUser ? Object.keys(parsedUser).join(', ') : 'No user'}`);
+                      }}
+                      className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors"
+                    >
+                      Check localStorage
+                    </button>
+                    <button
+                      onClick={() => {
+                        // Manually set user data from localStorage
+                        const userData = localStorage.getItem('user');
+                        if (userData) {
+                          const parsedUser = JSON.parse(userData);
+                          console.log('🔧 Manually setting user data:', parsedUser);
+                          setCurrentUser(parsedUser);
+                          alert('User data set from localStorage');
+                        } else {
+                          alert('No user data in localStorage');
+                        }
+                      }}
+                      className="px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors"
+                    >
+                      Set User from localStorage
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
