@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Save, User, Mail, Phone, Calendar, MapPin, Briefcase, GraduationCap, Award, Clock, DollarSign, Shield, Users, Stethoscope, Heart, UserCheck } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNotification } from '../contexts/NotificationContext';
+import { SupportedLanguage } from '../services/translationService';
 
 interface ProfileEditProps {
   isOpen: boolean;
@@ -22,7 +23,9 @@ const ProfileEdit: React.FC<ProfileEditProps> = ({ isOpen, onClose, user, userTy
   useEffect(() => {
     if (user) {
       console.log('ProfileEdit - User data received:', user);
-      setFormData({ ...user });
+      const langKey = `lang_${user.id || user._id || user.userId || 'anon'}`;
+      const savedLang = (localStorage.getItem(langKey) as SupportedLanguage | null) || (user.preferredLanguage as SupportedLanguage | null);
+      setFormData({ ...user, preferredLanguage: savedLang || user.preferredLanguage || 'en' });
     } else {
       console.log('ProfileEdit - No user data received');
     }
@@ -39,7 +42,8 @@ const ProfileEdit: React.FC<ProfileEditProps> = ({ isOpen, onClose, user, userTy
     try {
       setLoadingCaretakers(true);
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5001/api/patients/caretakers', {
+      const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${API_BASE_URL}/patients/caretakers`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (response.ok) {
@@ -99,7 +103,7 @@ const ProfileEdit: React.FC<ProfileEditProps> = ({ isOpen, onClose, user, userTy
       // Remove caretaker
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5001/api/patients/remove-caretaker', {
+        const response = await fetch(`${API_BASE_URL}/patients/remove-caretaker`, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -121,7 +125,7 @@ const ProfileEdit: React.FC<ProfileEditProps> = ({ isOpen, onClose, user, userTy
       // Assign caretaker
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5001/api/patients/assign-caretaker', {
+        const response = await fetch(`${API_BASE_URL}/patients/assign-caretaker`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -207,22 +211,22 @@ const ProfileEdit: React.FC<ProfileEditProps> = ({ isOpen, onClose, user, userTy
       // Determine the correct API endpoint based on user type
       switch (userType) {
         case 'patient':
-          endpoint = `http://localhost:5001/api/patients/profile/${userId}`;
+          endpoint = `${API_BASE_URL}/patients/profile/${userId}`;
           break;
         case 'doctor':
-          endpoint = `http://localhost:5001/api/doctors/profile/${userId}`;
+          endpoint = `${API_BASE_URL}/doctors/profile/${userId}`;
           break;
         case 'caretaker':
-          endpoint = `http://localhost:5001/api/caretakers/profile/${userId}`;
+          endpoint = `${API_BASE_URL}/caretakers/profile/${userId}`;
           break;
         case 'manager':
-          endpoint = `http://localhost:5001/api/management/profile/${userId}`;
+          endpoint = `${API_BASE_URL}/management/profile/${userId}`;
           break;
         case 'employee':
-          endpoint = `http://localhost:5001/api/management/profile/${userId}`;
+          endpoint = `${API_BASE_URL}/management/profile/${userId}`;
           break;
         case 'admin':
-          endpoint = `http://localhost:5001/api/admin/profile/${userId}`;
+          endpoint = `${API_BASE_URL}/admin/profile/${userId}`;
           break;
         default:
           throw new Error('Invalid user type');
@@ -239,6 +243,13 @@ const ProfileEdit: React.FC<ProfileEditProps> = ({ isOpen, onClose, user, userTy
       // Ensure age is a number
       if (updateData.age) {
         updateData.age = parseInt(updateData.age) || 0;
+      }
+      
+      // Persist preferredLanguage locally for per-user default
+      if (userType === 'patient') {
+        const lang = (updateData.preferredLanguage || 'en') as SupportedLanguage;
+        const langKey = `lang_${userId}`;
+        try { localStorage.setItem(langKey, lang); } catch {}
       }
       
       const response = await fetch(endpoint, {
@@ -332,6 +343,20 @@ const ProfileEdit: React.FC<ProfileEditProps> = ({ isOpen, onClose, user, userTy
             <option value="male">Male</option>
             <option value="female">Female</option>
             <option value="other">Other</option>
+          </select>
+        </div>
+
+        {/* Default Language Preference */}
+        <div>
+          <label className="block text-sm font-medium mb-1">Default Language</label>
+          <select
+            value={formData.preferredLanguage || 'en'}
+            onChange={(e) => handleInputChange('preferredLanguage', e.target.value as SupportedLanguage)}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          >
+            <option value="en">English</option>
+            <option value="hi">हिन्दी</option>
+            <option value="kn">ಕನ್ನಡ</option>
           </select>
         </div>
         

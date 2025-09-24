@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { ArrowRight } from 'lucide-react';
+import Trans from './common/Trans';
 
 const Hero: React.FC = () => {
   const { theme } = useTheme();
@@ -18,14 +19,14 @@ const Hero: React.FC = () => {
         <div className="text-center md:text-left md:flex md:items-center md:justify-between">
           <div className="md:max-w-2xl">
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-4">
-              <span className="block">AI-Based</span>
+              <span className="block"><Trans>AI-Based</Trans></span>
               <span className={`block ${theme === 'dark' ? 'text-orange-400' : 'text-orange-600'}`}>
-                Medicine Alert System
+                <Trans>Medicine Alert System</Trans>
               </span>
             </h1>
-            <p className="mt-6 text-xl max-w-2xl mx-auto md:mx-0 md:text-2xl leading-relaxed text-gray-400">
+            <Trans as="p" className="mt-6 text-xl max-w-2xl mx-auto md:mx-0 md:text-2xl leading-relaxed text-gray-400">
               Personalized native-language reminders, pill detection & family notifications.
-            </p>
+            </Trans>
             <div className="mt-10">
               <a
                 href="#demo"
@@ -35,7 +36,7 @@ const Hero: React.FC = () => {
                     : 'text-white bg-orange-600 hover:bg-orange-700'
                 } transition-colors duration-300 transform hover:scale-105`}
               >
-                View Demo
+                <Trans>View Demo</Trans>
                 <ArrowRight className="ml-2 -mr-1 h-5 w-5" aria-hidden="true" />
               </a>
             </div>

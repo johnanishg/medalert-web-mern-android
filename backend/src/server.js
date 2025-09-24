@@ -13,6 +13,8 @@ import prescriptionRoutes from './routes/prescriptionRoutes.js';
 import medicineNotificationRoutes from './routes/medicineNotificationRoutes.js';
 import adminMutationRoutes from './routes/adminMutationRoutes.js';
 import adherenceRoutes from './routes/adherenceRoutes.js';
+import translationRoutes from './routes/translationRoutes.js';
+import chatbotRoutes from './routes/chatbotRoutes.js';
 import { scheduleFollowUpReminders } from './services/followUpScheduler.js';
 import { schedulePatientMedicineReminders } from './services/patientMedicineScheduler.js';
 
@@ -71,6 +73,8 @@ app.use('/api/prescriptions', prescriptionRoutes);
 app.use('/api/medicine-notifications', medicineNotificationRoutes);
 app.use('/api/admin-mutations', adminMutationRoutes);
 app.use('/api/adherence', adherenceRoutes);
+app.use('/api/translate', translationRoutes);
+app.use('/api/chatbot', chatbotRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -83,10 +87,11 @@ app.use('*', (req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 MedAlert Backend Server running on port ${PORT}`);
   console.log(`📊 Database: medalert`);
   console.log(`🌐 API Base URL: http://localhost:${PORT}/api`);
+  console.log(`🌐 Network accessible at: http://192.168.29.72:${PORT}/api`);
   
   // Start follow-up reminder scheduler
   scheduleFollowUpReminders();

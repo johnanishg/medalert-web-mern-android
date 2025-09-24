@@ -1,6 +1,7 @@
 package com.medalert.patient.di
 
 import android.content.Context
+import com.medalert.patient.BuildConfig
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.medalert.patient.data.api.ApiService
@@ -9,11 +10,15 @@ import com.medalert.patient.data.local.DoseTrackingDatabase
 import com.medalert.patient.data.local.DoseTrackingDao
 import com.medalert.patient.data.local.DoseTrackingDatabaseProvider
 import com.medalert.patient.data.repository.DoseTrackingRepository
+import com.medalert.patient.data.repository.TranslationRepository
+import com.medalert.patient.data.service.GeminiService
+import com.medalert.patient.data.service.ChatbotApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import android.os.Build
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
@@ -21,8 +26,6 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.io.FileInputStream
-import java.util.Properties
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
@@ -34,35 +37,34 @@ object NetworkModule {
     @Singleton
     fun provideBaseUrl(@ApplicationContext context: Context): String {
         return try {
-            val properties = Properties()
-            // Try multiple possible locations for local.properties
-            val possiblePaths = listOf(
-                java.io.File(context.filesDir.parent, "local.properties"),
-                java.io.File("/data/data/${context.packageName}/local.properties"),
-                java.io.File(context.filesDir, "local.properties")
-            )
-            
-            var localProperties: java.io.File? = null
-            for (path in possiblePaths) {
-                if (path.exists()) {
-                    localProperties = path
-                    break
-                }
-            }
-            
-            if (localProperties != null) {
-                properties.load(FileInputStream(localProperties))
-                val url = properties.getProperty("api.base.url", "http://192.168.29.72:5001/api/")            //http://172.16.9.156:5001/api/
-                android.util.Log.d("NetworkModule", "Using API URL from ${localProperties.absolutePath}: $url")
-                url
+            val urlFromBuildConfig = BuildConfig.API_BASE_URL
+            if (urlFromBuildConfig.isNotBlank()) {
+                android.util.Log.d("NetworkModule", "Using API URL from BuildConfig: $urlFromBuildConfig")
+                urlFromBuildConfig
             } else {
-                android.util.Log.d("NetworkModule", "local.properties not found in any location, using hardcoded URL")
-                "http://192.168.29.72:5001/api/" // Use your actual IP as fallback
+                val fallback = if (isEmulator()) "http://10.0.2.2:5000/api/" else "http://127.0.0.1:5000/api/"
+                android.util.Log.w("NetworkModule", "BuildConfig.API_BASE_URL blank, using fallback: $fallback")
+                fallback
             }
         } catch (e: Exception) {
-            android.util.Log.e("NetworkModule", "Error loading properties: ${e.message}")
-            "http://192.168.29.72:5001/api/" // Use your actual IP as fallback
+            val fallback = if (isEmulator()) "http://10.0.2.2:5000/api/" else "http://127.0.0.1:5000/api/"
+            android.util.Log.e("NetworkModule", "Error reading BuildConfig.API_BASE_URL: ${e.message}. Using fallback: $fallback")
+            fallback
         }
+    }
+
+    private fun isEmulator(): Boolean {
+        return (Build.FINGERPRINT.startsWith("generic") ||
+                Build.FINGERPRINT.lowercase().contains("vbox") ||
+                Build.FINGERPRINT.lowercase().contains("test-keys") ||
+                Build.HARDWARE.contains("goldfish") ||
+                Build.HARDWARE.contains("ranchu") ||
+                Build.MODEL.contains("google_sdk") ||
+                Build.MODEL.contains("Emulator") ||
+                Build.MODEL.contains("Android SDK built for x86") ||
+                Build.MANUFACTURER.contains("Genymotion") ||
+                (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")) ||
+                "google_sdk" == Build.PRODUCT)
     }
     
     @Provides
@@ -136,5 +138,23 @@ object NetworkModule {
     @Singleton
     fun provideDoseTrackingRepository(doseTrackingDao: DoseTrackingDao): DoseTrackingRepository {
         return DoseTrackingRepository(doseTrackingDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideTranslationRepository(apiService: ApiService): TranslationRepository {
+        return TranslationRepository(apiService)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideChatbotApiService(retrofit: Retrofit): ChatbotApiService {
+        return retrofit.create(ChatbotApiService::class.java)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideGeminiService(chatbotApiService: ChatbotApiService): GeminiService {
+        return GeminiService(chatbotApiService)
     }
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { Github, Linkedin } from 'lucide-react';
+import Trans from './common/Trans';
 import JohnImage from './images/John.jpg';
 import PrajwalaImage from './images/Prajwala.jpeg';
 import DrushyaImage from './images/Drushya.png';
@@ -35,10 +36,10 @@ const TeamMember: React.FC<TeamMemberProps> = ({ name, role, image, github, link
         />
       </div>
       <div className="p-6 text-center">
-        <h3 className="text-xl font-bold mb-2">{name}</h3>
-        <p className={`text-sm mb-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+        <h3 className="text-xl font-bold mb-2"><Trans>{name}</Trans></h3>
+        <Trans as="p" className={`text-sm mb-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
           {role}
-        </p>
+        </Trans>
         <div className="flex space-x-3 justify-center">
           <a
             href={github}
@@ -108,10 +109,10 @@ const Team: React.FC = () => {
     >
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Team</h2>
-          <p className={`max-w-2xl mx-auto ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4"><Trans>Team</Trans></h2>
+          <Trans as="p" className={`max-w-2xl mx-auto ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
             Meet our talented team of researchers and developers behind the AI-Based Medicine Alert System.
-          </p>
+          </Trans>
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">

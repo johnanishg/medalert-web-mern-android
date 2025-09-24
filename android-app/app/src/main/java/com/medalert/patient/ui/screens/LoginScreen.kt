@@ -16,13 +16,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.medalert.patient.viewmodel.AuthViewModel
+import com.medalert.patient.viewmodel.LanguageViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit,
     onNavigateToDashboard: () -> Unit,
-    authViewModel: AuthViewModel = hiltViewModel()
+    authViewModel: AuthViewModel = hiltViewModel(),
+    languageViewModel: LanguageViewModel = hiltViewModel()
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -31,6 +33,26 @@ fun LoginScreen(
     val uiState by authViewModel.uiState.collectAsState()
     val currentUser by authViewModel.currentUser.collectAsState()
     
+    val lang by languageViewModel.language.collectAsState()
+    var uiTranslations by remember(lang) { mutableStateOf<Map<String, String>>(emptyMap()) }
+    LaunchedEffect(lang) {
+        val keys = listOf(
+            "MedAlert",
+            "Patient Portal",
+            "Sign In",
+            "Email",
+            "Password",
+            "Hide password",
+            "Show password",
+            "Don't have an account? ",
+            "Sign Up",
+            "MedAlert Logo"
+        )
+        val translated = languageViewModel.translateBatch(keys)
+        uiTranslations = keys.mapIndexed { i, k -> k to (translated.getOrNull(i) ?: k) }.toMap()
+    }
+    fun t(key: String): String = uiTranslations[key] ?: key
+
     // Navigate to dashboard if logged in
     LaunchedEffect(currentUser) {
         if (currentUser != null) {
@@ -56,7 +78,7 @@ fun LoginScreen(
         // App Logo and Title
         Icon(
             imageVector = Icons.Default.LocalPharmacy,
-            contentDescription = "MedAlert Logo",
+            contentDescription = t("MedAlert Logo"),
             modifier = Modifier.size(80.dp),
             tint = MaterialTheme.colorScheme.primary
         )
@@ -64,14 +86,14 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(16.dp))
         
         Text(
-            text = "MedAlert",
+            text = t("MedAlert"),
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary
         )
         
         Text(
-            text = "Patient Portal",
+            text = t("Patient Portal"),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -88,7 +110,7 @@ fun LoginScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = "Sign In",
+                    text = t("Sign In"),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -97,9 +119,9 @@ fun LoginScreen(
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    label = { Text("Email") },
+                    label = { Text(t("Email")) },
                     leadingIcon = {
-                        Icon(Icons.Default.Email, contentDescription = "Email")
+                        Icon(Icons.Default.Email, contentDescription = t("Email"))
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     modifier = Modifier.fillMaxWidth(),
@@ -110,15 +132,15 @@ fun LoginScreen(
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Password") },
+                    label = { Text(t("Password")) },
                     leadingIcon = {
-                        Icon(Icons.Default.Lock, contentDescription = "Password")
+                        Icon(Icons.Default.Lock, contentDescription = t("Password"))
                     },
                     trailingIcon = {
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
                             Icon(
                                 imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                                contentDescription = if (passwordVisible) t("Hide password") else t("Show password")
                             )
                         }
                     },
@@ -156,7 +178,7 @@ fun LoginScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                     }
-                    Text("Sign In")
+                    Text(t("Sign In"))
                 }
                 
                 // Register Link
@@ -164,9 +186,9 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Text("Don't have an account? ")
+                    Text(t("Don't have an account? "))
                     TextButton(onClick = onNavigateToRegister) {
-                        Text("Sign Up")
+                        Text(t("Sign Up"))
                     }
                 }
             }

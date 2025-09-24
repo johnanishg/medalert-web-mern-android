@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useTranslation } from '../contexts/TranslationContext';
 import { Pill, Menu, X, Moon, Sun } from 'lucide-react';
 import Login from './Login';
 import Register from './Register';
@@ -7,12 +8,23 @@ import AdminLogin from './AdminLogin';
 
 const Navbar: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
+  const { language, setLanguage, translateText, translatePage } = useTranslation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [keySequence, setKeySequence] = useState<string[]>([]);
+
+  const [tHome, setTHome] = useState('Home');
+  const [tFeatures, setTFeatures] = useState('Features');
+  const [tHardware, setTHardware] = useState('Hardware');
+  const [tDemo, setTDemo] = useState('Demo');
+  const [tTeam, setTTeam] = useState('Team');
+  const [tLogin, setTLogin] = useState('Login');
+  const [tRegister, setTRegister] = useState('Register');
+  const [tLightMode, setTLightMode] = useState('Light Mode');
+  const [tDarkMode, setTDarkMode] = useState('Dark Mode');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -36,12 +48,52 @@ const Navbar: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Translate labels when language changes
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      try {
+        const [home, features, hardware, demo, team, login, register, light, dark] = await Promise.all([
+          translateText('Home'),
+          translateText('Features'),
+          translateText('Hardware'),
+          translateText('Demo'),
+          translateText('Team'),
+          translateText('Login'),
+          translateText('Register'),
+          translateText('Light Mode'),
+          translateText('Dark Mode'),
+        ]);
+        if (cancelled) return;
+        setTHome(home);
+        setTFeatures(features);
+        setTHardware(hardware);
+        setTDemo(demo);
+        setTTeam(team);
+        setTLogin(login);
+        setTRegister(register);
+        setTLightMode(light);
+        setTDarkMode(dark);
+        if (translatePage) {
+          // fire-and-forget page translation
+          translatePage();
+        }
+      } catch (e) {
+        // On failure, keep English defaults
+      }
+    };
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [language, translateText, translatePage]);
+
   const navLinks = [
-    { name: 'Home', href: '#home' },
-    { name: 'Features', href: '#features' },
-    { name: 'Hardware', href: '#hardware' },
-    { name: 'Demo', href: '#demo' },
-    { name: 'Team', href: '#team' },
+    { name: tHome, href: '#home' },
+    { name: tFeatures, href: '#features' },
+    { name: tHardware, href: '#hardware' },
+    { name: tDemo, href: '#demo' },
+    { name: tTeam, href: '#team' },
   ];
 
   return (
@@ -67,7 +119,7 @@ const Navbar: React.FC = () => {
             <div className="ml-10 flex items-center space-x-4">
               {navLinks.map((link) => (
                 <a
-                  key={link.name}
+                  key={link.href}
                   href={link.href}
                   className={`px-3 py-2 rounded-md text-sm font-medium ${
                     theme === 'dark'
@@ -78,17 +130,31 @@ const Navbar: React.FC = () => {
                   {link.name}
                 </a>
               ))}
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as any)}
+                className={`px-2 py-2 rounded-md text-sm font-medium border ${
+                  theme === 'dark'
+                    ? 'bg-gray-900 text-gray-300 border-gray-700'
+                    : 'bg-white text-gray-700 border-gray-300'
+                }`}
+                aria-label="Change language"
+              >
+                <option value="en">English</option>
+                <option value="hi">हिन्दी</option>
+                <option value="kn">ಕನ್ನಡ</option>
+              </select>
               <button
                 onClick={() => setShowLogin(true)}
                 className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md text-sm font-medium transition-colors"
               >
-                Login
+                {tLogin}
               </button>
               <button
                 onClick={() => setShowRegister(true)}
                 className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md text-sm font-medium transition-colors"
               >
-                Register
+                {tRegister}
               </button>
               <button
                 onClick={toggleTheme}
@@ -132,7 +198,7 @@ const Navbar: React.FC = () => {
         }`}>
           {navLinks.map((link) => (
             <a
-              key={link.name}
+              key={link.href}
               href={link.href}
               className={`block px-3 py-2 rounded-md text-base font-medium ${
                 theme === 'dark'
@@ -151,7 +217,7 @@ const Navbar: React.FC = () => {
             }}
             className="w-full text-left px-3 py-2 rounded-md text-base font-medium bg-primary-600 hover:bg-primary-700 text-white transition-colors"
           >
-            Login
+            {tLogin}
           </button>
           <button
             onClick={() => {
@@ -160,7 +226,7 @@ const Navbar: React.FC = () => {
             }}
             className="w-full text-left px-3 py-2 rounded-md text-base font-medium bg-primary-600 hover:bg-primary-700 text-white transition-colors"
           >
-            Register
+            {tRegister}
           </button>
           <button
             onClick={toggleTheme}
@@ -172,11 +238,11 @@ const Navbar: React.FC = () => {
           >
             {theme === 'dark' ? (
               <>
-                <Sun size={20} className="mr-2" /> Light Mode
+                <Sun size={20} className="mr-2" /> {tLightMode}
               </>
             ) : (
               <>
-                <Moon size={20} className="mr-2" /> Dark Mode
+                <Moon size={20} className="mr-2" /> {tDarkMode}
               </>
             )}
           </button>

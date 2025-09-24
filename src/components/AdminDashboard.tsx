@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
+const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000/api';
 import { User, Users, Pill, Stethoscope, Tablet, ClipboardList, Cpu, Bell, LogOut, CheckCircle2, XCircle, Sun, Moon, X, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
+import { SupportedLanguage } from '../services/translationService';
+import { useTranslation } from '../contexts/TranslationContext';
 import ProfileEdit from './ProfileEdit';
 import Chatbot from './Chatbot';
 import logger from '../services/logger';
@@ -27,6 +30,7 @@ const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState('patients');
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const { translatePage, language, setLanguage } = useTranslation();
 
   // State for all sections
   const [patients, setPatients] = useState<any[]>([]);
@@ -109,6 +113,35 @@ const AdminDashboard = () => {
     }
   }, [activeSection, token]);
 
+  // Re-translate when key UI states change
+  useEffect(() => {
+    translatePage && translatePage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSection, patients, managers, employees, doctors, pendingDoctors, medications, prescriptions, devices, logs, notifications, loading, showCreateModal, showEditModal, showDeleteModal, showProfileEdit]);
+
+  // Per-user language preference
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem('user');
+      const user = storedUser ? JSON.parse(storedUser) : null;
+      const userId = user?.id || user?._id || user?.userId || 'anon';
+      const saved = localStorage.getItem(`lang_${userId}`) as SupportedLanguage | null;
+      if (saved && saved !== language) setLanguage(saved);
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newLang = e.target.value as SupportedLanguage;
+    setLanguage(newLang);
+    try {
+      const storedUser = localStorage.getItem('user');
+      const user = storedUser ? JSON.parse(storedUser) : null;
+      const userId = user?.id || user?._id || user?.userId || 'anon';
+      localStorage.setItem(`lang_${userId}`, newLang);
+    } catch {}
+  };
+
   const fetchSectionData = async () => {
     try {
       setLoading(true);
@@ -117,7 +150,8 @@ const AdminDashboard = () => {
       switch (activeSection) {
         case 'patients':
           try {
-            const patientsResponse = await fetch('http://localhost:5001/api/admin/users/patients', {
+            const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000/api';
+            const patientsResponse = await fetch(`${API_BASE_URL}/admin/users/patients`, {
               headers: { Authorization: `Bearer ${token}` }
             });
             if (patientsResponse.ok) {
@@ -132,7 +166,7 @@ const AdminDashboard = () => {
           }
           break;
         case 'managers':
-          const managersResponse = await fetch('http://localhost:5001/api/management/managers', {
+          const managersResponse = await fetch(`${API_BASE_URL}/management/managers`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (managersResponse.ok) {
@@ -141,7 +175,7 @@ const AdminDashboard = () => {
           }
           break;
         case 'employees':
-          const employeesResponse = await fetch('http://localhost:5001/api/management/employees', {
+          const employeesResponse = await fetch(`${API_BASE_URL}/management/employees`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (employeesResponse.ok) {
@@ -151,7 +185,7 @@ const AdminDashboard = () => {
           break;
         case 'doctors':
           try {
-            const doctorsResponse = await fetch('http://localhost:5001/api/admin/doctors', {
+            const doctorsResponse = await fetch(`${API_BASE_URL}/admin/doctors`, {
               headers: { Authorization: `Bearer ${token}` }
             });
             if (doctorsResponse.ok) {
@@ -169,7 +203,7 @@ const AdminDashboard = () => {
           setApprovalsLoading(true);
           setApprovalsError('');
           
-          const response = await fetch('http://localhost:5001/api/admin/pending-doctors', {
+          const response = await fetch(`${API_BASE_URL}/admin/pending-doctors`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           
@@ -184,7 +218,7 @@ const AdminDashboard = () => {
         case 'medications':
           try {
             console.log('Fetching medications...');
-            const medicationsResponse = await fetch('http://localhost:5001/api/admin/medications', {
+            const medicationsResponse = await fetch(`${API_BASE_URL}/admin/medications`, {
               headers: { Authorization: `Bearer ${token}` }
             });
             console.log('Medications response status:', medicationsResponse.status);
@@ -206,7 +240,7 @@ const AdminDashboard = () => {
         case 'prescriptions':
           try {
             console.log('Fetching prescriptions...');
-            const prescriptionsResponse = await fetch('http://localhost:5001/api/admin/prescriptions', {
+            const prescriptionsResponse = await fetch(`${API_BASE_URL}/admin/prescriptions`, {
               headers: { Authorization: `Bearer ${token}` }
             });
             console.log('Prescriptions response status:', prescriptionsResponse.status);
@@ -227,7 +261,7 @@ const AdminDashboard = () => {
           break;
         case 'devices':
           try {
-            const devicesResponse = await fetch('http://localhost:5001/api/admin/devices', {
+            const devicesResponse = await fetch(`${API_BASE_URL}/admin/devices`, {
               headers: { Authorization: `Bearer ${token}` }
             });
             if (devicesResponse.ok) {
@@ -243,7 +277,7 @@ const AdminDashboard = () => {
           break;
         case 'logs':
           try {
-            const logsResponse = await fetch('http://localhost:5001/api/admin/logs', {
+            const logsResponse = await fetch(`${API_BASE_URL}/admin/logs`, {
               headers: { Authorization: `Bearer ${token}` }
             });
             if (logsResponse.ok) {
@@ -260,7 +294,7 @@ const AdminDashboard = () => {
         case 'notifications':
           try {
             console.log('Fetching notifications...');
-            const notificationsResponse = await fetch('http://localhost:5001/api/admin/notifications', {
+            const notificationsResponse = await fetch(`${API_BASE_URL}/admin/notifications`, {
               headers: { Authorization: `Bearer ${token}` }
             });
             console.log('Notifications response status:', notificationsResponse.status);
@@ -295,7 +329,7 @@ const AdminDashboard = () => {
     setApprovalsLoading(true);
     setApprovalsError('');
     
-    fetch(`http://localhost:5001/api/admin/approve-doctor/${id}`, {
+    fetch(`${API_BASE_URL}/admin/approve-doctor/${id}`, {
       method: 'PUT',
       headers: { Authorization: `Bearer ${token}` }
     })
@@ -317,7 +351,7 @@ const AdminDashboard = () => {
     setApprovalsLoading(true);
     setApprovalsError('');
     
-    fetch(`http://localhost:5001/api/admin/reject-doctor/${id}`, {
+    fetch(`${API_BASE_URL}/admin/reject-doctor/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` }
     })
@@ -347,8 +381,8 @@ const AdminDashboard = () => {
     
     try {
       const endpoint = createUserType === 'manager' 
-        ? 'http://localhost:5001/api/management/create-manager'
-        : 'http://localhost:5001/api/management/create-employee';
+        ? `${API_BASE_URL}/management/create-manager`
+        : `${API_BASE_URL}/management/create-employee`;
         
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -387,7 +421,7 @@ const AdminDashboard = () => {
     }
     
     try {
-      const response = await fetch(`http://localhost:5001/api/management/delete-user/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/management/delete-user/${userId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -437,22 +471,22 @@ const AdminDashboard = () => {
       // Determine endpoint based on active section
       switch (activeSection) {
         case 'patients':
-          endpoint = `http://localhost:5001/api/admin/users/patients/${selectedItem._id}`;
+          endpoint = `${API_BASE_URL}/admin/users/patients/${selectedItem._id}`;
           break;
         case 'doctors':
-          endpoint = `http://localhost:5001/api/admin/users/doctors/${selectedItem._id}`;
+          endpoint = `${API_BASE_URL}/admin/users/doctors/${selectedItem._id}`;
           break;
         case 'managers':
-          endpoint = `http://localhost:5001/api/management/update-user/${selectedItem._id}`;
+          endpoint = `${API_BASE_URL}/management/update-user/${selectedItem._id}`;
           break;
         case 'employees':
-          endpoint = `http://localhost:5001/api/management/update-user/${selectedItem._id}`;
+          endpoint = `${API_BASE_URL}/management/update-user/${selectedItem._id}`;
           break;
         case 'medications':
-          endpoint = `http://localhost:5001/api/admin/medications/${selectedItem._id}`;
+          endpoint = `${API_BASE_URL}/admin/medications/${selectedItem._id}`;
           break;
         case 'prescriptions':
-          endpoint = `http://localhost:5001/api/admin/prescriptions/${selectedItem._id}`;
+          endpoint = `${API_BASE_URL}/admin/prescriptions/${selectedItem._id}`;
           break;
         default:
           throw new Error('Update not supported for this section');
@@ -517,22 +551,22 @@ const AdminDashboard = () => {
       // Determine endpoint based on active section
       switch (activeSection) {
         case 'patients':
-          endpoint = `http://localhost:5001/api/admin/users/patients/${selectedItem._id}`;
+          endpoint = `${API_BASE_URL}/admin/users/patients/${selectedItem._id}`;
           break;
         case 'doctors':
-          endpoint = `http://localhost:5001/api/admin/users/doctors/${selectedItem._id}`;
+          endpoint = `${API_BASE_URL}/admin/users/doctors/${selectedItem._id}`;
           break;
         case 'managers':
-          endpoint = `http://localhost:5001/api/management/delete-user/${selectedItem._id}`;
+          endpoint = `${API_BASE_URL}/management/delete-user/${selectedItem._id}`;
           break;
         case 'employees':
-          endpoint = `http://localhost:5001/api/management/delete-user/${selectedItem._id}`;
+          endpoint = `${API_BASE_URL}/management/delete-user/${selectedItem._id}`;
           break;
         case 'medications':
-          endpoint = `http://localhost:5001/api/admin/medications/${selectedItem._id}`;
+          endpoint = `${API_BASE_URL}/admin/medications/${selectedItem._id}`;
           break;
         case 'prescriptions':
-          endpoint = `http://localhost:5001/api/admin/prescriptions/${selectedItem._id}`;
+          endpoint = `${API_BASE_URL}/admin/prescriptions/${selectedItem._id}`;
           break;
         default:
           throw new Error('Delete not supported for this section');
@@ -1564,8 +1598,21 @@ const AdminDashboard = () => {
     <div className={`min-h-screen flex ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-50 text-black'} transition-colors duration-300`}>
       {/* Sidebar */}
       <aside className="w-56 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 p-6 flex flex-col gap-2 shadow-lg">
-        <div className="mb-8 flex items-center gap-2 text-2xl font-bold text-primary-600 dark:text-primary-400">
+        <div className="mb-4 flex items-center gap-2 text-2xl font-bold text-primary-600 dark:text-primary-400">
           <User size={28} /> Admin
+        </div>
+        <div className="mb-4">
+          <label className="block text-xs mb-1">Language</label>
+          <select
+            value={language}
+            onChange={handleLanguageChange}
+            className={`w-full px-2 py-1 rounded border ${theme === 'dark' ? 'bg-gray-800 border-gray-700 text-gray-200' : 'bg-white border-gray-300 text-gray-800'}`}
+            aria-label="Change language"
+          >
+            <option value="en">English</option>
+            <option value="hi">हिन्दी</option>
+            <option value="kn">ಕನ್ನಡ</option>
+          </select>
         </div>
         {sections.map(section => (
           <button

@@ -3,6 +3,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useNotification } from '../contexts/NotificationContext';
 import { Eye, EyeOff, Mail, Lock, User, Stethoscope, Building2, GraduationCap, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import Trans from './common/Trans';
 
 interface RegisterProps {
   onClose: () => void;
@@ -57,7 +58,8 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
   const fetchCaretakers = async () => {
     try {
       setLoadingCaretakers(true);
-      const response = await fetch('http://localhost:5001/api/patients/caretakers');
+      const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${API_BASE_URL}/patients/caretakers`);
       if (response.ok) {
         const data = await response.json();
         setAvailableCaretakers(data.caretakers || []);
@@ -88,7 +90,7 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
     }
     
     try {
-      const response = await fetch('http://localhost:5001/api/auth/register', {
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -223,7 +225,7 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
       } rounded-lg shadow-xl`}>
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold">Create Account</h2>
+            <h2 className="text-2xl font-bold"><Trans>Create Account</Trans></h2>
             <button
               onClick={onClose}
               className={`p-2 rounded-full ${
@@ -247,7 +249,7 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
               }`}
             >
               <User size={16} className="mr-1" />
-              Patient
+              <Trans>Patient</Trans>
             </button>
             <button
               onClick={() => handleUserTypeChange('doctor')}
@@ -258,7 +260,7 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
               }`}
             >
               <Stethoscope size={16} className="mr-1" />
-              Doctor
+              <Trans>Doctor</Trans>
             </button>
             <button
               onClick={() => handleUserTypeChange('caretaker')}
@@ -269,7 +271,7 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
               }`}
             >
               <Heart size={16} className="mr-1" />
-              Caretaker
+              <Trans>Caretaker</Trans>
             </button>
           </div>
 
@@ -277,7 +279,7 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="firstName" className="block text-sm font-medium mb-2">
-                  First Name
+                  <Trans>First Name</Trans>
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -305,7 +307,7 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
               
               <div>
                 <label htmlFor="lastName" className="block text-sm font-medium mb-2">
-                  Last Name
+                  <Trans>Last Name</Trans>
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -333,9 +335,9 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-2">
-                Email Address
-              </label>
+                <label htmlFor="email" className="block text-sm font-medium mb-2">
+                  <Trans>Email Address</Trans>
+                </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                 <input
@@ -365,7 +367,7 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
               <>
                 <div>
                   <label htmlFor="licenseNumber" className="block text-sm font-medium mb-2">
-                    Medical License Number
+                    <Trans>Medical License Number</Trans>
                   </label>
                   <div className="relative">
                     <GraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -387,7 +389,7 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
                 </div>
                 <div>
                   <label htmlFor="specialization" className="block text-sm font-medium mb-2">
-                    Specialization
+                    <Trans>Specialization</Trans>
                   </label>
                   <div className="relative">
                     <Stethoscope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -409,7 +411,7 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
                 </div>
                 <div>
                   <label htmlFor="hospital" className="block text-sm font-medium mb-2">
-                    Hospital/Clinic
+                    <Trans>Hospital/Clinic</Trans>
                   </label>
                   <div className="relative">
                     <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -436,7 +438,7 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
               <>
                 <div>
                   <label htmlFor="dateOfBirth" className="block text-sm font-medium mb-2">
-                    Date of Birth
+                    <Trans>Date of Birth</Trans>
                   </label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -457,7 +459,7 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
                 </div>
                 <div>
                   <label htmlFor="age" className="block text-sm font-medium mb-2">
-                    Age <span className="text-xs text-gray-500">(Auto-calculated)</span>
+                    <Trans>Age (Auto-calculated)</Trans>
                   </label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -477,7 +479,7 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
                 </div>
                 <div>
                   <label htmlFor="gender" className="block text-sm font-medium mb-2">
-                    Gender
+                    <Trans>Gender</Trans>
                   </label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -493,16 +495,16 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
                           : 'bg-white border-gray-300 text-gray-900'
                       } transition-colors`}
                     >
-                      <option value="">Select Gender</option>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
+                      <option value=""><Trans>Select Gender</Trans></option>
+                      <option value="male"><Trans>Male</Trans></option>
+                      <option value="female"><Trans>Female</Trans></option>
+                      <option value="other"><Trans>Other</Trans></option>
                     </select>
                   </div>
                 </div>
                 <div>
                   <label htmlFor="phoneNumber" className="block text-sm font-medium mb-2">
-                    Phone Number
+                    <Trans>Phone Number</Trans>
                   </label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -526,7 +528,7 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
                 {/* Caretaker Selection */}
                 <div>
                   <label htmlFor="selectedCaretakerId" className="block text-sm font-medium mb-2">
-                    Select Caretaker (Optional)
+                    <Trans>Select Caretaker (Optional)</Trans>
                   </label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -542,7 +544,7 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
                       } transition-colors`}
                       disabled={loadingCaretakers}
                     >
-                      <option value="">No caretaker selected</option>
+                      <option value=""><Trans>No caretaker selected</Trans></option>
                       {availableCaretakers.map((caretaker) => (
                         <option key={caretaker.userId} value={caretaker.userId}>
                           {caretaker.name} ({caretaker.userId}) - {caretaker.experience} years experience
@@ -551,7 +553,7 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
                     </select>
                   </div>
                   {loadingCaretakers && (
-                    <p className="text-sm text-gray-500 mt-1">Loading caretakers...</p>
+                    <Trans as="p" className="text-sm text-gray-500 mt-1">Loading caretakers...</Trans>
                   )}
                 </div>
               </>
@@ -561,7 +563,7 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
               <>
                 <div>
                   <label htmlFor="experience" className="block text-sm font-medium mb-2">
-                    Years of Experience
+                    <Trans>Years of Experience</Trans>
                   </label>
                   <div className="relative">
                     <Heart className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -583,7 +585,7 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
                 </div>
                 <div>
                   <label htmlFor="certifications" className="block text-sm font-medium mb-2">
-                    Certifications
+                    <Trans>Certifications</Trans>
                   </label>
                   <div className="relative">
                     <GraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -608,7 +610,7 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium mb-2">
-                Password
+                <Trans>Password</Trans>
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -643,7 +645,7 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2">
-                Confirm Password
+                <Trans>Confirm Password</Trans>
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -686,14 +688,7 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
                 }`}
               />
               <label htmlFor="terms" className="ml-2 text-sm">
-                I agree to the{' '}
-                <a href="#" className="text-primary-600 hover:text-primary-500 transition-colors">
-                  Terms of Service
-                </a>{' '}
-                and{' '}
-                <a href="#" className="text-primary-600 hover:text-primary-500 transition-colors">
-                  Privacy Policy
-                </a>
+                <Trans>I agree to the Terms of Service and Privacy Policy</Trans>
               </label>
             </div>
 
@@ -701,18 +696,18 @@ const Register: React.FC<RegisterProps> = ({ onClose, onSwitchToLogin }) => {
               type="submit"
               className="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-4 rounded-lg transition-colors focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
             >
-              Create {userType === 'patient' ? 'Patient' : userType === 'doctor' ? 'Doctor' : 'Caretaker'} Account
+              <Trans>Create {userType === 'patient' ? 'Patient' : userType === 'doctor' ? 'Doctor' : 'Caretaker'} Account</Trans>
             </button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-sm">
-              Already have an account?{' '}
+              <Trans>Already have an account?</Trans>{' '}
               <button
                 onClick={onSwitchToLogin}
                 className="text-primary-600 hover:text-primary-500 font-medium transition-colors"
               >
-                Sign in
+                <Trans>Sign in</Trans>
               </button>
             </p>
           </div>

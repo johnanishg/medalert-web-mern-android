@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { Smartphone, Mic, Camera, Wifi, Speaker, Battery, Monitor, Server } from 'lucide-react';
+import Trans from './common/Trans';
 
 interface HardwareItemProps {
   icon: React.ReactNode;
@@ -23,10 +24,10 @@ const HardwareItem: React.FC<HardwareItemProps> = ({ icon, name, description }) 
         {icon}
       </div>
       <div>
-        <h3 className="text-lg font-medium mb-1">{name}</h3>
-        <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+        <h3 className="text-lg font-medium mb-1"><Trans>{name}</Trans></h3>
+        <Trans as="p" className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
           {description}
-        </p>
+        </Trans>
       </div>
     </div>
   );
@@ -93,10 +94,10 @@ const Hardware: React.FC = () => {
     >
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Hardware</h2>
-          <p className={`max-w-2xl mx-auto ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4"><Trans>Hardware</Trans></h2>
+          <Trans as="p" className={`max-w-2xl mx-auto ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
             Our system utilizes state-of-the-art hardware components to ensure reliability and performance.
-          </p>
+          </Trans>
           
           <div className="inline-flex mt-6 p-1 rounded-md bg-opacity-20 bg-orange-500">
             <button
@@ -111,7 +112,7 @@ const Hardware: React.FC = () => {
                     : 'text-gray-700 hover:text-gray-900'
               }`}
             >
-              Essential
+              <Trans>Essential</Trans>
             </button>
             <button
               onClick={() => setHardwareType('advanced')}
@@ -125,7 +126,7 @@ const Hardware: React.FC = () => {
                     : 'text-gray-700 hover:text-gray-900'
               }`}
             >
-              Advanced
+              <Trans>Advanced</Trans>
             </button>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from '../contexts/TranslationContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { LogOut, Sun, Moon, UserPlus, Search, List, ClipboardList, User, Pill, X, Brain } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -7,6 +8,7 @@ import AdherenceAnalysisComponent from './AdherenceAnalysis';
 import { DashboardContext } from '../services/geminiService';
 import ProfileEdit from './ProfileEdit';
 import logger from '../services/logger';
+import { SupportedLanguage } from '../services/translationService';
 
 const initialPatientDetails = {
   name: '',
@@ -22,6 +24,7 @@ const initialPatientDetails = {
 
 const DoctorDashboard: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
+  const { translatePage, language, setLanguage } = useTranslation();
   const navigate = useNavigate();
   const [patients, setPatients] = useState<any[]>([]);
   const [searchId, setSearchId] = useState('');
@@ -65,6 +68,35 @@ const DoctorDashboard: React.FC = () => {
       'View Patient History',
       'Manage Patient Data'
     ]
+  };
+
+  // Trigger translation after key data changes render
+  useEffect(() => {
+    translatePage && translatePage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [patients, selectedPatient, prescriptions, patientPrescriptions, activeTab, loading]);
+
+  // Per-user language preference
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem('user');
+      const user = storedUser ? JSON.parse(storedUser) : null;
+      const userId = user?.id || user?._id || user?.userId || 'anon';
+      const saved = localStorage.getItem(`lang_${userId}`) as SupportedLanguage | null;
+      if (saved && saved !== language) setLanguage(saved);
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newLang = e.target.value as SupportedLanguage;
+    setLanguage(newLang);
+    try {
+      const storedUser = localStorage.getItem('user');
+      const user = storedUser ? JSON.parse(storedUser) : null;
+      const userId = user?.id || user?._id || user?.userId || 'anon';
+      localStorage.setItem(`lang_${userId}`, newLang);
+    } catch {}
   };
 
   const [medicineForm, setMedicineForm] = useState({
@@ -113,9 +145,10 @@ const DoctorDashboard: React.FC = () => {
   }, []);
 
   // Fetch prescriptions for the current doctor
+  const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000/api';
   const fetchPrescriptions = async (doctorId: string) => {
     try {
-      const response = await fetch(`http://localhost:5001/api/prescriptions/doctor/${doctorId}`, {
+      const response = await fetch(`${API_BASE_URL}/prescriptions/doctor/${doctorId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -152,7 +185,7 @@ const DoctorDashboard: React.FC = () => {
 
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:5001/api/prescriptions/update/${editingPrescription._id}`, {
+      const response = await fetch(`${API_BASE_URL}/prescriptions/update/${editingPrescription._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -206,7 +239,7 @@ const DoctorDashboard: React.FC = () => {
       setSearchError('');
       
       const doctorId = currentUser.id || currentUser._id || currentUser.userId;
-      const response = await fetch(`http://localhost:5001/api/prescriptions/patient/${patientId}/doctor/${doctorId}`, {
+      const response = await fetch(`${API_BASE_URL}/prescriptions/patient/${patientId}/doctor/${doctorId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -315,7 +348,7 @@ const DoctorDashboard: React.FC = () => {
       setDiagnosisLoading(true);
       console.log('Fetching diagnosis history for patient:', patientId);
       
-      const response = await fetch(`http://localhost:5001/api/diagnosis/patient/${patientId}`, {
+      const response = await fetch(`${API_BASE_URL}/diagnosis/patient/${patientId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -388,7 +421,7 @@ const DoctorDashboard: React.FC = () => {
       console.log('Searching with token:', token ? 'Token exists' : 'No token');
       console.log('Searching for patient ID:', searchId.trim());
 
-      const response = await fetch(`http://localhost:5001/api/doctors/search-patient/${searchId.trim()}`, {
+      const response = await fetch(`${API_BASE_URL}/doctors/search-patient/${searchId.trim()}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -434,12 +467,21 @@ const DoctorDashboard: React.FC = () => {
   };
 
   const handleTimingChange = (timing: string) => {
-    setMedicineForm(prev => ({
-      ...prev,
-      timing: prev.timing.includes(timing)
-        ? prev.timing.filter(t => t !== timing)
-        : [...prev.timing, timing]
-    }));
+    setMedicineForm(prev => {
+      const timingSet = new Set<string>(Array.isArray(prev.timing) ? prev.timing : []);
+      if (timingSet.has(timing)) {
+        timingSet.delete(timing);
+      } else {
+        timingSet.add(timing);
+      }
+      const newTiming = Array.from(timingSet);
+      console.log('Timing toggled:', timing, '->', newTiming);
+      return {
+        ...prev,
+        timing: newTiming,
+        tabletsPerDay: String(newTiming.length || '')
+      };
+    });
   };
 
   const calculateDuration = () => {
@@ -482,7 +524,7 @@ const DoctorDashboard: React.FC = () => {
       // Calculate duration
       const calculatedDuration = calculateDuration();
 
-      const response = await fetch(`http://localhost:5001/api/doctors/add-medicine/${selectedPatient._id}`, {
+      const response = await fetch(`${API_BASE_URL}/doctors/add-medicine/${selectedPatient._id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -491,8 +533,8 @@ const DoctorDashboard: React.FC = () => {
         body: JSON.stringify({
           name: medicineForm.name,
           dosage: medicineForm.dosage,
-          frequency: frequency,
-          duration: calculatedDuration,
+          frequency: frequency, // derived
+          duration: calculatedDuration, // derived
           instructions: medicineForm.instructions,
           timing: medicineForm.timing,
           foodTiming: medicineForm.foodTiming,
@@ -565,12 +607,21 @@ const DoctorDashboard: React.FC = () => {
 
   // Helper function for timing changes in prescription medicines
   const handlePrescriptionTimingChange = (index: number, timing: string) => {
-    const medicine = prescriptionMedicines[index];
-    const currentTiming = medicine.timing || [];
-    const newTiming = currentTiming.includes(timing)
-      ? currentTiming.filter(t => t !== timing)
-      : [...currentTiming, timing];
-    updatePrescriptionMedicine(index, 'timing', newTiming);
+    // Update both timing and tabletsPerDay in a single state update to avoid stale state issues
+    setPrescriptionMedicines(prevMedicines => {
+      const updatedMedicines = [...prevMedicines];
+      const medicine = updatedMedicines[index] || {} as any;
+      const currentTiming = Array.isArray(medicine.timing) ? medicine.timing : [];
+      const newTiming = currentTiming.includes(timing)
+        ? currentTiming.filter((t: string) => t !== timing)
+        : [...currentTiming, timing];
+      updatedMedicines[index] = {
+        ...medicine,
+        timing: newTiming,
+        tabletsPerDay: String(newTiming.length || '')
+      };
+      return updatedMedicines;
+    });
   };
 
   // Helper function to calculate duration for prescription medicines
@@ -652,8 +703,13 @@ const DoctorDashboard: React.FC = () => {
     // Validate each medicine
     for (let i = 0; i < prescriptionMedicines.length; i++) {
       const medicine = prescriptionMedicines[i];
-      if (!medicine.name.trim() || !medicine.dosage.trim() || !medicine.frequency.trim()) {
+      if (!medicine.name.trim() || !medicine.dosage.trim()) {
         setAddError(`Please fill all required fields for medicine ${i + 1}`);
+        return;
+      }
+      // Ensure at least one timing is selected because backend requires frequency
+      if (!Array.isArray(medicine.timing) || medicine.timing.length === 0) {
+        setAddError(`Please select timing for medicine ${i + 1} (e.g., Morning/Night)`);
         return;
       }
       
@@ -673,10 +729,22 @@ const DoctorDashboard: React.FC = () => {
         if (!duration || duration.trim() === '') {
           duration = calculatePrescriptionDuration(medicine);
         }
-        
+        // Derive frequency string from timing and food timing if not present
+        const timingArray: string[] = Array.isArray(medicine.timing) ? medicine.timing : [];
+        const timingText = timingArray.join(', ');
+        const foodText = medicine.foodTiming ? ` (${medicine.foodTiming} food)` : '';
+        const frequency = timingText ? `${timingText}${foodText}` : (medicine.frequency || '');
+
+        // Backfill tabletsPerDay from number of timings if empty
+        const tabletsPerDay = medicine.tabletsPerDay && String(medicine.tabletsPerDay).trim() !== ''
+          ? String(medicine.tabletsPerDay)
+          : String(timingArray.length || '');
+
         return {
           ...medicine,
-          duration: duration
+          duration: duration,
+          frequency,
+          tabletsPerDay
         };
       });
 
@@ -693,7 +761,8 @@ const DoctorDashboard: React.FC = () => {
         visitType: 'consultation'
       };
 
-      const response = await fetch('http://localhost:5001/api/prescriptions/create', {
+      const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${API_BASE_URL}/prescriptions/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -756,8 +825,21 @@ const DoctorDashboard: React.FC = () => {
     <div className={`min-h-screen flex ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-50 text-black'} transition-colors duration-300`}>
       {/* Sidebar */}
       <aside className="w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 p-6 flex flex-col gap-2 shadow-lg">
-        <div className="mb-8 flex items-center gap-2 text-2xl font-bold text-primary-600 dark:text-primary-400">
+        <div className="mb-4 flex items-center gap-2 text-2xl font-bold text-primary-600 dark:text-primary-400">
           <List size={28} /> Doctor
+        </div>
+        <div className="mb-4">
+          <label className="block text-xs mb-1">Language</label>
+          <select
+            value={language}
+            onChange={handleLanguageChange}
+            className={`w-full px-2 py-1 rounded border ${theme === 'dark' ? 'bg-gray-800 border-gray-700 text-gray-200' : 'bg-white border-gray-300 text-gray-800'}`}
+            aria-label="Change language"
+          >
+            <option value="en">English</option>
+            <option value="hi">हिन्दी</option>
+            <option value="kn">ಕನ್ನಡ</option>
+          </select>
         </div>
         
         {/* Navigation Tabs */}
@@ -1658,20 +1740,39 @@ const DoctorDashboard: React.FC = () => {
               <div>
                 <label className="block text-sm font-medium mb-2">When to take *</label>
                 <div className="grid grid-cols-3 gap-2">
-                  {['Morning', 'Afternoon', 'Night'].map((timing) => (
-                    <button
-                      key={timing}
-                      type="button"
-                      onClick={() => handleTimingChange(timing.toLowerCase())}
-                      className={`px-3 py-2 rounded-md border text-sm font-medium transition-colors ${
-                        medicineForm.timing.includes(timing.toLowerCase())
-                          ? 'bg-blue-500 text-white border-blue-500'
-                          : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
-                      }`}
-                    >
-                      {timing}
-                    </button>
-                  ))}
+                  {['morning', 'afternoon', 'night'].map((val) => {
+                    const checked = Array.isArray(medicineForm.timing) && medicineForm.timing.includes(val);
+                    const id = `single-timing-${val}`;
+                    return (
+                      <div key={val} className="relative">
+                        <input
+                          id={id}
+                          type="checkbox"
+                          checked={!!checked}
+                          onChange={() => handleTimingChange(val)}
+                          className="sr-only"
+                        />
+                        <label
+                          htmlFor={id}
+                          className={`block cursor-pointer px-3 py-2 rounded-md border text-sm font-medium transition-colors select-none ${
+                            checked
+                              ? 'bg-blue-500 text-white border-blue-500'
+                              : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                          }`}
+                        >
+                          {val.charAt(0).toUpperCase() + val.slice(1)}
+                        </label>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="mt-2 text-xs text-gray-600 dark:text-gray-300">
+                  Selected: <span className="font-semibold">{medicineForm.timing.length}</span> per day
+                  {medicineForm.timing.length > 0 && (
+                    <span className="ml-2">(
+                      {medicineForm.timing.map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(', ')}
+                    )</span>
+                  )}
                 </div>
               </div>
 
@@ -1928,17 +2029,7 @@ const DoctorDashboard: React.FC = () => {
                                 placeholder="e.g., 500mg"
                               />
                             </div>
-                            <div>
-                              <label className="block text-xs font-medium mb-1">Frequency *</label>
-                              <input
-                                type="text"
-                                value={medicine.frequency}
-                                onChange={(e) => updatePrescriptionMedicine(index, 'frequency', e.target.value)}
-                                disabled={editingMedicineIndex !== index}
-                                className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600"
-                                placeholder="e.g., Twice daily"
-                              />
-                            </div>
+                            {/* Frequency field removed - derived from timing and food timing */}
                             <div>
                               <label className="block text-xs font-medium mb-1">Food Timing</label>
                               <select
@@ -1953,17 +2044,7 @@ const DoctorDashboard: React.FC = () => {
                                 <option value="With">With food</option>
                               </select>
                             </div>
-                            <div>
-                              <label className="block text-xs font-medium mb-1">Duration (Manual)</label>
-                              <input
-                                type="text"
-                                value={medicine.duration}
-                                onChange={(e) => updatePrescriptionMedicine(index, 'duration', e.target.value)}
-                                disabled={editingMedicineIndex !== index}
-                                className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600"
-                                placeholder="e.g., 7 days, 2 weeks"
-                              />
-                            </div>
+                            {/* Manual duration removed - derived from Duration Type */}
                           </div>
 
                           {/* Timing Selection */}
@@ -1975,8 +2056,7 @@ const DoctorDashboard: React.FC = () => {
                                   key={timing}
                                   type="button"
                                   onClick={() => handlePrescriptionTimingChange(index, timing)}
-                                  disabled={editingMedicineIndex !== index}
-                                  className={`px-2 py-1 rounded text-xs font-medium transition-colors disabled:opacity-50 ${
+                                  className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
                                     (medicine.timing || []).includes(timing)
                                       ? 'bg-blue-500 text-white border-blue-500'
                                       : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
@@ -2321,7 +2401,7 @@ const DoctorDashboard: React.FC = () => {
       {/* Adherence Analysis Modal */}
       {showAdherenceAnalysis && selectedPatient && (
         <AdherenceAnalysisComponent
-          patientId={selectedPatient._id}
+          patientId={selectedPatient.userId || selectedPatient._id}
           patientName={selectedPatient.name}
           onClose={() => setShowAdherenceAnalysis(false)}
         />

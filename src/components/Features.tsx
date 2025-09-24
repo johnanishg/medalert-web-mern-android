@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { Volume2, Bell, Utensils, Camera, Users } from 'lucide-react';
+import Trans from './common/Trans';
 
 interface FeatureCardProps {
   icon: React.ReactNode;
@@ -24,10 +25,10 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description }) =
       }`}>
         {icon}
       </div>
-      <h3 className="text-xl font-semibold mb-2">{title}</h3>
-      <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+      <h3 className="text-xl font-semibold mb-2"><Trans>{title}</Trans></h3>
+      <Trans as="p" className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
         {description}
-      </p>
+      </Trans>
     </div>
   );
 };
@@ -72,10 +73,10 @@ const Features: React.FC = () => {
     >
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Features</h2>
-          <p className={`max-w-2xl mx-auto ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4"><Trans>Features</Trans></h2>
+          <Trans as="p" className={`max-w-2xl mx-auto ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
             Our AI-based medicine alert system comes with a range of features designed to improve medication adherence and safety.
-          </p>
+          </Trans>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

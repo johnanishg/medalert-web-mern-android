@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import Patient from '../models/Patient.js';
 import { verifyToken } from '../middleware/auth.js';
 
@@ -15,7 +16,7 @@ router.post('/record/:medicineIndex', verifyToken, async (req, res) => {
       return res.status(403).json({ message: 'Access denied. Only patients can record adherence.' });
     }
 
-    // Find the patient - req.user.userId is the MongoDB _id
+    // Find the authenticated patient (patients record their own adherence)
     const patient = await Patient.findById(req.user.userId);
     if (!patient) {
       return res.status(404).json({ message: 'Patient not found' });
@@ -74,7 +75,7 @@ router.get('/history/:medicineIndex', verifyToken, async (req, res) => {
       return res.status(403).json({ message: 'Access denied. Only patients can view adherence history.' });
     }
 
-    // Find the patient - req.user.userId is the MongoDB _id
+    // Find the authenticated patient
     const patient = await Patient.findById(req.user.userId);
     if (!patient) {
       return res.status(404).json({ message: 'Patient not found' });
@@ -113,8 +114,14 @@ router.get('/patient/:patientId', verifyToken, async (req, res) => {
       return res.status(403).json({ message: 'Access denied. Doctor or Admin privileges required.' });
     }
 
-    // Find the patient - req.user.userId is the MongoDB _id
-    const patient = await Patient.findById(req.user.userId);
+    // Find the patient by Mongo _id (if valid) or by human userId (e.g., PATXXXX)
+    let patient = null;
+    if (mongoose.isValidObjectId(patientId)) {
+      patient = await Patient.findById(patientId);
+    }
+    if (!patient) {
+      patient = await Patient.findOne({ userId: patientId });
+    }
     if (!patient) {
       return res.status(404).json({ message: 'Patient not found' });
     }

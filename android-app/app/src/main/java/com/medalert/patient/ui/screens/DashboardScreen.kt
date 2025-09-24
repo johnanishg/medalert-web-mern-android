@@ -17,6 +17,7 @@ import com.medalert.patient.ui.components.QuickStatsCard
 import com.medalert.patient.ui.components.UpcomingRemindersCard
 import com.medalert.patient.viewmodel.AuthViewModel
 import com.medalert.patient.viewmodel.PatientViewModel
+import com.medalert.patient.viewmodel.LanguageViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,45 +25,74 @@ fun DashboardScreen(
     onNavigateToMedications: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToNotifications: () -> Unit,
+    onNavigateToChatbot: () -> Unit,
     onLogout: () -> Unit,
     authViewModel: AuthViewModel = hiltViewModel(),
-    patientViewModel: PatientViewModel = hiltViewModel()
+    patientViewModel: PatientViewModel = hiltViewModel(),
+    languageViewModel: LanguageViewModel = hiltViewModel()
 ) {
     val patient by patientViewModel.patient.collectAsState()
     val medications by patientViewModel.medications.collectAsState()
     val notifications by patientViewModel.notifications.collectAsState()
     val uiState by patientViewModel.uiState.collectAsState()
-    
+
+    // Translations
+    val lang by languageViewModel.language.collectAsState()
+    var uiTranslations by remember(lang) { mutableStateOf<Map<String, String>>(emptyMap()) }
+    LaunchedEffect(lang) {
+        val keys = listOf(
+            "Welcome back,",
+            "Patient",
+            "Refresh",
+            "Language",
+            "Notifications",
+            "Profile",
+            "Logout",
+            "Current Medications",
+            "View All",
+            "No medications yet",
+            "Your prescribed medications will appear here",
+            "Your Patient ID",
+            "Share this ID with your doctor for prescriptions",
+            "No medications"
+        )
+        val translated = languageViewModel.translateBatch(keys)
+        uiTranslations = keys.mapIndexed { i, k -> k to (translated.getOrNull(i) ?: k) }.toMap()
+    }
+    fun t(key: String): String = uiTranslations[key] ?: key
+
     // Load data when screen opens
     LaunchedEffect(Unit) {
         patientViewModel.refreshAllData()
     }
-    
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
         // Header
-        Row(
+    Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
                 Text(
-                    text = "Welcome back,",
+                    text = t("Welcome back,"),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = patient?.name ?: "Patient",
+                    text = patient?.name ?: t("Patient"),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold
                 )
             }
             
-            Row {
+        val lang by languageViewModel.language.collectAsState()
+        var langMenu by remember { mutableStateOf(false) }
+        Row {
                 // Refresh button
                 IconButton(
                     onClick = { 
@@ -71,10 +101,22 @@ fun DashboardScreen(
                 ) {
                     Icon(
                         Icons.Default.Refresh,
-                        contentDescription = "Refresh",
+                        contentDescription = t("Refresh"),
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
+
+            // Language menu
+            Box {
+                IconButton(onClick = { langMenu = true }) {
+                    Icon(Icons.Default.Translate, contentDescription = t("Language"))
+                }
+                DropdownMenu(expanded = langMenu, onDismissRequest = { langMenu = false }) {
+                    DropdownMenuItem(text = { Text("English") }, onClick = { languageViewModel.setLanguage("en"); langMenu = false })
+                    DropdownMenuItem(text = { Text("हिन्दी") }, onClick = { languageViewModel.setLanguage("hi"); langMenu = false })
+                    DropdownMenuItem(text = { Text("ಕನ್ನಡ") }, onClick = { languageViewModel.setLanguage("kn"); langMenu = false })
+                }
+            }
                 
                 IconButton(onClick = onNavigateToNotifications) {
                     Badge(
@@ -83,15 +125,19 @@ fun DashboardScreen(
                     ) {
                         Text("${notifications.size}")
                     }
-                    Icon(Icons.Default.Notifications, contentDescription = "Notifications")
+                    Icon(Icons.Default.Notifications, contentDescription = t("Notifications"))
                 }
                 
                 IconButton(onClick = onNavigateToProfile) {
-                    Icon(Icons.Default.Person, contentDescription = "Profile")
+                    Icon(Icons.Default.Person, contentDescription = t("Profile"))
+                }
+                
+                IconButton(onClick = onNavigateToChatbot) {
+                    Icon(Icons.Default.SmartToy, contentDescription = "AI Assistant")
                 }
                 
                 IconButton(onClick = onLogout) {
-                    Icon(Icons.Default.Logout, contentDescription = "Logout")
+                    Icon(Icons.Default.Logout, contentDescription = t("Logout"))
                 }
             }
         }
@@ -142,13 +188,13 @@ fun DashboardScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Current Medications",
+                                    text = t("Current Medications"),
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold
                                 )
                                 
                                 TextButton(onClick = onNavigateToMedications) {
-                                    Text("View All")
+                                    Text(t("View All"))
                                 }
                             }
                             
@@ -163,18 +209,18 @@ fun DashboardScreen(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.MedicalServices,
-                                        contentDescription = "No medications",
+                                        contentDescription = t("No medications"),
                                         modifier = Modifier.size(48.dp),
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
-                                        text = "No medications yet",
+                                        text = t("No medications yet"),
                                         style = MaterialTheme.typography.bodyLarge,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                     Text(
-                                        text = "Your prescribed medications will appear here",
+                                        text = t("Your prescribed medications will appear here"),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -213,7 +259,7 @@ fun DashboardScreen(
                                 modifier = Modifier.padding(16.dp)
                             ) {
                                 Text(
-                                    text = "Your Patient ID",
+                                    text = t("Your Patient ID"),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -226,7 +272,7 @@ fun DashboardScreen(
                                     color = MaterialTheme.colorScheme.primary
                                 )
                                 Text(
-                                    text = "Share this ID with your doctor for prescriptions",
+                                    text = t("Share this ID with your doctor for prescriptions"),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )

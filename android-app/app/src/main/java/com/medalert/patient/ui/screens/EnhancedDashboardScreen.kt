@@ -21,6 +21,7 @@ import com.medalert.patient.ui.components.SetTimingDialog
 import com.medalert.patient.ui.components.UpcomingRemindersCard
 import com.medalert.patient.viewmodel.AuthViewModel
 import com.medalert.patient.viewmodel.PatientViewModel
+import com.medalert.patient.viewmodel.LanguageViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,6 +30,7 @@ fun EnhancedDashboardScreen(
     onNavigateToProfile: () -> Unit,
     onNavigateToNotifications: () -> Unit,
     onNavigateToCalendarSchedule: () -> Unit = {},
+    onNavigateToChatbot: () -> Unit = {},
     onLogout: () -> Unit,
     authViewModel: AuthViewModel = hiltViewModel(),
     patientViewModel: PatientViewModel = hiltViewModel()
@@ -39,6 +41,107 @@ fun EnhancedDashboardScreen(
     val uiState by patientViewModel.uiState.collectAsState()
     
     var activeTab by remember { mutableStateOf(DashboardTab.PROFILE) }
+    
+    // Language selector state
+    val languageViewModel: LanguageViewModel = hiltViewModel()
+    val lang by languageViewModel.language.collectAsState()
+    var langMenu by remember { mutableStateOf(false) }
+    var uiTranslations by remember(lang) { mutableStateOf<Map<String, String>>(emptyMap()) }
+    LaunchedEffect(lang) {
+        println("Language changed to: $lang")
+        val keys = listOf(
+            "Edit Profile",
+            "History",
+            "From Date",
+            "To Date",
+            "Clear",
+            "Apply",
+            "Calendar View",
+            "View All",
+            "Add Notification",
+            "Add Caretaker",
+            "View Calendar Schedule",
+            "Patient Information",
+            "Name",
+            "Email",
+            "Phone",
+            "Age",
+            "Gender",
+            "Patient ID",
+            "Emergency Contact",
+            "Relationship",
+            "Health Overview",
+            "Active Medicines",
+            "Total Visits",
+            "Known Allergies",
+            "Quick Actions",
+            "Medical History",
+            "No medical history recorded",
+            "Diagnosed",
+            "Status",
+            "Allergies",
+            "No known allergies",
+            "Allergy",
+            "Medicine Summary",
+            "Filter by date range",
+            "Current Medications",
+            "No medications",
+            "No medications yet",
+            "Your prescribed medications will appear here",
+            "Visit History",
+            "No visit history available",
+            "Date",
+            "Doctor",
+            "Diagnosis",
+            "Medicine Notifications",
+            "Manage your medicine reminder notifications and alarm settings",
+            "Notification Statistics",
+            "Active Notifications",
+            "Total Reminders",
+            "Response Rate",
+            "Current Notifications",
+            "No notifications set up",
+            "Add medicine notifications to get timely reminders",
+            "Edit notification",
+            "Delete notification",
+            "Dosage",
+            "Times",
+            "Caretaker Management",
+            "Manage your caretaker relationships and approval requests",
+            "Current Caretaker",
+            "Assigned",
+            "Contact caretaker",
+            "Remove caretaker",
+            "No caretaker assigned",
+            "Add a caretaker to help manage your health",
+            "Caretaker Requests",
+            "No pending requests",
+            "Requested",
+            "Medicine Schedule",
+            "View your complete medication schedule and track adherence",
+            "No Medicines Scheduled",
+            "Add medicines to see your schedule",
+            "Frequency",
+            "Daily Timings",
+            "Edit timing",
+            "Add Timing",
+            "Instructions",
+            "Refresh",
+            "Language",
+            "Notifications",
+            "Logout",
+            "MedAlert Dashboard",
+            // dynamic value translations
+            "male", "female", "other",
+            "medications", "conditions"
+        )
+        println("Calling translateBatch with ${keys.size} keys")
+        val translated = languageViewModel.translateBatch(keys)
+        println("Translated keys: $translated")
+        uiTranslations = keys.mapIndexed { index, key -> key to (translated.getOrNull(index) ?: key) }.toMap()
+        println("UI Translations: $uiTranslations")
+    }
+    fun t(key: String): String = uiTranslations[key] ?: key
     
     // Load data when screen opens
     LaunchedEffect(Unit) {
@@ -52,7 +155,7 @@ fun EnhancedDashboardScreen(
         TopAppBar(
             title = { 
                 Text(
-                    text = "MedAlert Dashboard",
+                    text = t("MedAlert Dashboard"),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -66,9 +169,21 @@ fun EnhancedDashboardScreen(
                 ) {
                     Icon(
                         Icons.Default.Refresh,
-                        contentDescription = "Refresh",
+                        contentDescription = t("Refresh"),
                         tint = MaterialTheme.colorScheme.onSurface
                     )
+                }
+                
+                // Language dropdown
+                Box {
+                    IconButton(onClick = { langMenu = true }) {
+                        Icon(Icons.Default.Translate, contentDescription = t("Language"))
+                    }
+                    DropdownMenu(expanded = langMenu, onDismissRequest = { langMenu = false }) {
+                        DropdownMenuItem(text = { Text("English") }, onClick = { languageViewModel.setLanguage("en"); langMenu = false })
+                        DropdownMenuItem(text = { Text("हिन्दी") }, onClick = { languageViewModel.setLanguage("hi"); langMenu = false })
+                        DropdownMenuItem(text = { Text("ಕನ್ನಡ") }, onClick = { languageViewModel.setLanguage("kn"); langMenu = false })
+                    }
                 }
                 
                 IconButton(onClick = onNavigateToNotifications) {
@@ -78,11 +193,15 @@ fun EnhancedDashboardScreen(
                     ) {
                         Text("${notifications.size}")
                     }
-                    Icon(Icons.Default.Notifications, contentDescription = "Notifications")
+                    Icon(Icons.Default.Notifications, contentDescription = t("Notifications"))
+                }
+                
+                IconButton(onClick = onNavigateToChatbot) {
+                    Icon(Icons.Default.SmartToy, contentDescription = "AI Assistant")
                 }
                 
                 IconButton(onClick = onLogout) {
-                    Icon(Icons.Default.Logout, contentDescription = "Logout")
+                    Icon(Icons.Default.Logout, contentDescription = t("Logout"))
                 }
             }
         )
@@ -121,7 +240,8 @@ fun EnhancedDashboardScreen(
             when (activeTab) {
                 DashboardTab.PROFILE -> ProfileTabContent(
                     patient = patient,
-                    onEditProfile = onNavigateToProfile
+                    onEditProfile = onNavigateToProfile,
+                    translate = { key -> t(key) }
                 )
                 DashboardTab.MEDICINES -> MedicinesTabContent(
                     medications = medications,
@@ -170,7 +290,8 @@ fun EnhancedDashboardScreen(
 @Composable
 fun ProfileTabContent(
     patient: com.medalert.patient.data.model.Patient?,
-    onEditProfile: () -> Unit
+    onEditProfile: () -> Unit,
+    translate: (String) -> String
 ) {
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -192,7 +313,7 @@ fun ProfileTabContent(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Patient Information",
+                            text = translate("Patient Information"),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -201,7 +322,7 @@ fun ProfileTabContent(
                         IconButton(onClick = onEditProfile) {
                             Icon(
                                 Icons.Default.Edit,
-                                contentDescription = "Edit Profile",
+                                contentDescription = translate("Edit Profile"),
                                 tint = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }
@@ -210,24 +331,30 @@ fun ProfileTabContent(
                     Spacer(modifier = Modifier.height(16.dp))
                     
                     patient?.let { p ->
-                        DashboardProfileInfoRow("Name", p.name)
-                        DashboardProfileInfoRow("Email", p.email)
-                        DashboardProfileInfoRow("Phone", p.phoneNumber)
-                        DashboardProfileInfoRow("Age", p.age.toString())
-                        DashboardProfileInfoRow("Gender", p.gender)
-                        DashboardProfileInfoRow("Patient ID", p.getUserFriendlyId())
+                        DashboardProfileInfoRow(translate("Name"), p.name)
+                        DashboardProfileInfoRow(translate("Email"), p.email)
+                        DashboardProfileInfoRow(translate("Phone"), p.phoneNumber)
+                        DashboardProfileInfoRow(translate("Age"), p.age.toString())
+                        val genderDisplay = when (p.gender.lowercase()) {
+                            "male" -> translate("male")
+                            "female" -> translate("female")
+                            "other" -> translate("other")
+                            else -> p.gender
+                        }
+                        DashboardProfileInfoRow(translate("Gender"), genderDisplay)
+                        DashboardProfileInfoRow(translate("Patient ID"), p.getUserFriendlyId())
                         
                         p.emergencyContact?.let { contact ->
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "Emergency Contact",
+                                text = translate("Emergency Contact"),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
-                            DashboardProfileInfoRow("Name", contact.name)
-                            DashboardProfileInfoRow("Phone", contact.phone)
-                            DashboardProfileInfoRow("Relationship", contact.relationship)
+                            DashboardProfileInfoRow(translate("Name"), contact.name)
+                            DashboardProfileInfoRow(translate("Phone"), contact.phone)
+                            DashboardProfileInfoRow(translate("Relationship"), contact.relationship)
                         }
                     }
                 }
@@ -243,7 +370,7 @@ fun ProfileTabContent(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = "Health Overview",
+                        text = translate("Health Overview"),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -264,7 +391,7 @@ fun ProfileTabContent(
                                 color = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                text = "Active Medicines",
+                                text = translate("Active Medicines"),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -281,7 +408,7 @@ fun ProfileTabContent(
                                 color = MaterialTheme.colorScheme.secondary
                             )
                             Text(
-                                text = "Total Visits",
+                                text = translate("Total Visits"),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -298,7 +425,7 @@ fun ProfileTabContent(
                                 color = MaterialTheme.colorScheme.tertiary
                             )
                             Text(
-                                text = "Known Allergies",
+                                text = translate("Known Allergies"),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -317,7 +444,7 @@ fun ProfileTabContent(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = "Quick Actions",
+                        text = translate("Quick Actions"),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -334,7 +461,7 @@ fun ProfileTabContent(
                         ) {
                             Icon(Icons.Default.Edit, contentDescription = null)
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Edit Profile")
+                            Text(translate("Edit Profile"))
                         }
                         
                         Spacer(modifier = Modifier.width(8.dp))
@@ -346,7 +473,7 @@ fun ProfileTabContent(
                         ) {
                             Icon(Icons.Default.History, contentDescription = null)
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("History")
+                            Text(translate("History"))
                         }
                     }
                 }
@@ -362,7 +489,7 @@ fun ProfileTabContent(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = "Medical History",
+                        text = translate("Medical History"),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -372,7 +499,7 @@ fun ProfileTabContent(
                     patient?.medicalHistory?.let { history ->
                         if (history.isEmpty()) {
                             Text(
-                                text = "No medical history recorded",
+                                text = translate("No medical history recorded"),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -393,12 +520,12 @@ fun ProfileTabContent(
                                             fontWeight = FontWeight.Bold
                                         )
                                         Text(
-                                            text = "Diagnosed: ${condition.diagnosisDate}",
+                                            text = "${translate("Diagnosed")}: ${condition.diagnosisDate}",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                         Text(
-                                            text = "Status: ${condition.status}",
+                                            text = "${translate("Status")}: ${condition.status}",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -421,7 +548,7 @@ fun ProfileTabContent(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = "Allergies",
+                        text = translate("Allergies"),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -431,7 +558,7 @@ fun ProfileTabContent(
                     patient?.allergies?.let { allergies ->
                         if (allergies.isEmpty()) {
                             Text(
-                                text = "No known allergies",
+                                text = translate("No known allergies"),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -443,7 +570,7 @@ fun ProfileTabContent(
                                     leadingIcon = {
                                         Icon(
                                             Icons.Default.Warning,
-                                            contentDescription = "Allergy",
+                                            contentDescription = translate("Allergy"),
                                             modifier = Modifier.size(16.dp)
                                         )
                                     }

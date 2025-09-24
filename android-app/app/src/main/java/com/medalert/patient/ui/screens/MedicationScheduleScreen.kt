@@ -17,6 +17,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.medalert.patient.data.model.*
 import com.medalert.patient.ui.components.CustomTimingDialog
 import com.medalert.patient.viewmodel.PatientViewModel
+import com.medalert.patient.viewmodel.LanguageViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -25,9 +26,32 @@ import java.util.*
 fun MedicationScheduleScreen(
     medication: Medication,
     onNavigateBack: () -> Unit,
-    patientViewModel: PatientViewModel = hiltViewModel()
+    patientViewModel: PatientViewModel = hiltViewModel(),
+    languageViewModel: LanguageViewModel = hiltViewModel()
 ) {
     val uiState by patientViewModel.uiState.collectAsState()
+    val lang by languageViewModel.language.collectAsState()
+    var uiTranslations by remember(lang) { mutableStateOf<Map<String, String>>(emptyMap()) }
+    LaunchedEffect(lang) {
+        val keys = listOf(
+            "Back",
+            "Refresh",
+            "Edit Schedule",
+            "Dosage",
+            "No schedule",
+            "No doses scheduled",
+            "Add schedule times to track your medication",
+            "Today",
+            "Taken at",
+            "Notes",
+            "Taken",
+            "Missed",
+            "Skip"
+        )
+        val translated = languageViewModel.translateBatch(keys)
+        uiTranslations = keys.mapIndexed { i, k -> k to (translated.getOrNull(i) ?: k) }.toMap()
+    }
+    fun t(key: String): String = uiTranslations[key] ?: key
     var showEditScheduleDialog by remember { mutableStateOf(false) }
     var selectedDate by remember { mutableStateOf(getCurrentDate()) }
     
@@ -45,14 +69,14 @@ fun MedicationScheduleScreen(
                 Column {
                     Text("${medication.name} Schedule")
                     Text(
-                        text = "Dosage: ${medication.dosage}",
+                        text = "${t("Dosage")}: ${medication.dosage}",
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
             },
             navigationIcon = {
                 IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    Icon(Icons.Default.ArrowBack, contentDescription = t("Back"))
                 }
             },
             actions = {
@@ -64,13 +88,13 @@ fun MedicationScheduleScreen(
                 ) {
                     Icon(
                         Icons.Default.Refresh,
-                        contentDescription = "Refresh",
+                        contentDescription = t("Refresh"),
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
                 
                 IconButton(onClick = { showEditScheduleDialog = true }) {
-                    Icon(Icons.Default.Edit, contentDescription = "Edit Schedule")
+                    Icon(Icons.Default.Edit, contentDescription = t("Edit Schedule"))
                 }
             }
         )
@@ -78,7 +102,8 @@ fun MedicationScheduleScreen(
         // Date selector
         DateSelector(
             selectedDate = selectedDate,
-            onDateSelected = { selectedDate = it }
+            onDateSelected = { selectedDate = it },
+            translate = { key -> t(key) }
         )
         
         if (uiState.isLoading) {
@@ -106,21 +131,21 @@ fun MedicationScheduleScreen(
                                     .padding(32.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Icon(
+                    Icon(
                                     imageVector = Icons.Default.Schedule,
-                                    contentDescription = "No schedule",
+                        contentDescription = t("No schedule"),
                                     modifier = Modifier.size(64.dp),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Text(
-                                    text = "No doses scheduled",
+                                    text = t("No doses scheduled"),
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
-                                    text = "Add schedule times to track your medication",
+                                    text = t("Add schedule times to track your medication"),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -139,7 +164,8 @@ fun MedicationScheduleScreen(
                             },
                             onMarkSkipped = { doseRecord ->
                                 patientViewModel.recordDoseSkipped(doseRecord)
-                            }
+                            },
+                            translate = { key -> t(key) }
                         )
                     }
                 }
@@ -164,7 +190,8 @@ fun MedicationScheduleScreen(
 @Composable
 fun DateSelector(
     selectedDate: String,
-    onDateSelected: (String) -> Unit
+    onDateSelected: (String) -> Unit,
+    translate: (String) -> String
 ) {
     val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     val calendar = Calendar.getInstance()
@@ -212,7 +239,7 @@ fun DateSelector(
                         )
                         if (isToday) {
                             Text(
-                                text = "Today",
+                                text = translate("Today"),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
@@ -229,7 +256,8 @@ fun DoseScheduleCard(
     doseSchedule: DoseSchedule,
     onMarkTaken: (DoseRecord) -> Unit,
     onMarkMissed: (DoseRecord) -> Unit,
-    onMarkSkipped: (DoseRecord) -> Unit
+    onMarkSkipped: (DoseRecord) -> Unit,
+    translate: (String) -> String
 ) {
     val statusColor = when (doseSchedule.status) {
         DoseStatus.TAKEN -> Color(0xFF4CAF50) // Green
@@ -261,7 +289,7 @@ fun DoseScheduleCard(
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Dosage: ${doseSchedule.scheduledDose.dosage}",
+                        text = "${translate("Dosage")}: ${doseSchedule.scheduledDose.dosage}",
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -283,8 +311,8 @@ fun DoseScheduleCard(
             // Actual time if taken
             if (doseSchedule.actualTime.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Taken at: ${doseSchedule.actualTime}",
+                        Text(
+                            text = "${translate("Taken at")}: ${doseSchedule.actualTime}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -293,8 +321,8 @@ fun DoseScheduleCard(
             // Notes if any
             if (doseSchedule.notes.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Notes: ${doseSchedule.notes}",
+                        Text(
+                            text = "${translate("Notes")}: ${doseSchedule.notes}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -314,27 +342,27 @@ fun DoseScheduleCard(
                             containerColor = Color(0xFF4CAF50)
                         )
                     ) {
-                        Icon(Icons.Default.Check, contentDescription = null)
+                            Icon(Icons.Default.Check, contentDescription = null)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Taken")
+                            Text(translate("Taken"))
                     }
                     
                     OutlinedButton(
                         onClick = { onMarkMissed(doseSchedule.toDoseRecord()) },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Icon(Icons.Default.Close, contentDescription = null)
+                            Icon(Icons.Default.Close, contentDescription = null)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Missed")
+                            Text(translate("Missed"))
                     }
                     
                     OutlinedButton(
                         onClick = { onMarkSkipped(doseSchedule.toDoseRecord()) },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Icon(Icons.Default.SkipNext, contentDescription = null)
+                            Icon(Icons.Default.SkipNext, contentDescription = null)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Skip")
+                            Text(translate("Skip"))
                     }
                 }
             }

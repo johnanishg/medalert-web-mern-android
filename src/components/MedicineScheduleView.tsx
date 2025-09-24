@@ -80,7 +80,8 @@ const MedicineScheduleView: React.FC<MedicineScheduleViewProps> = ({
         return;
       }
 
-      const response = await fetch(`http://localhost:5001/api/adherence/record/${patientId}/${dose.medicineIndex}`, {
+      const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${API_BASE_URL}/adherence/record/${patientId}/${dose.medicineIndex}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

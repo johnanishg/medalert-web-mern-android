@@ -173,7 +173,8 @@ const DoseBasedAdherenceTracker: React.FC<DoseBasedAdherenceTrackerProps> = ({
         tabletsPerDay: scheduleForm.tabletsPerDay
       };
 
-      const response = await fetch(`http://localhost:5001/api/patients/schedule/${medicineIndex}`, {
+      const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${API_BASE_URL}/patients/schedule/${medicineIndex}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -212,7 +213,7 @@ const DoseBasedAdherenceTracker: React.FC<DoseBasedAdherenceTrackerProps> = ({
         medicineName: medicine.name
       });
 
-      const response = await fetch(`http://localhost:5001/api/patients/medicines/${medicineIndex}`, {
+      const response = await fetch(`${API_BASE_URL}/patients/medicines/${medicineIndex}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -272,7 +273,7 @@ const DoseBasedAdherenceTracker: React.FC<DoseBasedAdherenceTrackerProps> = ({
         medicineName: medicine.name
       });
 
-      const response = await fetch(`http://localhost:5001/api/patients/medicines/${medicineIndex}`, {
+      const response = await fetch(`${API_BASE_URL}/patients/medicines/${medicineIndex}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -345,7 +346,7 @@ const DoseBasedAdherenceTracker: React.FC<DoseBasedAdherenceTrackerProps> = ({
         medicineIndex
       });
       
-      const response = await fetch(`http://localhost:5001/api/adherence/record/${medicineIndex}`, {
+      const response = await fetch(`${API_BASE_URL}/adherence/record/${medicineIndex}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -98,4 +98,11 @@ interface ApiService {
         @Path("caretakerId") caretakerId: String,
         @Body status: Map<String, String>
     ): Response<ApiResponse<Patient>>
+    
+    // Translation
+    @POST("translate/translate")
+    suspend fun translate(@Body body: Map<String, Any>): Response<TranslationSingleResponse>
+
+    @POST("translate/batch")
+    suspend fun translateBatch(@Body body: Map<String, Any>): Response<TranslationBatchResponse>
 }

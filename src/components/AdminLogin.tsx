@@ -24,6 +24,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onClose }) => {
     e.preventDefault();
     
     try {
+      const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000/api';
       let endpoint = '';
       let requestBody: any = {
         email: formData.email,
@@ -32,13 +33,13 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onClose }) => {
 
       // Set endpoint and request body based on user type
       if (activeTab === 'admin') {
-        endpoint = 'http://localhost:5001/api/auth/admin-login';
+        endpoint = `${API_BASE_URL}/auth/admin-login`;
         requestBody.adminKey = formData.adminKey;
       } else if (activeTab === 'manager') {
-        endpoint = 'http://localhost:5001/api/auth/login';
+        endpoint = `${API_BASE_URL}/auth/login`;
         requestBody.role = 'manager';
       } else if (activeTab === 'employee') {
-        endpoint = 'http://localhost:5001/api/auth/login';
+        endpoint = `${API_BASE_URL}/auth/login`;
         requestBody.role = 'employee';
       }
 

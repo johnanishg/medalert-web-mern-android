@@ -3,6 +3,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useNotification } from '../contexts/NotificationContext';
 import { Eye, EyeOff, Mail, Lock, User, Stethoscope, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import Trans from './common/Trans';
 
 interface LoginProps {
   onClose: () => void;
@@ -24,7 +25,8 @@ const Login: React.FC<LoginProps> = ({ onClose, onSwitchToRegister }) => {
     e.preventDefault();
     
     try {
-      const response = await fetch('http://localhost:5001/api/auth/login', {
+      const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -104,7 +106,7 @@ const Login: React.FC<LoginProps> = ({ onClose, onSwitchToRegister }) => {
       } rounded-lg shadow-xl`}>
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold">Sign In</h2>
+            <h2 className="text-2xl font-bold"><Trans>Sign In</Trans></h2>
             <button
               onClick={onClose}
               className={`p-2 rounded-full ${
@@ -128,7 +130,7 @@ const Login: React.FC<LoginProps> = ({ onClose, onSwitchToRegister }) => {
               }`}
             >
               <User size={16} className="mr-1" />
-              Patient
+              <Trans>Patient</Trans>
             </button>
             <button
               onClick={() => handleUserTypeChange('doctor')}
@@ -139,7 +141,7 @@ const Login: React.FC<LoginProps> = ({ onClose, onSwitchToRegister }) => {
               }`}
             >
               <Stethoscope size={16} className="mr-1" />
-              Doctor
+              <Trans>Doctor</Trans>
             </button>
             <button
               onClick={() => handleUserTypeChange('caretaker')}
@@ -150,14 +152,14 @@ const Login: React.FC<LoginProps> = ({ onClose, onSwitchToRegister }) => {
               }`}
             >
               <Heart size={16} className="mr-1" />
-              Caretaker
+              <Trans>Caretaker</Trans>
             </button>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off" data-form-type="other">
             <div>
               <label htmlFor="email" className="block text-sm font-medium mb-2">
-                Email Address
+                <Trans>Email Address</Trans>
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -185,7 +187,7 @@ const Login: React.FC<LoginProps> = ({ onClose, onSwitchToRegister }) => {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium mb-2">
-                Password
+                <Trans>Password</Trans>
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -226,13 +228,13 @@ const Login: React.FC<LoginProps> = ({ onClose, onSwitchToRegister }) => {
                     theme === 'dark' ? 'bg-gray-700 border-gray-600' : 'bg-white'
                   }`}
                 />
-                <span className="ml-2 text-sm">Remember me</span>
+                <span className="ml-2 text-sm"><Trans>Remember me</Trans></span>
               </label>
               <a
                 href="#"
                 className="text-sm text-primary-600 hover:text-primary-500 transition-colors"
               >
-                Forgot password?
+                <Trans>Forgot password?</Trans>
               </a>
             </div>
 
@@ -240,18 +242,18 @@ const Login: React.FC<LoginProps> = ({ onClose, onSwitchToRegister }) => {
               type="submit"
               className="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-4 rounded-lg transition-colors focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
             >
-              Sign In as {userType === 'patient' ? 'Patient' : userType === 'doctor' ? 'Doctor' : 'Caretaker'}
+              <Trans>Sign In as {userType === 'patient' ? 'Patient' : userType === 'doctor' ? 'Doctor' : 'Caretaker'}</Trans>
             </button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-sm">
-              Don't have an account?{' '}
+              <Trans>Don't have an account?</Trans>{' '}
               <button
                 onClick={onSwitchToRegister}
                 className="text-primary-600 hover:text-primary-500 font-medium transition-colors"
               >
-                Sign up
+                <Trans>Sign up</Trans>
               </button>
             </p>
           </div>

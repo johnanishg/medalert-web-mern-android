@@ -17,15 +17,59 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.medalert.patient.viewmodel.PatientViewModel
 import java.text.SimpleDateFormat
 import java.util.*
+import com.medalert.patient.viewmodel.LanguageViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     onNavigateBack: () -> Unit,
-    patientViewModel: PatientViewModel = hiltViewModel()
+    patientViewModel: PatientViewModel = hiltViewModel(),
+    languageViewModel: LanguageViewModel = hiltViewModel()
 ) {
     val patient by patientViewModel.patient.collectAsState()
     val uiState by patientViewModel.uiState.collectAsState()
+    val lang by languageViewModel.language.collectAsState()
+    var langMenu by remember { mutableStateOf(false) }
+
+    // Batch UI translations
+    var uiTranslations by remember(lang) { mutableStateOf<Map<String, String>>(emptyMap()) }
+    LaunchedEffect(lang) {
+        val keys = listOf(
+            "My Profile",
+            "Back",
+            "Refresh",
+            "Language",
+            "Edit Profile",
+            "Your Patient ID",
+            "Share this ID with your doctor for prescriptions",
+            "Basic Information",
+            "Name",
+            "Email",
+            "Phone",
+            "Age",
+            "years",
+            "Gender",
+            "Date of Birth",
+            "Emergency Contact",
+            "Call",
+            "Emergency Call",
+            "Medical Information",
+            "Allergies",
+            "None listed",
+            "Current Medications",
+            "Medical History",
+            "Assigned Caretaker",
+            "ID",
+            "Assigned On",
+            // dynamic values
+            "male", "female", "other",
+            "medications",
+            "conditions"
+        )
+        val translated = languageViewModel.translateBatch(keys)
+        uiTranslations = keys.mapIndexed { index, key -> key to (translated.getOrNull(index) ?: key) }.toMap()
+    }
+    fun t(key: String): String = uiTranslations[key] ?: key
     
     // Load data when screen opens
     LaunchedEffect(Unit) {
@@ -37,10 +81,10 @@ fun ProfileScreen(
     ) {
         // Top App Bar
         TopAppBar(
-            title = { Text("My Profile") },
+            title = { Text(t("My Profile")) },
             navigationIcon = {
                 IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    Icon(Icons.Default.ArrowBack, contentDescription = t("Back"))
                 }
             },
             actions = {
@@ -52,13 +96,25 @@ fun ProfileScreen(
                 ) {
                     Icon(
                         Icons.Default.Refresh,
-                        contentDescription = "Refresh",
+                        contentDescription = t("Refresh"),
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
                 
+                // Language selector
+                Box {
+                    IconButton(onClick = { langMenu = true }) {
+                        Icon(Icons.Default.Translate, contentDescription = t("Language"))
+                    }
+                    DropdownMenu(expanded = langMenu, onDismissRequest = { langMenu = false }) {
+                        DropdownMenuItem(text = { Text("English") }, onClick = { languageViewModel.setLanguage("en"); langMenu = false })
+                        DropdownMenuItem(text = { Text("हिन्दी") }, onClick = { languageViewModel.setLanguage("hi"); langMenu = false })
+                        DropdownMenuItem(text = { Text("ಕನ್ನಡ") }, onClick = { languageViewModel.setLanguage("kn"); langMenu = false })
+                    }
+                }
+
                 IconButton(onClick = { /* Navigate to edit profile */ }) {
-                    Icon(Icons.Default.Edit, contentDescription = "Edit Profile")
+                    Icon(Icons.Default.Edit, contentDescription = t("Edit Profile"))
                 }
             }
         )
@@ -90,7 +146,7 @@ fun ProfileScreen(
                                 modifier = Modifier.padding(16.dp)
                             ) {
                                 Text(
-                                    text = "Your Patient ID",
+                                    text = t("Your Patient ID"),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -103,7 +159,7 @@ fun ProfileScreen(
                                     color = MaterialTheme.colorScheme.primary
                                 )
                                 Text(
-                                    text = "Share this ID with your doctor for prescriptions",
+                                    text = t("Share this ID with your doctor for prescriptions"),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
@@ -118,17 +174,26 @@ fun ProfileScreen(
                                 modifier = Modifier.padding(16.dp)
                             ) {
                                 Text(
-                                    text = "Basic Information",
+                                    text = t("Basic Information"),
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
                                 
-                                ProfileInfoRow("Name", patientData.name)
-                                ProfileInfoRow("Email", patientData.email)
-                                ProfileInfoRow("Phone", patientData.phoneNumber)
-                                ProfileInfoRow("Age", "${patientData.age} years")
-                                ProfileInfoRow("Gender", patientData.gender.capitalize())
+                                ProfileInfoRow(t("Name"), patientData.name)
+                                ProfileInfoRow(t("Email"), patientData.email)
+                                ProfileInfoRow(t("Phone"), patientData.phoneNumber)
+                                ProfileInfoRow(t("Age"), "${patientData.age} ${t("years")}")
+                                val genderDisplay = remember(patientData.gender, lang) {
+                                    val g = patientData.gender.lowercase(Locale.getDefault())
+                                    when (g) {
+                                        "male" -> t("male")
+                                        "female" -> t("female")
+                                        "other" -> t("other")
+                                        else -> patientData.gender
+                                    }
+                                }
+                                ProfileInfoRow(t("Gender"), genderDisplay)
                                 
                                 if (patientData.dateOfBirth.isNotEmpty()) {
                                     val displayDate = remember(patientData.dateOfBirth) {
@@ -141,7 +206,7 @@ fun ProfileScreen(
                                             patientData.dateOfBirth
                                         }
                                     }
-                                    ProfileInfoRow("Date of Birth", displayDate)
+                                    ProfileInfoRow(t("Date of Birth"), displayDate)
                                 }
                             }
                         }
@@ -155,15 +220,15 @@ fun ProfileScreen(
                                     modifier = Modifier.padding(16.dp)
                                 ) {
                                     Text(
-                                        text = "Emergency Contact",
+                                        text = t("Emergency Contact"),
                                         style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.Bold
                                     )
                                     Spacer(modifier = Modifier.height(16.dp))
                                     
-                                    ProfileInfoRow("Name", contact.name)
-                                    ProfileInfoRow("Phone", contact.phone)
-                                    ProfileInfoRow("Relationship", contact.relationship)
+                                    ProfileInfoRow(t("Name"), contact.name)
+                                    ProfileInfoRow(t("Phone"), contact.phone)
+                                    ProfileInfoRow(t("Relationship"), contact.relationship)
                                     
                                     Spacer(modifier = Modifier.height(8.dp))
                                     
@@ -174,9 +239,9 @@ fun ProfileScreen(
                                         ),
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
-                                        Icon(Icons.Default.Phone, contentDescription = "Call")
+                                        Icon(Icons.Default.Phone, contentDescription = t("Call"))
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Emergency Call")
+                                        Text(t("Emergency Call"))
                                     }
                                 }
                             }
@@ -190,27 +255,27 @@ fun ProfileScreen(
                                 modifier = Modifier.padding(16.dp)
                             ) {
                                 Text(
-                                    text = "Medical Information",
+                                    text = t("Medical Information"),
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
                                 
                                 ProfileInfoRow(
-                                    "Allergies", 
+                                    t("Allergies"), 
                                     if (patientData.allergies.isNotEmpty()) 
                                         patientData.allergies.joinToString(", ") 
-                                    else "None listed"
+                                    else t("None listed")
                                 )
                                 
                                 ProfileInfoRow(
-                                    "Current Medications", 
-                                    "${patientData.currentMedications.size} medication(s)"
+                                    t("Current Medications"), 
+                                    "${patientData.currentMedications.size} ${t("medications")}"
                                 )
                                 
                                 ProfileInfoRow(
-                                    "Medical History", 
-                                    "${patientData.medicalHistory.size} condition(s)"
+                                    t("Medical History"), 
+                                    "${patientData.medicalHistory.size} ${t("conditions")}"
                                 )
                             }
                         }
@@ -224,15 +289,15 @@ fun ProfileScreen(
                                     modifier = Modifier.padding(16.dp)
                                 ) {
                                     Text(
-                                        text = "Assigned Caretaker",
+                                        text = t("Assigned Caretaker"),
                                         style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.Bold
                                     )
                                     Spacer(modifier = Modifier.height(16.dp))
                                     
-                                    ProfileInfoRow("Name", caretaker.caretakerName)
-                                    ProfileInfoRow("Email", caretaker.caretakerEmail)
-                                    ProfileInfoRow("ID", caretaker.caretakerUserId)
+                                    ProfileInfoRow(t("Name"), caretaker.caretakerName)
+                                    ProfileInfoRow(t("Email"), caretaker.caretakerEmail)
+                                    ProfileInfoRow(t("ID"), caretaker.caretakerUserId)
                                     
                                     val assignedDate = remember(caretaker.assignedAt) {
                                         try {
@@ -244,7 +309,7 @@ fun ProfileScreen(
                                             caretaker.assignedAt
                                         }
                                     }
-                                    ProfileInfoRow("Assigned On", assignedDate)
+                                    ProfileInfoRow(t("Assigned On"), assignedDate)
                                 }
                             }
                         }

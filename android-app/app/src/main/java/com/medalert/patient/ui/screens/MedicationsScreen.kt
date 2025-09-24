@@ -23,6 +23,7 @@ import com.medalert.patient.ui.components.NumericTimingDialog
 import com.medalert.patient.ui.components.CustomTimingDialog
 import com.medalert.patient.services.MedicineScheduleCalculator
 import com.medalert.patient.viewmodel.PatientViewModel
+import com.medalert.patient.viewmodel.LanguageViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -31,11 +32,36 @@ import javax.inject.Inject
 fun MedicationsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToSchedule: (Medication) -> Unit = {},
-    patientViewModel: PatientViewModel = hiltViewModel()
+    patientViewModel: PatientViewModel = hiltViewModel(),
+    languageViewModel: LanguageViewModel = hiltViewModel()
 ) {
     val medications by patientViewModel.medications.collectAsState()
     val uiState by patientViewModel.uiState.collectAsState()
     
+    // Translations
+    val lang by languageViewModel.language.collectAsState()
+    var uiTranslations by remember(lang) { mutableStateOf<Map<String, String>>(emptyMap()) }
+    LaunchedEffect(lang) {
+        val keys = listOf(
+            "My Medications",
+            "Back",
+            "Refresh",
+            "Add Medicine",
+            "Sync Timing",
+            "No medications yet",
+            "Your prescribed medications will appear here",
+            "No medications",
+            "Create/Edit",
+            "Edit timing",
+            "Edit schedule",
+            "Edit",
+            "Delete"
+        )
+        val translated = languageViewModel.translateBatch(keys)
+        uiTranslations = keys.mapIndexed { i, k -> k to (translated.getOrNull(i) ?: k) }.toMap()
+    }
+    fun t(key: String): String = uiTranslations[key] ?: key
+
     // Snackbar for error messages
     val snackbarHostState = remember { SnackbarHostState() }
     
@@ -70,10 +96,10 @@ fun MedicationsScreen(
     ) {
         // Top App Bar
         TopAppBar(
-            title = { Text("My Medications") },
+            title = { Text(t("My Medications")) },
             navigationIcon = {
                 IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    Icon(Icons.Default.ArrowBack, contentDescription = t("Back"))
                 }
             },
             actions = {
@@ -85,7 +111,7 @@ fun MedicationsScreen(
                 ) {
                     Icon(
                         Icons.Default.Refresh,
-                        contentDescription = "Refresh",
+                        contentDescription = t("Refresh"),
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
@@ -95,7 +121,7 @@ fun MedicationsScreen(
                     selectedMedicationIndex = -1
                     showEditDialog = true 
                 }) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Medicine")
+                    Icon(Icons.Default.Add, contentDescription = t("Add Medicine"))
                 }
                 
                 IconButton(onClick = { 
@@ -103,7 +129,7 @@ fun MedicationsScreen(
                     // Also trigger timing sync
                     patientViewModel.syncMedicineTimingFromWeb(-1) // -1 means sync all
                 }) {
-                    Icon(Icons.Default.Sync, contentDescription = "Sync Timing")
+                    Icon(Icons.Default.Sync, contentDescription = t("Sync Timing"))
                 }
             }
         )
@@ -135,19 +161,19 @@ fun MedicationsScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.MedicalServices,
-                                    contentDescription = "No medications",
+                                    contentDescription = t("No medications"),
                                     modifier = Modifier.size(64.dp),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Text(
-                                    text = "No medications yet",
+                                    text = t("No medications yet"),
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
-                                    text = "Your prescribed medications will appear here",
+                                    text = t("Your prescribed medications will appear here"),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )

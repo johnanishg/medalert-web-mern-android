@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { LogOut, Sun, Moon, Users, Bell, Calendar, Clock, Heart, Phone, User, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from '../contexts/TranslationContext';
+import { SupportedLanguage } from '../services/translationService';
 import ProfileEdit from './ProfileEdit';
 import logger from '../services/logger';
 
 const CaretakerDashboard: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
+  const { translatePage, language, setLanguage } = useTranslation();
   const navigate = useNavigate();
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [selectedPatientDetails, setSelectedPatientDetails] = useState<any>(null);
@@ -37,6 +40,35 @@ const CaretakerDashboard: React.FC = () => {
     logger.info('CaretakerDashboard initialized', { user }, 'CaretakerDashboard', 'low');
   }, []);
 
+  // Re-translate when key UI states change
+  useEffect(() => {
+    translatePage && translatePage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, patients, selectedPatient, approvalRequests, approvedPatients, notifications, loading]);
+
+  // Per-user language preference
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem('user');
+      const u = storedUser ? JSON.parse(storedUser) : null;
+      const userId = u?.id || u?._id || u?.userId || 'anon';
+      const saved = localStorage.getItem(`lang_${userId}`) as SupportedLanguage | null;
+      if (saved && saved !== language) setLanguage(saved);
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newLang = e.target.value as SupportedLanguage;
+    setLanguage(newLang);
+    try {
+      const storedUser = localStorage.getItem('user');
+      const u = storedUser ? JSON.parse(storedUser) : null;
+      const userId = u?.id || u?._id || u?.userId || 'anon';
+      localStorage.setItem(`lang_${userId}`, newLang);
+    } catch {}
+  };
+
   const fetchCaretakerData = async () => {
     try {
       setLoading(true);
@@ -48,7 +80,8 @@ const CaretakerDashboard: React.FC = () => {
       
       // Fetch approval requests
       console.log('🔍 fetchCaretakerData: Fetching approval requests...');
-      const approvalResponse = await fetch('http://localhost:5001/api/caretakers/approval-requests', {
+      const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000/api';
+      const approvalResponse = await fetch(`${API_BASE_URL}/caretakers/approval-requests`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -66,7 +99,7 @@ const CaretakerDashboard: React.FC = () => {
       
       // Fetch assigned patients (both directly assigned and approved)
       console.log('🔍 fetchCaretakerData: Fetching assigned patients...');
-      const patientsResponse = await fetch('http://localhost:5001/api/caretakers/assigned-patients', {
+      const patientsResponse = await fetch(`${API_BASE_URL}/caretakers/assigned-patients`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -116,7 +149,7 @@ const CaretakerDashboard: React.FC = () => {
       setSearchError('');
       setSearchedPatient(null);
 
-      const response = await fetch(`http://localhost:5001/api/caretakers/search-patient/${searchId.trim()}`, {
+      const response = await fetch(`${API_BASE_URL}/caretakers/search-patient/${searchId.trim()}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -139,7 +172,7 @@ const CaretakerDashboard: React.FC = () => {
     try {
       console.log('Requesting approval for patientId:', patientId);
       console.log('Token:', token ? 'Present' : 'Missing');
-      const response = await fetch(`http://localhost:5001/api/caretakers/request-patient-approval/${patientId}`, {
+      const response = await fetch(`${API_BASE_URL}/caretakers/request-patient-approval/${patientId}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -162,7 +195,7 @@ const CaretakerDashboard: React.FC = () => {
   const handleCaretakerApproval = async (patientId: string, action: 'approved' | 'rejected') => {
     try {
       console.log('Handling caretaker approval:', { patientId, action });
-      const response = await fetch(`http://localhost:5001/api/caretakers/approve-patient/${patientId}`, {
+      const response = await fetch(`${API_BASE_URL}/caretakers/approve-patient/${patientId}`, {
         method: 'PUT',
         headers: { 
           Authorization: `Bearer ${token}`,
@@ -188,7 +221,7 @@ const CaretakerDashboard: React.FC = () => {
   const handleViewPatientDetails = async (patient: any) => {
     try {
       console.log('Fetching patient details for:', patient.name);
-      const response = await fetch(`http://localhost:5001/api/patients/profile/${patient._id}`, {
+      const response = await fetch(`${API_BASE_URL}/patients/profile/${patient._id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -212,7 +245,7 @@ const CaretakerDashboard: React.FC = () => {
 
     try {
       console.log('Removing patient:', patientId);
-      const response = await fetch(`http://localhost:5001/api/caretakers/remove-patient/${patientId}`, {
+      const response = await fetch(`${API_BASE_URL}/caretakers/remove-patient/${patientId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -252,8 +285,21 @@ const CaretakerDashboard: React.FC = () => {
     <div className={`min-h-screen flex ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-50 text-black'} transition-colors duration-300`}>
       {/* Sidebar */}
       <aside className="w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 p-6 flex flex-col gap-2 shadow-lg">
-        <div className="mb-8 flex items-center gap-2 text-2xl font-bold text-primary-600 dark:text-primary-400">
+        <div className="mb-4 flex items-center gap-2 text-2xl font-bold text-primary-600 dark:text-primary-400">
           <Heart size={28} /> Caretaker
+        </div>
+        <div className="mb-4">
+          <label className="block text-xs mb-1">Language</label>
+          <select
+            value={language}
+            onChange={handleLanguageChange}
+            className={`w-full px-2 py-1 rounded border ${theme === 'dark' ? 'bg-gray-800 border-gray-700 text-gray-200' : 'bg-white border-gray-300 text-gray-800'}`}
+            aria-label="Change language"
+          >
+            <option value="en">English</option>
+            <option value="hi">हिन्दी</option>
+            <option value="kn">ಕನ್ನಡ</option>
+          </select>
         </div>
         
         {/* Navigation Tabs */}

@@ -14,16 +14,39 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.medalert.patient.data.model.MedicineNotification
 import com.medalert.patient.viewmodel.PatientViewModel
+import com.medalert.patient.viewmodel.LanguageViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationsScreen(
     onNavigateBack: () -> Unit,
-    patientViewModel: PatientViewModel = hiltViewModel()
+    patientViewModel: PatientViewModel = hiltViewModel(),
+    languageViewModel: LanguageViewModel = hiltViewModel()
 ) {
     val notifications by patientViewModel.notifications.collectAsState()
     val uiState by patientViewModel.uiState.collectAsState()
     
+    // Translations
+    val lang by languageViewModel.language.collectAsState()
+    var uiTranslations by remember(lang) { mutableStateOf<Map<String, String>>(emptyMap()) }
+    LaunchedEffect(lang) {
+        val keys = listOf(
+            "Notifications",
+            "Back",
+            "Refresh",
+            "No notifications set",
+            "Set medication timings to receive reminders",
+            "No notifications",
+            "Instructions: ",
+            "Food Timing: ",
+            "Reminder Times:",
+            "Time"
+        )
+        val translated = languageViewModel.translateBatch(keys)
+        uiTranslations = keys.mapIndexed { i, k -> k to (translated.getOrNull(i) ?: k) }.toMap()
+    }
+    fun t(key: String): String = uiTranslations[key] ?: key
+
     // Load data when screen opens
     LaunchedEffect(Unit) {
         patientViewModel.loadMedicineNotifications()
@@ -34,15 +57,15 @@ fun NotificationsScreen(
     ) {
         // Top App Bar
         TopAppBar(
-            title = { Text("Notifications") },
+            title = { Text(t("Notifications")) },
             navigationIcon = {
                 IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    Icon(Icons.Default.ArrowBack, contentDescription = t("Back"))
                 }
             },
             actions = {
                 IconButton(onClick = { patientViewModel.loadMedicineNotifications() }) {
-                    Icon(Icons.Default.Refresh, contentDescription = "Refresh")
+                    Icon(Icons.Default.Refresh, contentDescription = t("Refresh"))
                 }
             }
         )
@@ -74,19 +97,19 @@ fun NotificationsScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.NotificationsNone,
-                                    contentDescription = "No notifications",
+                                    contentDescription = t("No notifications"),
                                     modifier = Modifier.size(64.dp),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Text(
-                                    text = "No notifications set",
+                                    text = t("No notifications set"),
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
-                                    text = "Set medication timings to receive reminders",
+                                    text = t("Set medication timings to receive reminders"),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -95,7 +118,7 @@ fun NotificationsScreen(
                     }
                 } else {
                     items(notifications) { notification ->
-                        NotificationCard(notification = notification)
+                        NotificationCard(notification = notification, translate = { key -> t(key) })
                     }
                 }
             }
@@ -112,7 +135,7 @@ fun NotificationsScreen(
 }
 
 @Composable
-private fun NotificationCard(notification: MedicineNotification) {
+private fun NotificationCard(notification: MedicineNotification, translate: (String) -> String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -148,7 +171,7 @@ private fun NotificationCard(notification: MedicineNotification) {
             
             if (notification.instructions.isNotEmpty()) {
                 Text(
-                    text = "Instructions: ${notification.instructions}",
+                    text = "${translate("Instructions: ")}${notification.instructions}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -156,7 +179,7 @@ private fun NotificationCard(notification: MedicineNotification) {
             
             if (notification.foodTiming.isNotEmpty()) {
                 Text(
-                    text = "Food Timing: ${notification.foodTiming}",
+                    text = "${translate("Food Timing: ")}${notification.foodTiming}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -165,7 +188,7 @@ private fun NotificationCard(notification: MedicineNotification) {
             Spacer(modifier = Modifier.height(8.dp))
             
             Text(
-                text = "Reminder Times:",
+                text = translate("Reminder Times:"),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium
             )
@@ -181,7 +204,7 @@ private fun NotificationCard(notification: MedicineNotification) {
                         leadingIcon = {
                             Icon(
                                 Icons.Default.Schedule,
-                                contentDescription = "Time",
+                                contentDescription = translate("Time"),
                                 modifier = Modifier.size(16.dp)
                             )
                         }

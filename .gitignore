@@ -201,3 +201,5 @@ android-app/debug/
 android-app/profile/
 android-app/test/
 android-app/androidTest/
+# Ignore service account keys
+backend/*.json

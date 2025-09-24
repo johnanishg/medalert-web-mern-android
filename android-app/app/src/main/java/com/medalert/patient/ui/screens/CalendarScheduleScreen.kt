@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.medalert.patient.data.model.Medication
 import com.medalert.patient.data.model.ScheduledDose
+import com.medalert.patient.viewmodel.LanguageViewModel
 import com.medalert.patient.viewmodel.PatientViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -34,7 +35,8 @@ import java.util.*
 @Composable
 fun CalendarScheduleScreen(
     onNavigateBack: () -> Unit,
-    patientViewModel: PatientViewModel = hiltViewModel()
+    patientViewModel: PatientViewModel = hiltViewModel(),
+    languageViewModel: LanguageViewModel = hiltViewModel()
 ) {
     val medications by patientViewModel.medications.collectAsState()
     val uiState by patientViewModel.uiState.collectAsState()
@@ -42,6 +44,34 @@ fun CalendarScheduleScreen(
     var currentDate by remember { mutableStateOf(Date()) }
     var selectedDate by remember { mutableStateOf<Date?>(null) }
     
+    // Translations
+    val lang by languageViewModel.language.collectAsState()
+    var uiTranslations by remember(lang) { mutableStateOf<Map<String, String>>(emptyMap()) }
+    LaunchedEffect(lang) {
+        val keys = listOf(
+            "Medicine Schedule",
+            "Back",
+            "Refresh",
+            "🤖 Smart Schedule Information",
+            "Taken",
+            "Overdue",
+            "Due Now",
+            "Scheduled",
+            "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat",
+            "No doses",
+            "Medicine Management",
+            "Today:",
+            "Edit",
+            "Delete",
+            "Mark as taken",
+            "Previous Month",
+            "Next Month"
+        )
+        val translated = languageViewModel.translateBatch(keys)
+        uiTranslations = keys.mapIndexed { i, k -> k to (translated.getOrNull(i) ?: k) }.toMap()
+    }
+    fun t(key: String): String = uiTranslations[key] ?: key
+
     // Load data when screen opens
     LaunchedEffect(Unit) {
         patientViewModel.refreshAllData()
@@ -54,14 +84,14 @@ fun CalendarScheduleScreen(
         TopAppBar(
             title = { 
                 Text(
-                    text = "Medicine Schedule",
+                    text = t("Medicine Schedule"),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
             },
             navigationIcon = {
                 IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    Icon(Icons.Default.ArrowBack, contentDescription = t("Back"))
                 }
             },
             actions = {
@@ -73,7 +103,7 @@ fun CalendarScheduleScreen(
                 ) {
                     Icon(
                         Icons.Default.Refresh,
-                        contentDescription = "Refresh",
+                        contentDescription = t("Refresh"),
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
@@ -104,7 +134,7 @@ fun CalendarScheduleScreen(
                             tint = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = "🤖 Smart Schedule Information",
+                            text = t("🤖 Smart Schedule Information"),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.primary
@@ -139,11 +169,12 @@ fun CalendarScheduleScreen(
                 calendar.time = currentDate
                 calendar.add(Calendar.MONTH, 1)
                 currentDate = calendar.time
-            }
+            },
+            translate = { key -> t(key) }
         )
         
         // Legend
-        LegendSection()
+        LegendSection(translate = { key -> t(key) })
         
         // Calendar Grid
         CalendarGrid(
@@ -157,7 +188,8 @@ fun CalendarScheduleScreen(
                     medications.indexOf(medication), 
                     true
                 )
-            }
+            },
+            translate = { key -> t(key) }
         )
         
         // Medicine Management Section
@@ -168,7 +200,8 @@ fun CalendarScheduleScreen(
             },
             onDeleteMedicine = { medication ->
                 // Handle delete medicine
-            }
+            },
+            translate = { key -> t(key) }
         )
     }
     
@@ -187,7 +220,8 @@ fun CalendarScheduleScreen(
 fun CalendarHeader(
     currentDate: Date,
     onPreviousMonth: () -> Unit,
-    onNextMonth: () -> Unit
+    onNextMonth: () -> Unit,
+    translate: (String) -> String
 ) {
     val dateFormat = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
     
@@ -199,7 +233,7 @@ fun CalendarHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = onPreviousMonth) {
-            Icon(Icons.Default.ChevronLeft, contentDescription = "Previous Month")
+            Icon(Icons.Default.ChevronLeft, contentDescription = translate("Previous Month"))
         }
         
         Text(
@@ -209,13 +243,13 @@ fun CalendarHeader(
         )
         
         IconButton(onClick = onNextMonth) {
-            Icon(Icons.Default.ChevronRight, contentDescription = "Next Month")
+            Icon(Icons.Default.ChevronRight, contentDescription = translate("Next Month"))
         }
     }
 }
 
 @Composable
-fun LegendSection() {
+fun LegendSection(translate: (String) -> String) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -232,19 +266,19 @@ fun LegendSection() {
         ) {
             LegendItem(
                 color = Color.Green,
-                label = "Taken"
+                label = translate("Taken")
             )
             LegendItem(
                 color = Color.Red,
-                label = "Overdue"
+                label = translate("Overdue")
             )
             LegendItem(
                 color = Color(0xFFFF9800),
-                label = "Due Now"
+                label = translate("Due Now")
             )
             LegendItem(
                 color = Color.Gray,
-                label = "Scheduled"
+                label = translate("Scheduled")
             )
         }
     }
@@ -278,7 +312,8 @@ fun CalendarGrid(
     medications: List<Medication>,
     selectedDate: Date?,
     onDateSelected: (Date) -> Unit,
-    onDoseTaken: (Medication, ScheduledDose) -> Unit
+    onDoseTaken: (Medication, ScheduledDose) -> Unit,
+    translate: (String) -> String
 ) {
     val calendar = Calendar.getInstance()
     calendar.time = currentDate
@@ -307,7 +342,7 @@ fun CalendarGrid(
         ) {
             listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat").forEach { day ->
                 Text(
-                    text = day,
+                    text = translate(day),
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -341,7 +376,8 @@ fun CalendarGrid(
                     } ?: false,
                     isToday = date.toDateString() == Date().toDateString(),
                     onClick = { onDateSelected(date) },
-                    onDoseTaken = onDoseTaken
+                    onDoseTaken = onDoseTaken,
+                    translate = translate
                 )
             }
         }
@@ -355,7 +391,8 @@ fun CalendarDay(
     isSelected: Boolean,
     isToday: Boolean,
     onClick: () -> Unit,
-    onDoseTaken: (Medication, ScheduledDose) -> Unit
+    onDoseTaken: (Medication, ScheduledDose) -> Unit,
+    translate: (String) -> String
 ) {
     val dayOfMonth = SimpleDateFormat("d", Locale.getDefault()).format(date)
     
@@ -414,13 +451,14 @@ fun CalendarDay(
                         DoseItem(
                             medication = medication,
                             dose = dose,
-                            onDoseTaken = { onDoseTaken(medication, dose) }
+                            onDoseTaken = { onDoseTaken(medication, dose) },
+                            translate = translate
                         )
                     }
                 }
             } else {
                 Text(
-                    text = "No doses",
+                    text = translate("No doses"),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.weight(1f),
@@ -435,7 +473,8 @@ fun CalendarDay(
 fun DoseItem(
     medication: Medication,
     dose: ScheduledDose,
-    onDoseTaken: () -> Unit
+    onDoseTaken: () -> Unit,
+    translate: (String) -> String
 ) {
     val isTaken = false // You'll need to implement this based on your data model
     val isOverdue = false // You'll need to implement this based on your data model
@@ -485,7 +524,7 @@ fun DoseItem(
             ) {
                 Icon(
                     if (isTaken) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
-                    contentDescription = if (isTaken) "Taken" else "Mark as taken",
+                contentDescription = if (isTaken) translate("Taken") else translate("Mark as taken"),
                     modifier = Modifier.size(8.dp)
                 )
             }
@@ -497,7 +536,8 @@ fun DoseItem(
 fun MedicineManagementSection(
     medications: List<Medication>,
     onEditMedicine: (Medication) -> Unit,
-    onDeleteMedicine: (Medication) -> Unit
+    onDeleteMedicine: (Medication) -> Unit,
+    translate: (String) -> String
 ) {
     Card(
         modifier = Modifier
@@ -511,7 +551,7 @@ fun MedicineManagementSection(
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = "Medicine Management",
+                text = translate("Medicine Management"),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -525,7 +565,8 @@ fun MedicineManagementSection(
                     MedicineManagementItem(
                         medication = medication,
                         onEdit = { onEditMedicine(medication) },
-                        onDelete = { onDeleteMedicine(medication) }
+                        onDelete = { onDeleteMedicine(medication) },
+                        translate = translate
                     )
                 }
             }
@@ -537,7 +578,8 @@ fun MedicineManagementSection(
 fun MedicineManagementItem(
     medication: Medication,
     onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    translate: (String) -> String
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -566,7 +608,7 @@ fun MedicineManagementItem(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = "Today: ${medication.scheduledDoses.size} doses",
+                    text = "${translate("Today:")} ${medication.scheduledDoses.size} doses",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -574,10 +616,10 @@ fun MedicineManagementItem(
             
             Row {
                 IconButton(onClick = onEdit) {
-                    Icon(Icons.Default.Edit, contentDescription = "Edit")
+                    Icon(Icons.Default.Edit, contentDescription = translate("Edit"))
                 }
                 IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete")
+                    Icon(Icons.Default.Delete, contentDescription = translate("Delete"))
                 }
             }
         }

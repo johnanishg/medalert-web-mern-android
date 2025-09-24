@@ -42,12 +42,21 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Emulator default loopback to host machine
+            // Using host LAN IP so physical devices on same Wi‑Fi can reach backend
+            buildConfigField "String", "API_BASE_URL", '"http://192.168.29.72:5000/api/"'
+            buildConfigField "String", "GEMINI_API_KEY", '"YOUR_ACTUAL_GEMINI_API_KEY_HERE"'
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             if (keystorePropertiesFile.exists()) {
                 signingConfig signingConfigs.release
             }
+            // For a real device over the same Wi-Fi, point to your host IP or production URL
+            buildConfigField "String", "API_BASE_URL", '"http://192.168.29.72:5000/api/"'
+            buildConfigField "String", "GEMINI_API_KEY", '"YOUR_ACTUAL_GEMINI_API_KEY_HERE"'
         }
     }
     compileOptions {
@@ -60,6 +69,7 @@ android {
     buildFeatures {
         compose true
         viewBinding true
+        buildConfig true
     }
     composeOptions {
         kotlinCompilerExtensionVersion '1.5.4'
@@ -120,6 +130,9 @@ dependencies {
     
     // Work Manager for notifications
     implementation 'androidx.work:work-runtime-ktx:2.9.0'
+    
+    // Gemini AI
+    implementation 'com.google.ai.client.generativeai:generativeai:0.2.2'
     
     // Testing
     testImplementation 'junit:junit:4.13.2'

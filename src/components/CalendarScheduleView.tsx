@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000/api';
 import { Calendar, Clock, CheckCircle, XCircle, AlertCircle, ChevronLeft, ChevronRight, Plus, Edit, Trash2 } from 'lucide-react';
 import { DoseScheduler, Dose, MedicineSchedule } from '../services/doseScheduler';
 import logger from '../services/logger';
@@ -110,10 +111,9 @@ const CalendarScheduleView: React.FC<CalendarScheduleViewProps> = ({
       console.log('📅 CalendarScheduleView: Available schedules:', Object.keys(schedules));
       console.log('📅 CalendarScheduleView: Schedules object:', schedules);
       
+      // Even if there are no schedules yet, still render the month grid so the calendar is visible
       if (Object.keys(schedules).length === 0) {
-        console.log('📅 CalendarScheduleView: No schedules available, setting empty day schedules');
-        setDaySchedules([]);
-        return;
+        console.log('📅 CalendarScheduleView: No schedules available, will still render empty calendar days');
       }
       
       let startDate: Date;
@@ -208,7 +208,7 @@ const CalendarScheduleView: React.FC<CalendarScheduleViewProps> = ({
         return;
       }
 
-      const response = await fetch(`http://localhost:5001/api/adherence/record/${dose.medicineIndex}`, {
+      const response = await fetch(`${API_BASE_URL}/adherence/record/${dose.medicineIndex}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -385,7 +385,7 @@ const CalendarScheduleView: React.FC<CalendarScheduleViewProps> = ({
         updatedTiming[editingTiming.timeIndex] = newTime;
       }
 
-      const response = await fetch(`http://localhost:5001/api/patients/medicines/${editingTiming.medicine._id}`, {
+      const response = await fetch(`${API_BASE_URL}/patients/medicines/${editingTiming.medicine._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -419,46 +419,11 @@ const CalendarScheduleView: React.FC<CalendarScheduleViewProps> = ({
     setNewTime('');
   };
 
-  if (medicines.length === 0) {
-    return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-          <Calendar size={48} className="mx-auto mb-4 opacity-50" />
-          <p>No medications found</p>
-          <p className="text-sm mt-2">Your prescribed medications will appear here</p>
-        </div>
-      </div>
-    );
-  }
+  // Do not early-return when no medicines; we still render the calendar grid with an empty-state banner
 
-  // Debug: Check if we have schedules but no doses
+  // Debug: still compute totals (no early return) so the calendar remains visible even with zero doses
   const totalDoses = Object.values(schedules).reduce((sum, schedule) => sum + schedule.doses.length, 0);
   const totalDayDoses = daySchedules.reduce((sum, ds) => sum + ds.doses.length, 0);
-  
-  if (medicines.length > 0 && totalDoses === 0) {
-    return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-          <Calendar size={48} className="mx-auto mb-4 opacity-50" />
-          <p>No doses generated for medications</p>
-          <p className="text-sm mt-2">This might be due to missing timing or duration information</p>
-          <div className="mt-4 text-xs text-gray-400 space-y-1">
-            <div>Medicines count: {medicines.length}</div>
-            <div>Schedules generated: {Object.keys(schedules).length}</div>
-            <div>Total doses: {totalDoses}</div>
-            {medicines.length > 0 && (
-              <div>
-                <div>Sample medicine: {medicines[0]?.name}</div>
-                <div>Timing: {medicines[0]?.timing?.join(', ') || 'None'}</div>
-                <div>Duration: {medicines[0]?.duration || 'None'}</div>
-                <div>Frequency: {medicines[0]?.frequency || 'None'}</div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
@@ -516,6 +481,17 @@ const CalendarScheduleView: React.FC<CalendarScheduleViewProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Empty-state banner when no medicines or doses */}
+      {(medicines.length === 0 || totalDoses === 0) && (
+        <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-sm text-yellow-800 dark:text-yellow-200">
+          {medicines.length === 0 ? (
+            <span>No medications found. Your prescribed medications will appear here.</span>
+          ) : (
+            <span>No doses generated yet. Add timing and duration to your medicines to populate the calendar.</span>
+          )}
+        </div>
+      )}
 
       {/* Smart Schedule Information */}
       {medicines.some(med => med.smartScheduled && med.scheduleExplanation) && (

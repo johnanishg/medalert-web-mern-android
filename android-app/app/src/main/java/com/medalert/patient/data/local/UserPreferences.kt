@@ -25,6 +25,7 @@ class UserPreferences @Inject constructor(
     companion object {
         private val AUTH_TOKEN_KEY = stringPreferencesKey("auth_token")
         private val USER_DATA_KEY = stringPreferencesKey("user_data")
+        private val LANGUAGE_KEY = stringPreferencesKey("preferred_language")
     }
     
     suspend fun saveAuthToken(token: String) {
@@ -54,6 +55,18 @@ class UserPreferences @Inject constructor(
                     null
                 }
             }
+        }
+    }
+    
+    suspend fun savePreferredLanguage(languageCode: String) {
+        context.dataStore.edit { preferences ->
+            preferences[LANGUAGE_KEY] = languageCode
+        }
+    }
+    
+    fun getPreferredLanguage(): Flow<String?> {
+        return context.dataStore.data.map { preferences ->
+            preferences[LANGUAGE_KEY]
         }
     }
     

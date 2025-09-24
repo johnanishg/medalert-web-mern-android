@@ -67,6 +67,9 @@ fun MedAlertNavigation(
                 onNavigateToCalendarSchedule = {
                     navController.navigate("calendar_schedule")
                 },
+                onNavigateToChatbot = {
+                    navController.navigate("chatbot")
+                },
                 onLogout = {
                     authViewModel.logout()
                     navController.navigate("login") {
@@ -117,6 +120,14 @@ fun MedAlertNavigation(
         
         composable("notifications") {
             NotificationsScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        
+        composable("chatbot") {
+            ChatbotScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 }

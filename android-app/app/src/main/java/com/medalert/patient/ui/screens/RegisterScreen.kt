@@ -18,6 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.medalert.patient.viewmodel.AuthViewModel
+import com.medalert.patient.viewmodel.LanguageViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -26,7 +27,8 @@ import java.util.*
 fun RegisterScreen(
     onNavigateToLogin: () -> Unit,
     onNavigateToDashboard: () -> Unit,
-    authViewModel: AuthViewModel = hiltViewModel()
+    authViewModel: AuthViewModel = hiltViewModel(),
+    languageViewModel: LanguageViewModel = hiltViewModel()
 ) {
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
@@ -45,6 +47,38 @@ fun RegisterScreen(
     val uiState by authViewModel.uiState.collectAsState()
     val currentUser by authViewModel.currentUser.collectAsState()
     
+    // Translations
+    val lang by languageViewModel.language.collectAsState()
+    var uiTranslations by remember(lang) { mutableStateOf<Map<String, String>>(emptyMap()) }
+    LaunchedEffect(lang) {
+        val keys = listOf(
+            "Create Patient Account",
+            "First Name",
+            "Last Name",
+            "Email",
+            "Phone Number",
+            "Date of Birth",
+            "YYYY-MM-DD",
+            "Age (Auto-calculated)",
+            "Gender",
+            "male", "female", "other",
+            "Password",
+            "Hide password",
+            "Show password",
+            "Confirm Password",
+            "Hide password",
+            "Show password",
+            "Create Account",
+            "Already have an account? ",
+            "Sign In",
+            "MedAlert Logo",
+            "Date of Birth"
+        )
+        val translated = languageViewModel.translateBatch(keys)
+        uiTranslations = keys.mapIndexed { i, k -> k to (translated.getOrNull(i) ?: k) }.toMap()
+    }
+    fun t(key: String): String = uiTranslations[key] ?: key
+
     // Navigate to dashboard if logged in
     LaunchedEffect(currentUser) {
         if (currentUser != null) {
@@ -87,7 +121,7 @@ fun RegisterScreen(
         // App Logo and Title
         Icon(
             imageVector = Icons.Default.LocalPharmacy,
-            contentDescription = "MedAlert Logo",
+            contentDescription = t("MedAlert Logo"),
             modifier = Modifier.size(64.dp),
             tint = MaterialTheme.colorScheme.primary
         )
@@ -95,7 +129,7 @@ fun RegisterScreen(
         Spacer(modifier = Modifier.height(16.dp))
         
         Text(
-            text = "Create Patient Account",
+            text = t("Create Patient Account"),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary
@@ -120,8 +154,8 @@ fun RegisterScreen(
                     OutlinedTextField(
                         value = firstName,
                         onValueChange = { firstName = it },
-                        label = { Text("First Name") },
-                        leadingIcon = { Icon(Icons.Default.Person, contentDescription = "First Name") },
+                        label = { Text(t("First Name")) },
+                        leadingIcon = { Icon(Icons.Default.Person, contentDescription = t("First Name")) },
                         modifier = Modifier.weight(1f),
                         singleLine = true
                     )
@@ -129,8 +163,8 @@ fun RegisterScreen(
                     OutlinedTextField(
                         value = lastName,
                         onValueChange = { lastName = it },
-                        label = { Text("Last Name") },
-                        leadingIcon = { Icon(Icons.Default.Person, contentDescription = "Last Name") },
+                        label = { Text(t("Last Name")) },
+                        leadingIcon = { Icon(Icons.Default.Person, contentDescription = t("Last Name")) },
                         modifier = Modifier.weight(1f),
                         singleLine = true
                     )
@@ -140,8 +174,8 @@ fun RegisterScreen(
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    label = { Text("Email") },
-                    leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email") },
+                    label = { Text(t("Email")) },
+                    leadingIcon = { Icon(Icons.Default.Email, contentDescription = t("Email")) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
@@ -151,8 +185,8 @@ fun RegisterScreen(
                 OutlinedTextField(
                     value = phoneNumber,
                     onValueChange = { phoneNumber = it },
-                    label = { Text("Phone Number") },
-                    leadingIcon = { Icon(Icons.Default.Phone, contentDescription = "Phone") },
+                    label = { Text(t("Phone Number")) },
+                    leadingIcon = { Icon(Icons.Default.Phone, contentDescription = t("Phone Number")) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
@@ -162,19 +196,19 @@ fun RegisterScreen(
                 OutlinedTextField(
                     value = dateOfBirth,
                     onValueChange = { dateOfBirth = it },
-                    label = { Text("Date of Birth") },
-                    leadingIcon = { Icon(Icons.Default.DateRange, contentDescription = "Date of Birth") },
+                    label = { Text(t("Date of Birth")) },
+                    leadingIcon = { Icon(Icons.Default.DateRange, contentDescription = t("Date of Birth")) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    placeholder = { Text("YYYY-MM-DD") }
+                    placeholder = { Text(t("YYYY-MM-DD")) }
                 )
                 
                 // Age Field (Auto-calculated)
                 OutlinedTextField(
                     value = age,
                     onValueChange = { },
-                    label = { Text("Age (Auto-calculated)") },
-                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = "Age") },
+                    label = { Text(t("Age (Auto-calculated)")) },
+                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = t("Age (Auto-calculated)")) },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = false,
                     singleLine = true
@@ -189,8 +223,8 @@ fun RegisterScreen(
                         value = gender,
                         onValueChange = { },
                         readOnly = true,
-                        label = { Text("Gender") },
-                        leadingIcon = { Icon(Icons.Default.Person, contentDescription = "Gender") },
+                        label = { Text(t("Gender")) },
+                        leadingIcon = { Icon(Icons.Default.Person, contentDescription = t("Gender")) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = genderExpanded) },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -203,7 +237,7 @@ fun RegisterScreen(
                     ) {
                         listOf("male", "female", "other").forEach { option ->
                             DropdownMenuItem(
-                                text = { Text(option.capitalize()) },
+                                text = { Text(t(option)) },
                                 onClick = {
                                     gender = option
                                     genderExpanded = false
@@ -217,13 +251,13 @@ fun RegisterScreen(
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Password") },
-                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password") },
+                    label = { Text(t("Password")) },
+                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = t("Password")) },
                     trailingIcon = {
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
                             Icon(
                                 imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                                contentDescription = if (passwordVisible) t("Hide password") else t("Show password")
                             )
                         }
                     },
@@ -236,13 +270,13 @@ fun RegisterScreen(
                 OutlinedTextField(
                     value = confirmPassword,
                     onValueChange = { confirmPassword = it },
-                    label = { Text("Confirm Password") },
-                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Confirm Password") },
+                    label = { Text(t("Confirm Password")) },
+                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = t("Confirm Password")) },
                     trailingIcon = {
                         IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
                             Icon(
                                 imageVector = if (confirmPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                contentDescription = if (confirmPasswordVisible) "Hide password" else "Show password"
+                                contentDescription = if (confirmPasswordVisible) t("Hide password") else t("Show password")
                             )
                         }
                     },
@@ -290,7 +324,7 @@ fun RegisterScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                     }
-                    Text("Create Account")
+                    Text(t("Create Account"))
                 }
                 
                 // Login Link
@@ -298,9 +332,9 @@ fun RegisterScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Text("Already have an account? ")
+                    Text(t("Already have an account? "))
                     TextButton(onClick = onNavigateToLogin) {
-                        Text("Sign In")
+                        Text(t("Sign In"))
                     }
                 }
             }

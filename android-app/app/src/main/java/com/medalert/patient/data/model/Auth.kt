@@ -41,6 +41,18 @@ data class ApiResponse<T>(
 ) : Parcelable
 
 @Parcelize
+data class TranslationSingleResponse(
+    val translatedText: String,
+    val targetLanguage: String
+) : Parcelable
+
+@Parcelize
+data class TranslationBatchResponse(
+    val translatedTexts: List<String>,
+    val targetLanguage: String
+) : Parcelable
+
+@Parcelize
 data class PatientProfileResponse(
     val message: String,
     val patient: Patient? = null,

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000/api';
 import { useTheme } from '../contexts/ThemeContext';
 import { LogOut, Sun, Moon, Bell, Pill, Calendar, Clock, User, Trash2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -7,9 +8,12 @@ import DoseBasedAdherenceTracker from './DoseBasedAdherenceTracker';
 import CalendarScheduleView from './CalendarScheduleView';
 import logger from '../services/logger';
 import { DashboardContext } from '../services/geminiService';
+import { useTranslation } from '../contexts/TranslationContext';
+import { SupportedLanguage } from '../services/translationService';
 
 const PatientDashboard: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
+  const { translatePage, language, setLanguage } = useTranslation();
   const navigate = useNavigate();
   const [medicines, setMedicines] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -43,8 +47,36 @@ const PatientDashboard: React.FC = () => {
     foodTiming: ''
   });
   
+  // Per-user language preference
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem('user');
+      const user = storedUser ? JSON.parse(storedUser) : null;
+      const userId = user?.id || user?._id || user?.userId || 'anon';
+      const saved = localStorage.getItem(`lang_${userId}`) as SupportedLanguage | null;
+      if (saved && saved !== language) setLanguage(saved);
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newLang = e.target.value as SupportedLanguage;
+    setLanguage(newLang);
+    try {
+      const storedUser = localStorage.getItem('user');
+      const user = storedUser ? JSON.parse(storedUser) : null;
+      const userId = user?.id || user?._id || user?.userId || 'anon';
+      localStorage.setItem(`lang_${userId}`, newLang);
+    } catch {}
+  };
   // Active tab state
   const [activeTab, setActiveTab] = useState<'profile' | 'medicines' | 'schedule' | 'visits' | 'notifications' | 'caretaker'>('profile');
+  
+  // Re-translate when key UI states change
+  useEffect(() => {
+    translatePage && translatePage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, medicines, notifications, medicineNotifications, showEditMedicineModal, showNotificationModal, showCaretakerRequests]);
   
   // Date range filter states
   const [dateRange, setDateRange] = useState({
@@ -310,7 +342,8 @@ const PatientDashboard: React.FC = () => {
       
       // Fetch caretaker requests
       console.log('📞 Fetching caretaker requests...');
-      const caretakerResponse = await fetch('http://localhost:5001/api/patients/caretaker-requests', {
+      const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000/api';
+      const caretakerResponse = await fetch(`${API_BASE_URL}/patients/caretaker-requests`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -340,7 +373,7 @@ const PatientDashboard: React.FC = () => {
         console.log('📞 User object:', user);
         console.log('📞 Token available:', !!token);
         console.log('📞 Token value:', token);
-        const patientResponse = await fetch(`http://localhost:5001/api/patients/profile/${userId}`, {
+        const patientResponse = await fetch(`${API_BASE_URL}/patients/profile/${userId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
@@ -425,7 +458,7 @@ const PatientDashboard: React.FC = () => {
           setError('');
 
           // Fetch medicine notifications
-          const notificationsResponse = await fetch(`http://localhost:5001/api/medicine-notifications/patient/${userId}`, {
+          const notificationsResponse = await fetch(`${API_BASE_URL}/medicine-notifications/patient/${userId}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           
@@ -440,8 +473,8 @@ const PatientDashboard: React.FC = () => {
         }
       }
       
-      // Fetch notifications from database
-      const notificationsResponse = await fetch(`http://localhost:5001/api/patients/notifications/${userId}`, {
+      // Fetch notifications from database (use medicine-notifications route)
+      const notificationsResponse = await fetch(`${API_BASE_URL}/medicine-notifications/patient/${userId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -491,7 +524,7 @@ const PatientDashboard: React.FC = () => {
 
       console.log('🔄 Syncing notification timings to medicine schedule...');
       
-      const response = await fetch('http://localhost:5001/api/patients/sync-notifications', {
+      const response = await fetch(`${API_BASE_URL}/patients/sync-notifications`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -546,7 +579,7 @@ const PatientDashboard: React.FC = () => {
         return;
       }
       
-      const patientResponse = await fetch(`http://localhost:5001/api/patients/profile/${userId}`, {
+      const patientResponse = await fetch(`${API_BASE_URL}/patients/profile/${userId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -756,7 +789,7 @@ const PatientDashboard: React.FC = () => {
         notificationTimes: notificationForm.times.filter(time => time.time.trim() !== '')
       });
       
-      const response = await fetch('http://localhost:5001/api/medicine-notifications/set-timings', {
+      const response = await fetch(`${API_BASE_URL}/medicine-notifications/set-timings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -823,7 +856,7 @@ const PatientDashboard: React.FC = () => {
       
       logger.apiCall('DELETE', `/api/medicine-notifications/${notificationId}`, { notificationId });
       
-      const response = await fetch(`http://localhost:5001/api/medicine-notifications/${notificationId}`, {
+      const response = await fetch(`${API_BASE_URL}/medicine-notifications/${notificationId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -878,7 +911,7 @@ const PatientDashboard: React.FC = () => {
       setLoading(true);
       const token = localStorage.getItem('token');
       
-      const response = await fetch(`http://localhost:5001/api/patients/medicines/${editingMedicine.index}`, {
+      const response = await fetch(`${API_BASE_URL}/patients/medicines/${editingMedicine.index}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -915,7 +948,7 @@ const PatientDashboard: React.FC = () => {
       setLoading(true);
       const token = localStorage.getItem('token');
       
-      const response = await fetch(`http://localhost:5001/api/patients/medicines/${index}`, {
+      const response = await fetch(`${API_BASE_URL}/patients/medicines/${index}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`
@@ -941,7 +974,7 @@ const PatientDashboard: React.FC = () => {
 
   const handleCaretakerApproval = async (caretakerId: string, status: 'approved' | 'rejected') => {
     try {
-      const response = await fetch(`http://localhost:5001/api/patients/caretaker-approval/${caretakerId}`, {
+      const response = await fetch(`${API_BASE_URL}/patients/caretaker-approval/${caretakerId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1001,7 +1034,7 @@ const PatientDashboard: React.FC = () => {
         updateData.age = parseInt(updateData.age) || 0;
       }
 
-      const response = await fetch(`http://localhost:5001/api/patients/profile/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/patients/profile/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1044,8 +1077,8 @@ const PatientDashboard: React.FC = () => {
       setLoadingCaretakers(true);
       const token = localStorage.getItem('token');
       const url = searchTerm 
-        ? `http://localhost:5001/api/patients/caretakers?search=${encodeURIComponent(searchTerm)}`
-        : 'http://localhost:5001/api/patients/caretakers';
+        ? `${API_BASE_URL}/patients/caretakers?search=${encodeURIComponent(searchTerm)}`
+        : `${API_BASE_URL}/patients/caretakers`;
         
       const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` }
@@ -1077,7 +1110,7 @@ const PatientDashboard: React.FC = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5001/api/patients/remove-caretaker', {
+      const response = await fetch(`${API_BASE_URL}/patients/remove-caretaker`, {
         method: 'DELETE',
         headers: { 
           'Content-Type': 'application/json',
@@ -1108,7 +1141,7 @@ const PatientDashboard: React.FC = () => {
       // Remove caretaker
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5001/api/patients/remove-caretaker', {
+        const response = await fetch(`${API_BASE_URL}/patients/remove-caretaker`, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -1133,7 +1166,7 @@ const PatientDashboard: React.FC = () => {
       // Assign caretaker
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5001/api/patients/direct-assign-caretaker', {
+        const response = await fetch(`${API_BASE_URL}/patients/direct-assign-caretaker`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -1191,8 +1224,21 @@ const PatientDashboard: React.FC = () => {
     <div className={`min-h-screen flex ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-50 text-black'} transition-colors duration-300`}>
       {/* Sidebar */}
       <aside className="w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 p-6 flex flex-col gap-2 shadow-lg">
-        <div className="mb-8 flex items-center gap-2 text-2xl font-bold text-primary-600 dark:text-primary-400">
+        <div className="mb-4 flex items-center gap-2 text-2xl font-bold text-primary-600 dark:text-primary-400">
           <Pill size={28} /> Patient
+        </div>
+        <div className="mb-4">
+          <label className="block text-xs mb-1">Language</label>
+          <select
+            value={language}
+            onChange={handleLanguageChange}
+            className={`w-full px-2 py-1 rounded border ${theme === 'dark' ? 'bg-gray-800 border-gray-700 text-gray-200' : 'bg-white border-gray-300 text-gray-800'}`}
+            aria-label="Change language"
+          >
+            <option value="en">English</option>
+            <option value="hi">हिन्दी</option>
+            <option value="kn">ಕನ್ನಡ</option>
+          </select>
         </div>
         
         {/* Navigation Tabs */}
@@ -1849,31 +1895,15 @@ const PatientDashboard: React.FC = () => {
               </div>
               
 
-              {/* Calendar Schedule View */}
-              {medicines.length > 0 ? (
-                <CalendarScheduleView
-                  medicines={medicines}
-                  patientId={currentUser?._id || currentUser?.id || currentUser?.userId || ''}
-                  onAdherenceUpdate={refreshMedicineData}
-                  onEditMedicine={openEditMedicineModal}
-                  onDeleteMedicine={handleDeleteMedicine}
-                  dateRange={dateRange}
-                />
-              ) : (
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                    <Calendar size={48} className="mx-auto mb-4 opacity-50" />
-                    <p>No medications found</p>
-                    <p className="text-sm mt-2">Your prescribed medications will appear here</p>
-                    <button
-                      onClick={handleRefresh}
-                      className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-                    >
-                      Refresh Medications
-                    </button>
-                  </div>
-                </div>
-              )}
+              {/* Calendar Schedule View (always render; handles empty state internally) */}
+              <CalendarScheduleView
+                medicines={medicines}
+                patientId={currentUser?._id || currentUser?.id || currentUser?.userId || ''}
+                onAdherenceUpdate={refreshMedicineData}
+                onEditMedicine={openEditMedicineModal}
+                onDeleteMedicine={handleDeleteMedicine}
+                dateRange={dateRange}
+              />
             </div>
           )}
 
@@ -2041,7 +2071,7 @@ const PatientDashboard: React.FC = () => {
                           
                           console.log('🧪 Adding sample visit to database for userId:', userId);
                           
-                          const response = await fetch(`http://localhost:5001/api/patients/test-visits/${userId}`, {
+                          const response = await fetch(`${API_BASE_URL}/patients/test-visits/${userId}`, {
                             method: 'POST',
                             headers: {
                               'Authorization': `Bearer ${token}`
@@ -2090,7 +2120,7 @@ const PatientDashboard: React.FC = () => {
                           
                           console.log('🧪 Testing API call directly for userId:', userId);
                           
-                          const response = await fetch(`http://localhost:5001/api/patients/profile/${userId}`, {
+                          const response = await fetch(`${API_BASE_URL}/patients/profile/${userId}`, {
                             headers: { Authorization: `Bearer ${token}` }
                           });
                           
