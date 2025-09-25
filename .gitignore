@@ -201,5 +201,10 @@ android-app/debug/
 android-app/profile/
 android-app/test/
 android-app/androidTest/
-# Ignore service account keys
+# Ignore service account keys and credentials
 backend/*.json
+backend/src/*.json
+**/rsvp-*.json
+**/service-account*.json
+**/credentials*.json
+**/*-key.json
