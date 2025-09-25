@@ -1,3 +1,26 @@
+## Speech-to-Text (Google Cloud)
+
+This backend exposes an endpoint to transcribe short microphone recordings using Google Cloud Speech-to-Text.
+
+### Endpoint
+
+- POST `/api/speech/transcribe`
+  - Form fields:
+    - `audio` (file): WebM audio blob recorded in the browser
+    - `languageCode` (string, optional): BCP-47 code like `en-US`, `hi-IN`, `kn-IN`
+    - `sampleRateHertz` (number, optional)
+  - Response: `{ success: boolean, transcription?: string, message?: string }`
+
+### Credentials
+
+Credentials are read from existing environment variables. Do not modify credential contents in code.
+
+Required env vars (already supported and loaded via dotenv):
+- `GCLOUD_PROJECT_ID`
+- `GOOGLE_APPLICATION_CREDENTIALS` (path to service account JSON)
+
+No code changes are needed when rotating credentials; update the `.env` values only.
+
 # MedAlert Backend API
 
 RESTful API server for the MedAlert healthcare management system built with Node.js, Express.js, and MongoDB.

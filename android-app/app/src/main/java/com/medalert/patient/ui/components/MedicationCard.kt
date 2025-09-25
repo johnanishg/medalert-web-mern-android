@@ -26,7 +26,8 @@ fun MedicationCard(
     onEdit: (() -> Unit)? = null,
     onDelete: (() -> Unit)? = null,
     onViewSchedule: (() -> Unit)? = null,
-    showActions: Boolean = true
+    showActions: Boolean = true,
+    translate: (String) -> String = { it }
 ) {
     var showAdherenceDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -64,7 +65,7 @@ fun MedicationCard(
                             IconButton(onClick = editAction) {
                                 Icon(
                                     Icons.Default.Edit, 
-                                    contentDescription = "Edit Medicine",
+                                    contentDescription = translate("Edit Medicine"),
                                     tint = MaterialTheme.colorScheme.primary
                                 )
                             }
@@ -73,7 +74,7 @@ fun MedicationCard(
                         IconButton(onClick = onEditTiming) {
                             Icon(
                                 Icons.Default.Schedule, 
-                                contentDescription = "Edit Timing",
+                                contentDescription = translate("Edit Timing"),
                                 tint = MaterialTheme.colorScheme.tertiary
                             )
                         }
@@ -82,7 +83,7 @@ fun MedicationCard(
                             IconButton(onClick = quickTimingAction) {
                                 Icon(
                                     Icons.Default.AccessTime, 
-                                    contentDescription = "Edit Timing",
+                                    contentDescription = translate("Edit Timing"),
                                     tint = MaterialTheme.colorScheme.tertiary
                                 )
                             }
@@ -92,7 +93,7 @@ fun MedicationCard(
                             IconButton(onClick = scheduleAction) {
                                 Icon(
                                     Icons.Default.CalendarMonth, 
-                                    contentDescription = "Edit Schedule",
+                                    contentDescription = translate("Edit Schedule"),
                                     tint = MaterialTheme.colorScheme.secondary
                                 )
                             }
@@ -102,7 +103,7 @@ fun MedicationCard(
                             IconButton(onClick = viewScheduleAction) {
                                 Icon(
                                     Icons.Default.ViewList, 
-                                    contentDescription = "View Schedule",
+                                    contentDescription = translate("View Schedule"),
                                     tint = MaterialTheme.colorScheme.primary
                                 )
                             }
@@ -112,7 +113,7 @@ fun MedicationCard(
                             IconButton(onClick = { showDeleteDialog = true }) {
                                 Icon(
                                     Icons.Default.Delete, 
-                                    contentDescription = "Delete",
+                                    contentDescription = translate("Delete"),
                                     tint = MaterialTheme.colorScheme.error
                                 )
                             }

@@ -29,7 +29,13 @@ import com.medalert.patient.data.service.DashboardContext
 import com.medalert.patient.data.service.GeminiService
 import com.medalert.patient.viewmodel.ChatbotViewModel
 import com.medalert.patient.viewmodel.LanguageViewModel
+import com.medalert.patient.utils.MarkdownRenderer
 import kotlinx.coroutines.launch
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -42,6 +48,8 @@ fun ChatbotScreen(
     val isLoading by chatbotViewModel.isLoading.collectAsState()
     val isAvailable by chatbotViewModel.isAvailable.collectAsState()
     val inputText by chatbotViewModel.inputText.collectAsState()
+    val isRecording by chatbotViewModel.isRecording.collectAsState()
+    val ttsEnabled by chatbotViewModel.ttsEnabled.collectAsState()
     
     // Translations
     val lang by languageViewModel.language.collectAsState()
@@ -63,9 +71,14 @@ fun ChatbotScreen(
             "History",
             "Schedule",
             "Trends",
-            "Press Enter to send, Shift+Enter for new line"
+            "Press Enter to send, Shift+Enter for new line",
+            "Back",
+            "TTS Toggle",
+            "AI is thinking...",
+            "Stop",
+            "Record"
         )
-        val translated = languageViewModel.translateBatch(keys)
+        val translated = languageViewModel.translateBatch(keys, lang)
         uiTranslations = keys.mapIndexed { i, k -> k to (translated.getOrNull(i) ?: k) }.toMap()
     }
     fun t(key: String): String = uiTranslations[key] ?: key
@@ -73,6 +86,22 @@ fun ChatbotScreen(
     val listState = rememberLazyListState()
     val focusManager = LocalFocusManager.current
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    
+    // Permission handling
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            if (isRecording) {
+                chatbotViewModel.startRecording()
+            }
+        }
+    }
+    
+    val hasPermission = remember {
+        context.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+    }
     
     // Auto-scroll to bottom when new messages arrive
     LaunchedEffect(messages.size) {
@@ -116,11 +145,17 @@ fun ChatbotScreen(
                 IconButton(onClick = onNavigateBack) {
                     Icon(
                         imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Back"
+                        contentDescription = t("Back")
                     )
                 }
             },
             actions = {
+                IconButton(onClick = { chatbotViewModel.toggleTts() }) {
+                    Icon(
+                        imageVector = if (ttsEnabled) Icons.Default.VolumeUp else Icons.Default.VolumeOff,
+                        contentDescription = t("TTS Toggle")
+                    )
+                }
                 IconButton(
                     onClick = { 
                         scope.launch {
@@ -202,7 +237,7 @@ fun ChatbotScreen(
                 
                 if (isLoading) {
                     item {
-                        LoadingMessage()
+                        LoadingMessage(translate = { key -> t(key) })
                     }
                 }
             }
@@ -298,11 +333,14 @@ fun ChatbotScreen(
                     
                     FloatingActionButton(
                         onClick = {
-                            if (inputText.isNotBlank() && !isLoading) {
-                                scope.launch {
-                                    chatbotViewModel.sendMessage()
-                                    focusManager.clearFocus()
+                            if (!isRecording) {
+                                if (hasPermission) {
+                                    chatbotViewModel.startRecording()
+                                } else {
+                                    permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                                 }
+                            } else {
+                                chatbotViewModel.stopRecordingAndTranscribe()
                             }
                         },
                         modifier = Modifier.size(48.dp),
@@ -310,8 +348,8 @@ fun ChatbotScreen(
                         contentColor = MaterialTheme.colorScheme.onPrimary
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Send,
-                            contentDescription = t("Send")
+                            imageVector = if (isRecording) Icons.Default.Stop else Icons.Default.Mic,
+                            contentDescription = if (isRecording) t("Stop") else t("Record")
                         )
                     }
                 }
@@ -322,6 +360,26 @@ fun ChatbotScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                 )
+                // Send Button
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    ExtendedFloatingActionButton(
+                        onClick = {
+                            if (inputText.isNotBlank() && !isLoading) {
+                                scope.launch {
+                                    chatbotViewModel.sendMessage()
+                                    focusManager.clearFocus()
+                                }
+                            }
+                        },
+                        icon = { Icon(Icons.Default.Send, contentDescription = t("Send")) },
+                        text = { Text(t("Send")) }
+                    )
+                }
             }
         }
     }
@@ -330,6 +388,13 @@ fun ChatbotScreen(
 @Composable
 private fun ChatMessageItem(message: ChatMessage) {
     val isUser = message.role == "user"
+    val context = LocalContext.current
+    val markdownRenderer = remember { MarkdownRenderer() }
+    
+    // Initialize markdown renderer
+    LaunchedEffect(Unit) {
+        markdownRenderer.initialize(context)
+    }
     
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -372,14 +437,21 @@ private fun ChatMessageItem(message: ChatMessage) {
             Column(
                 modifier = Modifier.padding(12.dp)
             ) {
-                Text(
-                    text = message.content,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (isUser) 
-                        MaterialTheme.colorScheme.onPrimary 
-                    else 
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                // Render markdown for assistant messages, plain text for user messages
+                if (isUser) {
+                    Text(
+                        text = message.content,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    val renderedMarkdown = markdownRenderer.renderMarkdown(message.content)
+                    Text(
+                        text = renderedMarkdown,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
@@ -415,7 +487,7 @@ private fun ChatMessageItem(message: ChatMessage) {
 }
 
 @Composable
-private fun LoadingMessage() {
+private fun LoadingMessage(translate: (String) -> String) {
     Row(
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -451,7 +523,7 @@ private fun LoadingMessage() {
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "AI is thinking...",
+                    text = translate("AI is thinking..."),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

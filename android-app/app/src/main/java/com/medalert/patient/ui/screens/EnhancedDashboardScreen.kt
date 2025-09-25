@@ -47,6 +47,10 @@ fun EnhancedDashboardScreen(
     val lang by languageViewModel.language.collectAsState()
     var langMenu by remember { mutableStateOf(false) }
     var uiTranslations by remember(lang) { mutableStateOf<Map<String, String>>(emptyMap()) }
+    
+    fun t(key: String): String = uiTranslations[key] ?: key
+    fun translate(key: String): String = t(key)
+    
     LaunchedEffect(lang) {
         println("Language changed to: $lang")
         val keys = listOf(
@@ -133,15 +137,87 @@ fun EnhancedDashboardScreen(
             "MedAlert Dashboard",
             // dynamic value translations
             "male", "female", "other",
-            "medications", "conditions"
+            "medications", "conditions",
+            // Additional keys for tab content
+            "Medicine Summary",
+            "Filter by date range",
+            "From Date",
+            "To Date",
+            "Clear",
+            "Apply",
+            "Current Medications",
+            "Calendar View",
+            "View All",
+            "No medications",
+            "No medications yet",
+            "Your prescribed medications will appear here",
+            "Visit History",
+            "No visit history available",
+            "Date",
+            "Doctor",
+            "Diagnosis",
+            "Medicine Notifications",
+            "Manage your medicine reminder notifications and alarm settings",
+            "Add Notification",
+            "Notification Statistics",
+            "Active Notifications",
+            "Total Reminders",
+            "Response Rate",
+            "Current Notifications",
+            "No notifications set up",
+            "Add medicine notifications to get timely reminders",
+            "Edit notification",
+            "Delete notification",
+            "Dosage",
+            "Times",
+            "Caretaker Management",
+            "Manage your caretaker relationships and approval requests",
+            "Add Caretaker",
+            "Current Caretaker",
+            "Assigned",
+            "Contact caretaker",
+            "Remove caretaker",
+            "No caretaker assigned",
+            "Add a caretaker to help manage your health",
+            "Caretaker Requests",
+            "No pending requests",
+            "Status",
+            "Requested",
+            "Medicine Schedule",
+            "View your complete medication schedule and track adherence",
+            "View Calendar Schedule",
+            "No Medicines Scheduled",
+            "Add medicines to see your schedule",
+            "Frequency",
+            "Daily Timings:",
+            "Pending",
+            "Late",
+            "Active",
+            "Inactive",
+            "Taken at",
+            "Dose History",
+            "No dose records yet",
+            "And",
+            "more...",
+            "Edit",
+            "Delete",
+            "Profile",
+            "Medicines",
+            "Schedule",
+            "Visits",
+            "Notifications",
+            "Caretaker",
+            "Edit Medicine",
+            "Edit Timing",
+            "Edit Schedule",
+            "View Schedule"
         )
         println("Calling translateBatch with ${keys.size} keys")
-        val translated = languageViewModel.translateBatch(keys)
+        val translated = languageViewModel.translateBatch(keys, lang)
         println("Translated keys: $translated")
         uiTranslations = keys.mapIndexed { index, key -> key to (translated.getOrNull(index) ?: key) }.toMap()
         println("UI Translations: $uiTranslations")
     }
-    fun t(key: String): String = uiTranslations[key] ?: key
     
     // Load data when screen opens
     LaunchedEffect(Unit) {
@@ -197,7 +273,7 @@ fun EnhancedDashboardScreen(
                 }
                 
                 IconButton(onClick = onNavigateToChatbot) {
-                    Icon(Icons.Default.SmartToy, contentDescription = "AI Assistant")
+                    Icon(Icons.Default.SmartToy, contentDescription = t("AI Assistant"))
                 }
                 
                 IconButton(onClick = onLogout) {
@@ -218,12 +294,12 @@ fun EnhancedDashboardScreen(
                     icon = {
                         Icon(
                             imageVector = tab.icon,
-                            contentDescription = tab.title
+                            contentDescription = t(tab.title)
                         )
                     },
                     text = {
                         Text(
-                            text = tab.title,
+                            text = t(tab.title),
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
@@ -247,22 +323,27 @@ fun EnhancedDashboardScreen(
                     medications = medications,
                     onNavigateToMedications = onNavigateToMedications,
                     onNavigateToCalendarSchedule = onNavigateToCalendarSchedule,
-                    patientViewModel = patientViewModel
+                    patientViewModel = patientViewModel,
+                    translate = { key -> t(key) }
                 )
                 DashboardTab.SCHEDULE -> ScheduleTabContent(
                     medications = medications,
                     onNavigateToCalendarSchedule = onNavigateToCalendarSchedule,
-                    patientViewModel = patientViewModel
+                    patientViewModel = patientViewModel,
+                    translate = { key -> t(key) }
                 )
                 DashboardTab.VISITS -> VisitsTabContent(
-                    patient = patient
+                    patient = patient,
+                    translate = { key -> t(key) }
                 )
                 DashboardTab.NOTIFICATIONS -> NotificationsTabContent(
-                    notifications = notifications
+                    notifications = notifications,
+                    translate = { key -> t(key) }
                 )
                 DashboardTab.CARETAKER -> CaretakerTabContent(
                     patient = patient,
-                    patientViewModel = patientViewModel
+                    patientViewModel = patientViewModel,
+                    translate = { key -> t(key) }
                 )
             }
         }
@@ -331,7 +412,18 @@ fun ProfileTabContent(
                     Spacer(modifier = Modifier.height(16.dp))
                     
                     patient?.let { p ->
-                        DashboardProfileInfoRow(translate("Name"), p.name)
+                        // Translate patient name
+                        val translatedName = if (p.name.isNotEmpty()) {
+                            try {
+                                // Use the translate function to translate the name
+                                translate(p.name)
+                            } catch (e: Exception) {
+                                p.name
+                            }
+                        } else {
+                            p.name
+                        }
+                        DashboardProfileInfoRow(translate("Name"), translatedName)
                         DashboardProfileInfoRow(translate("Email"), p.email)
                         DashboardProfileInfoRow(translate("Phone"), p.phoneNumber)
                         DashboardProfileInfoRow(translate("Age"), p.age.toString())
@@ -352,7 +444,17 @@ fun ProfileTabContent(
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
-                            DashboardProfileInfoRow(translate("Name"), contact.name)
+                            // Translate emergency contact name
+                            val translatedContactName = if (contact.name.isNotEmpty()) {
+                                try {
+                                    translate(contact.name)
+                                } catch (e: Exception) {
+                                    contact.name
+                                }
+                            } else {
+                                contact.name
+                            }
+                            DashboardProfileInfoRow(translate("Name"), translatedContactName)
                             DashboardProfileInfoRow(translate("Phone"), contact.phone)
                             DashboardProfileInfoRow(translate("Relationship"), contact.relationship)
                         }
@@ -590,7 +692,8 @@ fun MedicinesTabContent(
     medications: List<com.medalert.patient.data.model.Medication>,
     onNavigateToMedications: () -> Unit,
     onNavigateToCalendarSchedule: () -> Unit,
-    patientViewModel: PatientViewModel
+    patientViewModel: PatientViewModel,
+    translate: (String) -> String
 ) {
     var showDateRangeFilter by remember { mutableStateOf(false) }
     var dateRangeFrom by remember { mutableStateOf("") }
@@ -616,7 +719,7 @@ fun MedicinesTabContent(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Medicine Summary",
+                            text = translate("Medicine Summary"),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -625,7 +728,7 @@ fun MedicinesTabContent(
                         IconButton(onClick = { showDateRangeFilter = !showDateRangeFilter }) {
                             Icon(
                                 Icons.Default.FilterList,
-                                contentDescription = "Filter by date range",
+                                contentDescription = translate("Filter by date range"),
                                 tint = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }
@@ -640,14 +743,14 @@ fun MedicinesTabContent(
                             OutlinedTextField(
                                 value = dateRangeFrom,
                                 onValueChange = { dateRangeFrom = it },
-                                label = { Text("From Date") },
+                                label = { Text(translate("From Date")) },
                                 modifier = Modifier.weight(1f),
                                 singleLine = true
                             )
                             OutlinedTextField(
                                 value = dateRangeTo,
                                 onValueChange = { dateRangeTo = it },
-                                label = { Text("To Date") },
+                                label = { Text(translate("To Date")) },
                                 modifier = Modifier.weight(1f),
                                 singleLine = true
                             )
@@ -662,11 +765,11 @@ fun MedicinesTabContent(
                                 dateRangeTo = ""
                                 showDateRangeFilter = false
                             }) {
-                                Text("Clear")
+                                Text(translate("Clear"))
                             }
                             Spacer(modifier = Modifier.width(8.dp))
                             Button(onClick = { showDateRangeFilter = false }) {
-                                Text("Apply")
+                                Text(translate("Apply"))
                             }
                         }
                     }
@@ -707,17 +810,17 @@ fun MedicinesTabContent(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Current Medications",
+                            text = translate("Current Medications"),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
                         
                         Row {
                             TextButton(onClick = onNavigateToCalendarSchedule) {
-                                Text("Calendar View")
+                                Text(translate("Calendar View"))
                             }
                             TextButton(onClick = onNavigateToMedications) {
-                                Text("View All")
+                                Text(translate("View All"))
                             }
                         }
                     }
@@ -733,18 +836,18 @@ fun MedicinesTabContent(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.MedicalServices,
-                                contentDescription = "No medications",
+                                contentDescription = translate("No medications"),
                                 modifier = Modifier.size(48.dp),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "No medications yet",
+                                text = translate("No medications yet"),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = "Your prescribed medications will appear here",
+                                text = translate("Your prescribed medications will appear here"),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -758,7 +861,8 @@ fun MedicinesTabContent(
                                     patientViewModel.recordAdherence(medicineIndex, taken)
                                 },
                                 onEditTiming = { /* Navigate to timing edit */ },
-                                showActions = false
+                                showActions = false,
+                                translate = { key -> translate(key) }
                             )
                             
                             if (medication != medications.take(3).last()) {
@@ -774,7 +878,8 @@ fun MedicinesTabContent(
 
 @Composable
 fun VisitsTabContent(
-    patient: com.medalert.patient.data.model.Patient?
+    patient: com.medalert.patient.data.model.Patient?,
+    translate: (String) -> String
 ) {
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -787,7 +892,7 @@ fun VisitsTabContent(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = "Visit History",
+                        text = translate("Visit History"),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -797,7 +902,7 @@ fun VisitsTabContent(
                     patient?.visits?.let { visits ->
                         if (visits.isEmpty()) {
                             Text(
-                                text = "No visit history available",
+                                text = translate("No visit history available"),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -818,20 +923,20 @@ fun VisitsTabContent(
                                             fontWeight = FontWeight.Bold
                                         )
                                         Text(
-                                            text = "Date: ${visit.visitDate}",
+                                            text = "${translate("Date")}: ${visit.visitDate}",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                         visit.doctorName?.let { doctorName ->
                                             Text(
-                                                text = "Doctor: $doctorName",
+                                                text = "${translate("Doctor")}: $doctorName",
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
                                         visit.diagnosis?.let { diagnosis ->
                                             Text(
-                                                text = "Diagnosis: $diagnosis",
+                                                text = "${translate("Diagnosis")}: $diagnosis",
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
@@ -850,7 +955,8 @@ fun VisitsTabContent(
 
 @Composable
 fun NotificationsTabContent(
-    notifications: List<com.medalert.patient.data.model.MedicineNotification>
+    notifications: List<com.medalert.patient.data.model.MedicineNotification>,
+    translate: (String) -> String
 ) {
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -872,7 +978,7 @@ fun NotificationsTabContent(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Medicine Notifications",
+                            text = translate("Medicine Notifications"),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -883,13 +989,13 @@ fun NotificationsTabContent(
                         ) {
                             Icon(Icons.Default.Add, contentDescription = null)
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Add Notification")
+                            Text(translate("Add Notification"))
                         }
                     }
                     
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Manage your medicine reminder notifications and alarm settings",
+                        text = translate("Manage your medicine reminder notifications and alarm settings"),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                     )
@@ -906,7 +1012,7 @@ fun NotificationsTabContent(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = "Notification Statistics",
+                        text = translate("Notification Statistics"),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -926,7 +1032,7 @@ fun NotificationsTabContent(
                                 color = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                text = "Active Notifications",
+                                text = translate("Active Notifications"),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -942,7 +1048,7 @@ fun NotificationsTabContent(
                                 color = MaterialTheme.colorScheme.secondary
                             )
                             Text(
-                                text = "Total Reminders",
+                                text = translate("Total Reminders"),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -958,7 +1064,7 @@ fun NotificationsTabContent(
                                 color = MaterialTheme.colorScheme.tertiary
                             )
                             Text(
-                                text = "Response Rate",
+                                text = translate("Response Rate"),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -977,7 +1083,7 @@ fun NotificationsTabContent(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = "Current Notifications",
+                        text = translate("Current Notifications"),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -999,14 +1105,14 @@ fun NotificationsTabContent(
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                text = "No notifications set up",
+                                text = translate("No notifications set up"),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "Add medicine notifications to get timely reminders",
+                                text = translate("Add medicine notifications to get timely reminders"),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                             )
@@ -1037,14 +1143,14 @@ fun NotificationsTabContent(
                                             IconButton(onClick = { /* Edit notification */ }) {
                                                 Icon(
                                                     Icons.Default.Edit,
-                                                    contentDescription = "Edit notification",
+                                                    contentDescription = translate("Edit notification"),
                                                     modifier = Modifier.size(16.dp)
                                                 )
                                             }
                                             IconButton(onClick = { /* Delete notification */ }) {
                                                 Icon(
                                                     Icons.Default.Delete,
-                                                    contentDescription = "Delete notification",
+                                                    contentDescription = translate("Delete notification"),
                                                     modifier = Modifier.size(16.dp)
                                                 )
                                             }
@@ -1052,12 +1158,12 @@ fun NotificationsTabContent(
                                     }
                                     
                                     Text(
-                                        text = "Dosage: ${notification.dosage}",
+                                        text = "${translate("Dosage")}: ${notification.dosage}",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                     Text(
-                                        text = "Times: ${notification.notificationTimes.joinToString(", ") { it.time }}",
+                                        text = "${translate("Times")}: ${notification.notificationTimes.joinToString(", ") { it.time }}",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -1075,7 +1181,8 @@ fun NotificationsTabContent(
 @Composable
 fun CaretakerTabContent(
     patient: com.medalert.patient.data.model.Patient?,
-    patientViewModel: PatientViewModel
+    patientViewModel: PatientViewModel,
+    translate: (String) -> String
 ) {
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -1097,7 +1204,7 @@ fun CaretakerTabContent(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Caretaker Management",
+                            text = translate("Caretaker Management"),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -1108,13 +1215,13 @@ fun CaretakerTabContent(
                         ) {
                             Icon(Icons.Default.PersonAdd, contentDescription = null)
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Add Caretaker")
+                            Text(translate("Add Caretaker"))
                         }
                     }
                     
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Manage your caretaker relationships and approval requests",
+                        text = translate("Manage your caretaker relationships and approval requests"),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                     )
@@ -1131,7 +1238,7 @@ fun CaretakerTabContent(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = "Current Caretaker",
+                        text = translate("Current Caretaker"),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -1166,7 +1273,7 @@ fun CaretakerTabContent(
                                             color = MaterialTheme.colorScheme.onPrimaryContainer
                                         )
                                         Text(
-                                            text = "Assigned: ${caretaker.assignedAt}",
+                                            text = "${translate("Assigned")}: ${caretaker.assignedAt}",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer
                                         )
@@ -1176,14 +1283,14 @@ fun CaretakerTabContent(
                                         IconButton(onClick = { /* Contact caretaker */ }) {
                                             Icon(
                                                 Icons.Default.Message,
-                                                contentDescription = "Contact caretaker",
+                                                contentDescription = translate("Contact caretaker"),
                                                 tint = MaterialTheme.colorScheme.onPrimaryContainer
                                             )
                                         }
                                         IconButton(onClick = { /* Remove caretaker */ }) {
                                             Icon(
                                                 Icons.Default.Remove,
-                                                contentDescription = "Remove caretaker",
+                                                contentDescription = translate("Remove caretaker"),
                                                 tint = MaterialTheme.colorScheme.onPrimaryContainer
                                             )
                                         }
@@ -1206,14 +1313,14 @@ fun CaretakerTabContent(
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                text = "No caretaker assigned",
+                                text = translate("No caretaker assigned"),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "Add a caretaker to help manage your health",
+                                text = translate("Add a caretaker to help manage your health"),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                             )
@@ -1232,7 +1339,7 @@ fun CaretakerTabContent(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = "Caretaker Requests",
+                        text = translate("Caretaker Requests"),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -1242,7 +1349,7 @@ fun CaretakerTabContent(
                     patient?.caretakerApprovals?.let { approvals ->
                         if (approvals.isEmpty()) {
                             Text(
-                                text = "No pending requests",
+                                text = translate("No pending requests"),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -1262,12 +1369,12 @@ fun CaretakerTabContent(
                                         modifier = Modifier.padding(12.dp)
                                     ) {
                                         Text(
-                                            text = "Status: ${approval.status.uppercase()}",
+                                            text = "${translate("Status")}: ${approval.status.uppercase()}",
                                             style = MaterialTheme.typography.titleMedium,
                                             fontWeight = FontWeight.Bold
                                         )
                                         Text(
-                                            text = "Requested: ${approval.requestedAt}",
+                                            text = "${translate("Requested")}: ${approval.requestedAt}",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -1312,7 +1419,8 @@ fun DashboardProfileInfoRow(
 fun ScheduleTabContent(
     medications: List<com.medalert.patient.data.model.Medication>,
     onNavigateToCalendarSchedule: () -> Unit,
-    patientViewModel: PatientViewModel
+    patientViewModel: PatientViewModel,
+    translate: (String) -> String
 ) {
     var showTimingDialog by remember { mutableStateOf(false) }
     var selectedMedication by remember { mutableStateOf<com.medalert.patient.data.model.Medication?>(null) }
@@ -1331,14 +1439,14 @@ fun ScheduleTabContent(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = "Medicine Schedule",
+                        text = translate("Medicine Schedule"),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "View your complete medication schedule and track adherence",
+                        text = translate("View your complete medication schedule and track adherence"),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                     )
@@ -1349,7 +1457,7 @@ fun ScheduleTabContent(
                     ) {
                         Icon(Icons.Default.CalendarToday, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("View Calendar Schedule")
+                        Text(translate("View Calendar Schedule"))
                     }
                 }
             }
@@ -1377,14 +1485,14 @@ fun ScheduleTabContent(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "No Medicines Scheduled",
+                            text = translate("No Medicines Scheduled"),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Add medicines to see your schedule",
+                            text = translate("Add medicines to see your schedule"),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                         )
@@ -1445,7 +1553,7 @@ fun ScheduleTabContent(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Frequency: ${medication.frequency}",
+                                text = "${translate("Frequency")}: ${medication.frequency}",
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Medium
                             )
@@ -1469,7 +1577,7 @@ fun ScheduleTabContent(
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Column {
                                     Text(
-                                        text = "Daily Timings:",
+                                        text = translate("Daily Timings:"),
                                         style = MaterialTheme.typography.bodyLarge,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.primary

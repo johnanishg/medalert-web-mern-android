@@ -10,6 +10,13 @@ export default defineConfig({
   server: {
     watch: {
       ignored: ['**/android-app/**', '**/node_modules/**']
+    },
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        secure: false
+      }
     }
   }
 });

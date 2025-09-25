@@ -108,6 +108,8 @@ dependencies {
     implementation 'androidx.hilt:hilt-navigation-compose:1.1.0'
     ksp 'com.google.dagger:hilt-compiler:2.48'
     
+    // Markdown rendering - using simple text processing for now
+    
     // Room Database
     implementation 'androidx.room:room-runtime:2.6.1'
     implementation 'androidx.room:room-ktx:2.6.1'

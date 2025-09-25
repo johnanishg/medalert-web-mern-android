@@ -46,9 +46,11 @@ fun MedicationScheduleScreen(
             "Notes",
             "Taken",
             "Missed",
-            "Skip"
+            "Skip",
+            "Pending",
+            "Late"
         )
-        val translated = languageViewModel.translateBatch(keys)
+        val translated = languageViewModel.translateBatch(keys, lang)
         uiTranslations = keys.mapIndexed { i, k -> k to (translated.getOrNull(i) ?: k) }.toMap()
     }
     fun t(key: String): String = uiTranslations[key] ?: key
@@ -67,7 +69,7 @@ fun MedicationScheduleScreen(
         TopAppBar(
             title = { 
                 Column {
-                    Text("${medication.name} Schedule")
+                    Text("${medication.name} " + t("Schedule"))
                     Text(
                         text = "${t("Dosage")}: ${medication.dosage}",
                         style = MaterialTheme.typography.bodySmall
@@ -299,7 +301,13 @@ fun DoseScheduleCard(
                     colors = CardDefaults.cardColors(containerColor = statusColor.copy(alpha = 0.1f))
                 ) {
                     Text(
-                        text = doseSchedule.status.name,
+                        text = when (doseSchedule.status) {
+                            DoseStatus.TAKEN -> translate("Taken")
+                            DoseStatus.MISSED -> translate("Missed")
+                            DoseStatus.SKIPPED -> translate("Skip")
+                            DoseStatus.LATE -> translate("Late")
+                            DoseStatus.PENDING -> translate("Pending")
+                        },
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Bold,

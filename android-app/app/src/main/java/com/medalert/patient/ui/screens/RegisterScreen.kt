@@ -74,7 +74,7 @@ fun RegisterScreen(
             "MedAlert Logo",
             "Date of Birth"
         )
-        val translated = languageViewModel.translateBatch(keys)
+        val translated = languageViewModel.translateBatch(keys, lang)
         uiTranslations = keys.mapIndexed { i, k -> k to (translated.getOrNull(i) ?: k) }.toMap()
     }
     fun t(key: String): String = uiTranslations[key] ?: key

@@ -8,6 +8,7 @@ import Employee from '../models/Employee.js';
 import Admin from '../models/Admin.js';
 import Prescription from '../models/Prescription.js';
 import MedicineNotification from '../models/MedicineNotification.js';
+import Device from '../models/Device.js';
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
@@ -16,18 +17,22 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const verifyAdminToken = (req, res, next) => {
   const token = req.headers.authorization?.replace('Bearer ', '');
   
+  console.log('Admin token verification:', { token: token ? 'present' : 'missing' });
+  
   if (!token) {
     return res.status(401).json({ message: 'No token provided' });
   }
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
+    console.log('Token decoded:', decoded);
     if (decoded.role !== 'admin') {
       return res.status(403).json({ message: 'Access denied' });
     }
     req.user = decoded;
     next();
   } catch (error) {
+    console.log('Token verification error:', error.message);
     res.status(401).json({ message: 'Invalid token' });
   }
 };
@@ -616,12 +621,12 @@ router.delete('/prescriptions/:prescriptionId', verifyAdminToken, async (req, re
   }
 });
 
-// Get all devices (mock data for now - would be real device data in production)
+// Get all devices
 router.get('/devices', verifyAdminToken, async (req, res) => {
   try {
-    // In a real application, this would fetch from a Device model
-    // For now, we'll return an empty array since we don't have device tracking yet
-    const devices = [];
+    const devices = await Device.find()
+      .populate('assignedPatient.patientId', 'name email phoneNumber')
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
       message: 'Devices retrieved successfully',

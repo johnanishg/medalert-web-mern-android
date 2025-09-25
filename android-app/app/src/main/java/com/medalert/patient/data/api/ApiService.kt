@@ -1,6 +1,8 @@
 package com.medalert.patient.data.api
 
 import com.medalert.patient.data.model.*
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import kotlinx.parcelize.RawValue
 import retrofit2.Response
 import retrofit2.http.*
@@ -101,8 +103,23 @@ interface ApiService {
     
     // Translation
     @POST("translate/translate")
-    suspend fun translate(@Body body: Map<String, Any>): Response<TranslationSingleResponse>
+    suspend fun translate(@Body body: TranslationSingleRequest): Response<TranslationSingleResponse>
 
     @POST("translate/batch")
-    suspend fun translateBatch(@Body body: Map<String, Any>): Response<TranslationBatchResponse>
+    suspend fun translateBatch(@Body body: TranslationBatchRequest): Response<TranslationBatchResponse>
+
+    // Speech-to-Text
+    data class SttResponse(
+        val success: Boolean,
+        val transcription: String?
+    )
+
+    @Multipart
+    @POST("speech/transcribe")
+    suspend fun transcribeSpeech(
+        @Part audio: MultipartBody.Part,
+        @Part("languageCode") languageCode: RequestBody,
+        @Part("sampleRateHertz") sampleRateHertz: RequestBody,
+        @Part("encoding") encoding: RequestBody
+    ): Response<SttResponse>
 }

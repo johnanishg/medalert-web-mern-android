@@ -628,19 +628,35 @@ const AdminDashboard = () => {
       const medicinesResponse = await fetch(`/api/admin-mutations/patient/${patientId}/medicines`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const medicinesData = await medicinesResponse.json();
+      if (!medicinesResponse.ok) {
+        const text = await medicinesResponse.text();
+        throw new Error(`Medicines request failed (${medicinesResponse.status}): ${text?.slice(0, 120)}`);
+      }
+      const medicinesData = await medicinesResponse.json().catch(async () => {
+        const text = await medicinesResponse.text();
+        throw new Error(`Medicines response is not JSON: ${text?.slice(0, 120)}`);
+      });
       setPatientMedicines(medicinesData.medicines || []);
 
       // Fetch patient visits
       const visitsResponse = await fetch(`/api/admin-mutations/patient/${patientId}/visits`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const visitsData = await visitsResponse.json();
+      if (!visitsResponse.ok) {
+        const text = await visitsResponse.text();
+        throw new Error(`Visits request failed (${visitsResponse.status}): ${text?.slice(0, 120)}`);
+      }
+      const visitsData = await visitsResponse.json().catch(async () => {
+        const text = await visitsResponse.text();
+        throw new Error(`Visits response is not JSON: ${text?.slice(0, 120)}`);
+      });
       setPatientVisits(visitsData.visits || []);
 
     } catch (error) {
       console.error('Error fetching patient data:', error);
-      setError('Failed to fetch patient data');
+      setError(
+        error instanceof Error ? error.message : 'Failed to fetch patient data'
+      );
     } finally {
       setMutationLoading(false);
     }
@@ -745,6 +761,28 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error('Error deleting visit:', error);
       setError('Failed to delete visit');
+    } finally {
+      setMutationLoading(false);
+    }
+  };
+
+  const handleSaveMutation = async () => {
+    if (!selectedPatientForMutation) return;
+
+    try {
+      setMutationLoading(true);
+      
+      if (mutationType === 'medicine') {
+        await handleUpdateMedicine(selectedPatientForMutation._id, mutationData.index, mutationData);
+      } else if (mutationType === 'visit') {
+        await handleUpdateVisit(selectedPatientForMutation._id, mutationData.index, mutationData);
+      }
+      
+      setShowMutationModal(false);
+      setMutationData({});
+    } catch (error) {
+      console.error('Error saving mutation:', error);
+      setError('Failed to save changes');
     } finally {
       setMutationLoading(false);
     }
@@ -1332,47 +1370,155 @@ const AdminDashboard = () => {
         return (
           <div>
             <h3 className="text-xl font-bold mb-4 flex items-center"><Cpu className="mr-2" />Devices</h3>
-            <table className="min-w-full bg-white dark:bg-gray-800 rounded shadow overflow-hidden">
-              <thead>
-                <tr className="bg-gray-100 dark:bg-gray-700">
-                  <th className="py-2 px-4 text-left">Name</th>
-                  <th className="py-2 px-4 text-left">Type</th>
-                  <th className="py-2 px-4 text-left">Status</th>
-                  <th className="py-2 px-4">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {devices.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="text-center py-8 text-gray-500 dark:text-gray-400">
-                      <Cpu size={48} className="mx-auto mb-4 opacity-50" />
-                      <p>No devices found.</p>
-                      <p className="text-sm">IoT devices will appear here when connected to the system.</p>
-                    </td>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+              <div className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                <div className="flex items-center">
+                  <Cpu className="mr-2 text-blue-500" size={20} />
+                  <span className="font-semibold">Total Devices</span>
+                </div>
+                <div className="text-2xl font-bold mt-2">{devices.length}</div>
+              </div>
+              <div className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                  <span className="font-semibold">Online</span>
+                </div>
+                <div className="text-2xl font-bold mt-2">{devices.filter(d => d.status === 'online').length}</div>
+              </div>
+              <div className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                  <span className="font-semibold">Offline</span>
+                </div>
+                <div className="text-2xl font-bold mt-2">{devices.filter(d => d.status === 'offline').length}</div>
+              </div>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-white dark:bg-gray-800 rounded shadow overflow-hidden">
+                <thead>
+                  <tr className="bg-gray-100 dark:bg-gray-700">
+                    <th className="py-3 px-4 text-left">Device</th>
+                    <th className="py-3 px-4 text-left">Type</th>
+                    <th className="py-3 px-4 text-left">Status</th>
+                    <th className="py-3 px-4 text-left">Battery</th>
+                    <th className="py-3 px-4 text-left">Location</th>
+                    <th className="py-3 px-4 text-left">Last Seen</th>
+                    <th className="py-3 px-4">Actions</th>
                   </tr>
-                ) : (
-                  devices.map(device => (
-                    <tr key={device.id} className="border-b border-gray-200 dark:border-gray-700">
-                      <td className={`py-2 px-4 ${theme === 'dark' ? 'dark:text-white' : 'text-black'}`}>{device.name}</td>
-                      <td className={`py-2 px-4 ${theme === 'dark' ? 'dark:text-white' : 'text-black'}`}>{device.type}</td>
-                      <td className={`py-2 px-4 capitalize ${theme === 'dark' ? 'dark:text-white' : 'text-black'}`}>{device.status}</td>
-                      <td className="py-2 px-4 flex gap-2">
-                        <button className={`py-1 px-3 rounded font-semibold transition-colors duration-200 text-xs text-center ${
-                          theme === 'dark' 
-                            ? 'bg-primary-400 text-black hover:bg-primary-500' 
-                            : 'bg-primary-700 text-white hover:bg-primary-800'
-                        }`}>Edit</button>
-                        <button className={`py-1 px-3 rounded font-semibold transition-colors duration-200 text-xs text-center ${
-                          theme === 'dark' 
-                            ? 'bg-red-400 text-black hover:bg-red-500' 
-                            : 'bg-red-700 text-white hover:bg-red-800'
-                        }`}>Delete</button>
+                </thead>
+                <tbody>
+                  {devices.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="text-center py-8 text-gray-500 dark:text-gray-400">
+                        <Cpu size={48} className="mx-auto mb-4 opacity-50" />
+                        <p>No devices found.</p>
+                        <p className="text-sm">IoT devices will appear here when connected to the system.</p>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    devices.map(device => (
+                      <tr key={device._id || device.id} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td className="py-3 px-4">
+                          <div>
+                            <div className={`font-semibold ${theme === 'dark' ? 'dark:text-white' : 'text-black'}`}>
+                              {device.name}
+                            </div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                              {device.manufacturer} {device.model}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            device.type === 'smart_pillbox' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                            device.type === 'wearable_monitor' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                            device.type === 'medication_dispenser' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' :
+                            'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                          }`}>
+                            {device.type?.replace('_', ' ').toUpperCase()}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            device.status === 'online' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                            device.status === 'offline' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                            device.status === 'maintenance' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                            'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                          }`}>
+                            <div className={`w-2 h-2 rounded-full mr-1 ${
+                              device.status === 'online' ? 'bg-green-500' :
+                              device.status === 'offline' ? 'bg-red-500' :
+                              device.status === 'maintenance' ? 'bg-yellow-500' :
+                              'bg-gray-500'
+                            }`}></div>
+                            {device.status?.toUpperCase()}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          {device.batteryLevel !== null && device.batteryLevel !== undefined ? (
+                            <div className="flex items-center">
+                              <div className="w-16 bg-gray-200 dark:bg-gray-600 rounded-full h-2 mr-2">
+                                <div 
+                                  className={`h-2 rounded-full ${
+                                    device.batteryLevel > 50 ? 'bg-green-500' :
+                                    device.batteryLevel > 20 ? 'bg-yellow-500' : 'bg-red-500'
+                                  }`}
+                                  style={{ width: `${device.batteryLevel}%` }}
+                                ></div>
+                              </div>
+                              <span className="text-sm">{device.batteryLevel}%</span>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">N/A</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="text-sm">
+                            {device.location?.room && (
+                              <div>{device.location.room}</div>
+                            )}
+                            {device.location?.floor && (
+                              <div className="text-gray-500 dark:text-gray-400">{device.location.floor}</div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="text-sm">
+                            {device.lastSeen ? new Date(device.lastSeen).toLocaleDateString() : 'Never'}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex gap-2">
+                            <button className={`py-1 px-3 rounded font-semibold transition-colors duration-200 text-xs ${
+                              theme === 'dark' 
+                                ? 'bg-blue-400 text-black hover:bg-blue-500' 
+                                : 'bg-blue-700 text-white hover:bg-blue-800'
+                            }`}>
+                              View
+                            </button>
+                            <button className={`py-1 px-3 rounded font-semibold transition-colors duration-200 text-xs ${
+                              theme === 'dark' 
+                                ? 'bg-primary-400 text-black hover:bg-primary-500' 
+                                : 'bg-primary-700 text-white hover:bg-primary-800'
+                            }`}>
+                              Edit
+                            </button>
+                            <button className={`py-1 px-3 rounded font-semibold transition-colors duration-200 text-xs ${
+                              theme === 'dark' 
+                                ? 'bg-red-400 text-black hover:bg-red-500' 
+                                : 'bg-red-700 text-white hover:bg-red-800'
+                            }`}>
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         );
       case 'logs':
@@ -1942,6 +2088,125 @@ const AdminDashboard = () => {
                 className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
               >
                 {loading ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mutation Modal */}
+      {showMutationModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">
+                Edit {mutationType === 'medicine' ? 'Medicine' : 'Visit'}
+              </h3>
+              <button
+                onClick={() => setShowMutationModal(false)}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {mutationType === 'medicine' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Medicine Name</label>
+                    <input
+                      type="text"
+                      value={mutationData.name || ''}
+                      onChange={(e) => setMutationData({ ...mutationData, name: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Dosage</label>
+                    <input
+                      type="text"
+                      value={mutationData.dosage || ''}
+                      onChange={(e) => setMutationData({ ...mutationData, dosage: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Frequency</label>
+                    <input
+                      type="text"
+                      value={mutationData.frequency || ''}
+                      onChange={(e) => setMutationData({ ...mutationData, frequency: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Instructions</label>
+                    <textarea
+                      value={mutationData.instructions || ''}
+                      onChange={(e) => setMutationData({ ...mutationData, instructions: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      rows={3}
+                    />
+                  </div>
+                </>
+              )}
+              
+              {mutationType === 'visit' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Visit Date</label>
+                    <input
+                      type="date"
+                      value={mutationData.visitDate || ''}
+                      onChange={(e) => setMutationData({ ...mutationData, visitDate: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Doctor</label>
+                    <input
+                      type="text"
+                      value={mutationData.doctor || ''}
+                      onChange={(e) => setMutationData({ ...mutationData, doctor: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Purpose</label>
+                    <input
+                      type="text"
+                      value={mutationData.purpose || ''}
+                      onChange={(e) => setMutationData({ ...mutationData, purpose: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Notes</label>
+                    <textarea
+                      value={mutationData.notes || ''}
+                      onChange={(e) => setMutationData({ ...mutationData, notes: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      rows={3}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+            
+            <div className="flex justify-end gap-2 mt-6">
+              <button
+                onClick={() => setShowMutationModal(false)}
+                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveMutation}
+                disabled={mutationLoading}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+              >
+                {mutationLoading ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </div>

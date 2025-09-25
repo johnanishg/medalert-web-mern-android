@@ -54,9 +54,14 @@ fun DashboardScreen(
             "Your prescribed medications will appear here",
             "Your Patient ID",
             "Share this ID with your doctor for prescriptions",
-            "No medications"
+            "No medications",
+            "Edit Medicine",
+            "Edit Timing",
+            "Edit Schedule",
+            "View Schedule",
+            "Delete"
         )
-        val translated = languageViewModel.translateBatch(keys)
+        val translated = languageViewModel.translateBatch(keys, lang)
         uiTranslations = keys.mapIndexed { i, k -> k to (translated.getOrNull(i) ?: k) }.toMap()
     }
     fun t(key: String): String = uiTranslations[key] ?: key
@@ -123,7 +128,7 @@ fun DashboardScreen(
                         containerColor = MaterialTheme.colorScheme.error,
                         contentColor = MaterialTheme.colorScheme.onError
                     ) {
-                        Text("${notifications.size}")
+                    Text("${notifications.size}")
                     }
                     Icon(Icons.Default.Notifications, contentDescription = t("Notifications"))
                 }
@@ -133,7 +138,7 @@ fun DashboardScreen(
                 }
                 
                 IconButton(onClick = onNavigateToChatbot) {
-                    Icon(Icons.Default.SmartToy, contentDescription = "AI Assistant")
+                Icon(Icons.Default.SmartToy, contentDescription = t("AI Assistant"))
                 }
                 
                 IconButton(onClick = onLogout) {
@@ -234,7 +239,8 @@ fun DashboardScreen(
                                             patientViewModel.recordAdherence(medicineIndex, taken)
                                         },
                                         onEditTiming = { /* Navigate to timing edit */ },
-                                        showActions = false
+                                        showActions = false,
+                                        translate = { key -> t(key) }
                                     )
                                     
                                     if (medication != medications.take(3).last()) {

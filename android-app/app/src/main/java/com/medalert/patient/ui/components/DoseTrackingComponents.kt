@@ -21,7 +21,8 @@ import java.util.*
 fun DoseRecordCard(
     doseRecord: DoseRecord,
     onEdit: (DoseRecord) -> Unit,
-    onDelete: (DoseRecord) -> Unit
+    onDelete: (DoseRecord) -> Unit,
+    translate: (String) -> String = { it }
 ) {
     val statusColor = when (doseRecord.status) {
         DoseStatus.TAKEN -> Color(0xFF4CAF50) // Green
@@ -53,7 +54,7 @@ fun DoseRecordCard(
                     )
                     if (doseRecord.actualTime.isNotEmpty()) {
                         Text(
-                            text = "Taken at: ${doseRecord.actualTime}",
+                            text = "${translate("Taken at")}: ${doseRecord.actualTime}",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -66,7 +67,13 @@ fun DoseRecordCard(
                         colors = CardDefaults.cardColors(containerColor = statusColor.copy(alpha = 0.1f))
                     ) {
                         Text(
-                            text = doseRecord.status.name,
+                            text = when (doseRecord.status) {
+                                DoseStatus.TAKEN -> translate("Taken")
+                                DoseStatus.MISSED -> translate("Missed")
+                                DoseStatus.SKIPPED -> translate("Skip")
+                                DoseStatus.LATE -> translate("Late")
+                                DoseStatus.PENDING -> translate("Pending")
+                            },
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold,
@@ -77,12 +84,12 @@ fun DoseRecordCard(
                     Spacer(modifier = Modifier.width(8.dp))
                     
                     IconButton(onClick = { onEdit(doseRecord) }) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit")
+                        Icon(Icons.Default.Edit, contentDescription = translate("Edit"))
                     }
                     IconButton(onClick = { onDelete(doseRecord) }) {
                         Icon(
                             Icons.Default.Delete,
-                            contentDescription = "Delete",
+                            contentDescription = translate("Delete"),
                             tint = MaterialTheme.colorScheme.error
                         )
                     }
@@ -234,7 +241,8 @@ fun DoseNoteDialog(
 @Composable
 fun DoseStatusIndicator(
     status: DoseStatus,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    translate: (String) -> String = { it }
 ) {
     val (color, icon) = when (status) {
         DoseStatus.TAKEN -> Color(0xFF4CAF50) to Icons.Default.Check
@@ -260,7 +268,13 @@ fun DoseStatusIndicator(
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
-                text = status.name,
+                text = when (status) {
+                    DoseStatus.TAKEN -> translate("Taken")
+                    DoseStatus.MISSED -> translate("Missed")
+                    DoseStatus.SKIPPED -> translate("Skip")
+                    DoseStatus.LATE -> translate("Late")
+                    DoseStatus.PENDING -> translate("Pending")
+                },
                 style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.Bold,
                 color = color
@@ -272,7 +286,8 @@ fun DoseStatusIndicator(
 @Composable
 fun DoseHistoryCard(
     doseRecords: List<DoseRecord>,
-    onRecordClick: (DoseRecord) -> Unit
+    onRecordClick: (DoseRecord) -> Unit,
+    translate: (String) -> String = { it }
 ) {
     Card(
         modifier = Modifier.fillMaxWidth()
@@ -281,7 +296,7 @@ fun DoseHistoryCard(
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = "Dose History",
+                text = translate("Dose History"),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -290,7 +305,7 @@ fun DoseHistoryCard(
             
             if (doseRecords.isEmpty()) {
                 Text(
-                    text = "No dose records yet",
+                    text = translate("No dose records yet"),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -299,14 +314,15 @@ fun DoseHistoryCard(
                     DoseRecordCard(
                         doseRecord = record,
                         onEdit = onRecordClick,
-                        onDelete = { /* Handle delete */ }
+                        onDelete = { /* Handle delete */ },
+                        translate = translate
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                 }
                 
                 if (doseRecords.size > 5) {
                     Text(
-                        text = "And ${doseRecords.size - 5} more...",
+                        text = translate("And ${doseRecords.size - 5} more..."),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

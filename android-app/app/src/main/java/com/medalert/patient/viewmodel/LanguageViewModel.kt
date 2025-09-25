@@ -29,16 +29,15 @@ class LanguageViewModel @Inject constructor(
         }
     }
 
-    suspend fun translate(text: String, source: String? = null): String {
-        val target = language.value
-        println("LanguageViewModel: translate called with target=$target, text=$text")
-        if (target == "en") {
+    suspend fun translate(text: String, targetLanguage: String, source: String? = null): String {
+        println("LanguageViewModel: translate called with target=$targetLanguage, text=$text")
+        if (targetLanguage == "en") {
             println("LanguageViewModel: Target is English, returning original text")
             return text
         }
         return try {
             println("LanguageViewModel: Calling translationRepository.translate")
-            val result = translationRepository.translate(text, target, source)
+            val result = translationRepository.translate(text, targetLanguage, source)
             println("LanguageViewModel: Translation result: $result")
             result ?: text
         } catch (e: Exception) {
@@ -47,16 +46,15 @@ class LanguageViewModel @Inject constructor(
         }
     }
 
-    suspend fun translateBatch(texts: List<String>, source: String? = null): List<String> {
-        val target = language.value
-        println("LanguageViewModel: translateBatch called with target=$target, texts=$texts")
-        if (target == "en") {
+    suspend fun translateBatch(texts: List<String>, targetLanguage: String, source: String? = null): List<String> {
+        println("LanguageViewModel: translateBatch called with target=$targetLanguage, texts=$texts")
+        if (targetLanguage == "en") {
             println("LanguageViewModel: Target is English, returning original texts")
             return texts
         }
         return try {
             println("LanguageViewModel: Calling translationRepository.translateBatch")
-            val result = translationRepository.translateBatch(texts, target, source)
+            val result = translationRepository.translateBatch(texts, targetLanguage, source)
             println("LanguageViewModel: Translation result: $result")
             result
         } catch (e: Exception) {

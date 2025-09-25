@@ -15,6 +15,7 @@ import adminMutationRoutes from './routes/adminMutationRoutes.js';
 import adherenceRoutes from './routes/adherenceRoutes.js';
 import translationRoutes from './routes/translationRoutes.js';
 import chatbotRoutes from './routes/chatbotRoutes.js';
+import speechRoutes from './routes/speechRoutes.js';
 import { scheduleFollowUpReminders } from './services/followUpScheduler.js';
 import { schedulePatientMedicineReminders } from './services/patientMedicineScheduler.js';
 
@@ -75,6 +76,7 @@ app.use('/api/admin-mutations', adminMutationRoutes);
 app.use('/api/adherence', adherenceRoutes);
 app.use('/api/translate', translationRoutes);
 app.use('/api/chatbot', chatbotRoutes);
+app.use('/api/speech', speechRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

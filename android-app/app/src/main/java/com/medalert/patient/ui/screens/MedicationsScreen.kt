@@ -55,9 +55,13 @@ fun MedicationsScreen(
             "Edit timing",
             "Edit schedule",
             "Edit",
-            "Delete"
+            "Delete",
+            "Edit Medicine",
+            "Edit Timing",
+            "Edit Schedule",
+            "View Schedule"
         )
-        val translated = languageViewModel.translateBatch(keys)
+        val translated = languageViewModel.translateBatch(keys, lang)
         uiTranslations = keys.mapIndexed { i, k -> k to (translated.getOrNull(i) ?: k) }.toMap()
     }
     fun t(key: String): String = uiTranslations[key] ?: key
@@ -213,7 +217,8 @@ fun MedicationsScreen(
                             onViewSchedule = {
                                 onNavigateToSchedule(medication)
                             },
-                            showActions = true
+                            showActions = true,
+                            translate = { key -> t(key) }
                         )
                     }
                 }

@@ -1,6 +1,8 @@
 package com.medalert.patient.data.repository
 
 import com.medalert.patient.data.api.ApiService
+import com.medalert.patient.data.model.TranslationBatchRequest
+import com.medalert.patient.data.model.TranslationSingleRequest
 import com.medalert.patient.data.model.TranslationBatchResponse
 import com.medalert.patient.data.model.TranslationSingleResponse
 import javax.inject.Inject
@@ -10,11 +12,11 @@ class TranslationRepository @Inject constructor(
 ) {
     suspend fun translate(text: String, target: String, source: String? = null): String? {
         return try {
-            val body = mutableMapOf(
-                "text" to text,
-                "targetLanguage" to target
+            val body = TranslationSingleRequest(
+                text = text,
+                targetLanguage = target,
+                sourceLanguage = source
             )
-            if (source != null) body["sourceLanguage"] = source
             println("TranslationRepository: Sending single translation request: $body")
             val resp = api.translate(body)
             println("TranslationRepository: Single response code: ${resp.code()}, Success: ${resp.isSuccessful}")
@@ -35,11 +37,11 @@ class TranslationRepository @Inject constructor(
     suspend fun translateBatch(texts: List<String>, target: String, source: String? = null): List<String> {
         if (texts.isEmpty()) return emptyList()
         return try {
-            val body: MutableMap<String, Any> = mutableMapOf(
-                "texts" to texts,
-                "targetLanguage" to target
+            val body = TranslationBatchRequest(
+                texts = texts,
+                targetLanguage = target,
+                sourceLanguage = source
             )
-            if (source != null) body["sourceLanguage"] = source
             println("TranslationRepository: Sending batch translation request: $body")
             val resp = api.translateBatch(body)
             println("TranslationRepository: Response code: ${resp.code()}, Success: ${resp.isSuccessful}")

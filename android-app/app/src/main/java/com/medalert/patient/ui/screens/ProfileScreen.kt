@@ -66,7 +66,7 @@ fun ProfileScreen(
             "medications",
             "conditions"
         )
-        val translated = languageViewModel.translateBatch(keys)
+        val translated = languageViewModel.translateBatch(keys, lang)
         uiTranslations = keys.mapIndexed { index, key -> key to (translated.getOrNull(index) ?: key) }.toMap()
     }
     fun t(key: String): String = uiTranslations[key] ?: key
@@ -180,7 +180,17 @@ fun ProfileScreen(
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
                                 
-                                ProfileInfoRow(t("Name"), patientData.name)
+                                // Translate patient name
+                                val translatedName = if (patientData.name.isNotEmpty()) {
+                                    try {
+                                        t(patientData.name)
+                                    } catch (e: Exception) {
+                                        patientData.name
+                                    }
+                                } else {
+                                    patientData.name
+                                }
+                                ProfileInfoRow(t("Name"), translatedName)
                                 ProfileInfoRow(t("Email"), patientData.email)
                                 ProfileInfoRow(t("Phone"), patientData.phoneNumber)
                                 ProfileInfoRow(t("Age"), "${patientData.age} ${t("years")}")
@@ -226,7 +236,17 @@ fun ProfileScreen(
                                     )
                                     Spacer(modifier = Modifier.height(16.dp))
                                     
-                                    ProfileInfoRow(t("Name"), contact.name)
+                                    // Translate emergency contact name
+                                    val translatedContactName = if (contact.name.isNotEmpty()) {
+                                        try {
+                                            t(contact.name)
+                                        } catch (e: Exception) {
+                                            contact.name
+                                        }
+                                    } else {
+                                        contact.name
+                                    }
+                                    ProfileInfoRow(t("Name"), translatedContactName)
                                     ProfileInfoRow(t("Phone"), contact.phone)
                                     ProfileInfoRow(t("Relationship"), contact.relationship)
                                     
@@ -295,7 +315,17 @@ fun ProfileScreen(
                                     )
                                     Spacer(modifier = Modifier.height(16.dp))
                                     
-                                    ProfileInfoRow(t("Name"), caretaker.caretakerName)
+                                    // Translate caretaker name
+                                    val translatedCaretakerName = if (caretaker.caretakerName.isNotEmpty()) {
+                                        try {
+                                            t(caretaker.caretakerName)
+                                        } catch (e: Exception) {
+                                            caretaker.caretakerName
+                                        }
+                                    } else {
+                                        caretaker.caretakerName
+                                    }
+                                    ProfileInfoRow(t("Name"), translatedCaretakerName)
                                     ProfileInfoRow(t("Email"), caretaker.caretakerEmail)
                                     ProfileInfoRow(t("ID"), caretaker.caretakerUserId)
                                     
