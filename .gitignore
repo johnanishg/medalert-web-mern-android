@@ -208,3 +208,8 @@ backend/src/*.json
 **/service-account*.json
 **/credentials*.json
 **/*-key.json
+
+# Specific files to ignore
+backend/src/rsvp-450609-5da96c081fd6.json
+backend/rsvp-450609-67bb2a85607a.json
+backend/start-server.sh
