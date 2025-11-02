@@ -46,9 +46,7 @@ class PatientRepository @Inject constructor(
                 userPreferences.saveAuthToken(authResponse.token)
                 userPreferences.saveUserData(authResponse.user)
                 
-                // Sync patient data to local database after successful login
-                syncPatientDataToLocal(authResponse.user.getPatientId())
-                
+                // Sync will happen on first fetch
                 Result.success(authResponse)
             } else {
                 android.util.Log.e("PatientRepository", "Login failed: ${response.code()} - ${response.message()}")
@@ -406,9 +404,6 @@ class PatientRepository @Inject constructor(
                 emptyList()
             }
             
-            // Sync fetched data to local database
-            syncPatientDataToLocal(user.getPatientId())
-            
             val dataBundle = PatientDataBundle(
                 patient = patient,
                 medicines = patient.currentMedications,
@@ -416,6 +411,9 @@ class PatientRepository @Inject constructor(
                 caretakerRequests = caretakerRequests,
                 visits = patient.visits
             )
+            
+            // Sync fetched data to local database
+            syncPatientDataToLocal(dataBundle)
             
             android.util.Log.d("PatientRepository", "All data fetched successfully. Medicines: ${dataBundle.medicines.size}, Notifications: ${dataBundle.notifications.size}")
             Result.success(dataBundle)
@@ -435,56 +433,42 @@ class PatientRepository @Inject constructor(
     }
     
     // Sync patient data to local database
-    private suspend fun syncPatientDataToLocal(patientId: String) {
+    private suspend fun syncPatientDataToLocal(dataBundle: PatientDataBundle) {
         try {
+            val patientId = dataBundle.patient.getPatientId()
             android.util.Log.d("PatientRepository", "Syncing patient data to local database for: $patientId")
             
-            // Get patient profile from network
-            val patientResult = getPatientProfile()
-            if (patientResult.isFailure) {
-                android.util.Log.w("PatientRepository", "Failed to fetch patient for sync: ${patientResult.exceptionOrNull()?.message}")
-                return
-            }
-            
-            val patient = patientResult.getOrThrow()
-            
             // Save patient entity
-            val patientEntity = PatientEntity.fromPatient(patient)
+            val patientEntity = PatientEntity.fromPatient(dataBundle.patient)
             patientDao.insertPatient(patientEntity)
             
             // Save medications
             medicationDao.deleteMedicationsForPatient(patientId)
-            val medicationEntities = patient.currentMedications.map { 
+            val medicationEntities = dataBundle.medicines.map { 
                 MedicationEntity.fromMedication(it, patientId) 
             }
             medicationDao.insertMedications(medicationEntities)
             
-            // Fetch and save notifications
-            val notificationsResult = getMedicineNotifications()
-            if (notificationsResult.isSuccess) {
-                medicineNotificationDao.deleteNotificationsForPatient(patientId)
-                val notificationEntities = notificationsResult.getOrThrow().map { 
-                    MedicineNotificationEntity.fromMedicineNotification(it) 
-                }
-                medicineNotificationDao.insertNotifications(notificationEntities)
+            // Save notifications
+            medicineNotificationDao.deleteNotificationsForPatient(patientId)
+            val notificationEntities = dataBundle.notifications.map { 
+                MedicineNotificationEntity.fromMedicineNotification(it) 
             }
+            medicineNotificationDao.insertNotifications(notificationEntities)
             
             // Save visits
             visitDao.deleteVisitsForPatient(patientId)
-            val visitEntities = patient.visits.map { 
+            val visitEntities = dataBundle.visits.map { 
                 VisitEntity.fromVisit(it, patientId) 
             }
             visitDao.insertVisits(visitEntities)
             
             // Save caretaker approvals
-            val approvalsResult = getCaretakerRequests()
-            if (approvalsResult.isSuccess) {
-                caretakerApprovalDao.deleteApprovalsForPatient(patientId)
-                val approvalEntities = approvalsResult.getOrThrow().map { 
-                    CaretakerApprovalEntity.fromCaretakerApproval(it, patientId) 
-                }
-                caretakerApprovalDao.insertApprovals(approvalEntities)
+            caretakerApprovalDao.deleteApprovalsForPatient(patientId)
+            val approvalEntities = dataBundle.caretakerRequests.map { 
+                CaretakerApprovalEntity.fromCaretakerApproval(it, patientId) 
             }
+            caretakerApprovalDao.insertApprovals(approvalEntities)
             
             android.util.Log.d("PatientRepository", "Successfully synced patient data to local database")
         } catch (e: Exception) {
