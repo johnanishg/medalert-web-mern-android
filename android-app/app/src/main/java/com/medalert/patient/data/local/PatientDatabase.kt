@@ -2,12 +2,9 @@ package com.medalert.patient.data.local
 
 import android.content.Context
 import androidx.room.*
-import androidx.room.migration.Migration
-import androidx.sqlite.db.SupportSQLiteDatabase
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.medalert.patient.data.model.*
-import kotlinx.coroutines.flow.Flow
 
 @Database(
     entities = [
@@ -22,7 +19,6 @@ import kotlinx.coroutines.flow.Flow
     version = 1,
     exportSchema = false
 )
-@TypeConverters(PatientConverters::class)
 abstract class PatientDatabase : RoomDatabase() {
     abstract fun patientDao(): PatientDao
     abstract fun medicationDao(): MedicationDao
@@ -35,8 +31,7 @@ abstract class PatientDatabase : RoomDatabase() {
 
 @Entity(tableName = "patients")
 data class PatientEntity(
-    @PrimaryKey val _id: String,
-    val id: String = "",
+    @PrimaryKey val id: String,
     val userId: String = "",
     val name: String = "",
     val email: String = "",
@@ -64,7 +59,7 @@ data class PatientEntity(
         val allergiesType = object : TypeToken<List<String>>() {}.type
         
         return Patient(
-            _id = _id,
+            _id = id,
             id = id,
             userId = userId,
             name = name,
@@ -105,8 +100,7 @@ data class PatientEntity(
             val gson = Gson()
             
             return PatientEntity(
-                _id = patient._id.ifEmpty { patient.id },
-                id = patient.id,
+                id = patient._id.ifEmpty { patient.id },
                 userId = patient.userId,
                 name = patient.name,
                 email = patient.email,
@@ -134,7 +128,7 @@ data class PatientEntity(
 
 @Entity(tableName = "medications")
 data class MedicationEntity(
-    @PrimaryKey val _id: String,
+    @PrimaryKey val id: String,
     val patientId: String, // Foreign key to patient
     val name: String = "",
     val dosage: String = "",
@@ -169,7 +163,7 @@ data class MedicationEntity(
         val adherenceType = object : TypeToken<List<AdherenceRecord>>() {}.type
         
         return Medication(
-            _id = _id,
+            _id = id,
             name = name,
             dosage = dosage,
             frequency = frequency,
@@ -202,7 +196,7 @@ data class MedicationEntity(
             val gson = Gson()
             
             return MedicationEntity(
-                _id = medication._id.ifEmpty { medication.name + patientId },
+                id = medication._id.ifEmpty { medication.name + patientId },
                 patientId = patientId,
                 name = medication.name,
                 dosage = medication.dosage,
@@ -234,7 +228,7 @@ data class MedicationEntity(
 
 @Entity(tableName = "medicine_notifications")
 data class MedicineNotificationEntity(
-    @PrimaryKey val _id: String,
+    @PrimaryKey val id: String,
     val patientId: String,
     val patientName: String = "",
     val patientPhone: String = "",
@@ -257,7 +251,7 @@ data class MedicineNotificationEntity(
         val notificationTimesType = object : TypeToken<List<NotificationTime>>() {}.type
         
         return MedicineNotification(
-            _id = _id,
+            _id = id,
             patientId = patientId,
             patientName = patientName,
             patientPhone = patientPhone,
@@ -282,7 +276,7 @@ data class MedicineNotificationEntity(
             val gson = Gson()
             
             return MedicineNotificationEntity(
-                _id = notification._id,
+                id = notification._id,
                 patientId = notification.patientId,
                 patientName = notification.patientName,
                 patientPhone = notification.patientPhone,
@@ -468,7 +462,7 @@ data class ScheduleEntryEntity(
 
 @Dao
 interface PatientDao {
-    @Query("SELECT * FROM patients WHERE _id = :id OR id = :id")
+    @Query("SELECT * FROM patients WHERE id = :id")
     suspend fun getPatient(id: String): PatientEntity?
     
     @Query("SELECT * FROM patients LIMIT 1")
@@ -492,7 +486,7 @@ interface MedicationDao {
     @Query("SELECT * FROM medications WHERE patientId = :patientId AND isActive = 1")
     suspend fun getActiveMedications(patientId: String): List<MedicationEntity>
     
-    @Query("SELECT * FROM medications WHERE _id = :id")
+    @Query("SELECT * FROM medications WHERE id = :id")
     suspend fun getMedication(id: String): MedicationEntity?
     
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -507,7 +501,7 @@ interface MedicationDao {
     @Query("DELETE FROM medications WHERE patientId = :patientId")
     suspend fun deleteMedicationsForPatient(patientId: String)
     
-    @Query("DELETE FROM medications WHERE _id = :id")
+    @Query("DELETE FROM medications WHERE id = :id")
     suspend fun deleteMedication(id: String)
 }
 
@@ -519,7 +513,7 @@ interface MedicineNotificationDao {
     @Query("SELECT * FROM medicine_notifications WHERE patientId = :patientId AND isActive = 1")
     suspend fun getActiveNotifications(patientId: String): List<MedicineNotificationEntity>
     
-    @Query("SELECT * FROM medicine_notifications WHERE _id = :id")
+    @Query("SELECT * FROM medicine_notifications WHERE id = :id")
     suspend fun getNotification(id: String): MedicineNotificationEntity?
     
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -534,7 +528,7 @@ interface MedicineNotificationDao {
     @Query("DELETE FROM medicine_notifications WHERE patientId = :patientId")
     suspend fun deleteNotificationsForPatient(patientId: String)
     
-    @Query("DELETE FROM medicine_notifications WHERE _id = :id")
+    @Query("DELETE FROM medicine_notifications WHERE id = :id")
     suspend fun deleteNotification(id: String)
 }
 
@@ -569,10 +563,6 @@ interface CaretakerApprovalDao {
     
     @Query("DELETE FROM caretaker_approvals WHERE patientId = :patientId")
     suspend fun deleteApprovalsForPatient(patientId: String)
-}
-
-class PatientConverters {
-    // Converters are handled inline in the entities using Gson
 }
 
 // Database instance

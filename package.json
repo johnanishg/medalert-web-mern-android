@@ -9,7 +9,10 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "seed-mongodb": "tsx src/lib/mongodb-seed.ts"
+    "seed-mongodb": "tsx src/lib/mongodb-seed.ts",
+    "backend": "node backend/src/server.js",
+    "tunnel": "npx lt --port 5000 --subdomain medalert123",
+    "backend:tunnel": "concurrently \"npm run backend\" \"npm run tunnel\" --names \"BACKEND,TUNNEL\" --prefix-colors \"blue,green\""
   },
   "dependencies": {
     "@google-cloud/text-to-speech": "^6.3.0",
@@ -31,10 +34,12 @@
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.18",
+    "concurrently": "^9.2.1",
     "eslint": "^9.9.1",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.11",
     "globals": "^15.9.0",
+    "localtunnel": "^2.0.2",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
     "tsx": "^4.7.0",
