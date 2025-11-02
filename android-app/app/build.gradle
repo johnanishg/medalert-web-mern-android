@@ -45,7 +45,7 @@ android {
         debug {
             // Emulator default loopback to host machine
             // Using host LAN IP so physical devices on same Wi‑Fi can reach backend
-            buildConfigField "String", "API_BASE_URL", '"http://192.168.29.72:5000/api/"'
+                buildConfigField "String", "API_BASE_URL", '"https://medalert123.loca.lt/api/"'
             buildConfigField "String", "GEMINI_API_KEY", '"YOUR_ACTUAL_GEMINI_API_KEY_HERE"'
         }
         release {
@@ -55,7 +55,7 @@ android {
                 signingConfig signingConfigs.release
             }
             // For a real device over the same Wi-Fi, point to your host IP or production URL
-            buildConfigField "String", "API_BASE_URL", '"http://192.168.29.72:5000/api/"'
+                buildConfigField "String", "API_BASE_URL", '"https://medalert123.loca.lt/api/"'
             buildConfigField "String", "GEMINI_API_KEY", '"YOUR_ACTUAL_GEMINI_API_KEY_HERE"'
         }
     }

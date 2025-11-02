@@ -9,6 +9,9 @@ import com.medalert.patient.data.local.UserPreferences
 import com.medalert.patient.data.local.DoseTrackingDatabase
 import com.medalert.patient.data.local.DoseTrackingDao
 import com.medalert.patient.data.local.DoseTrackingDatabaseProvider
+import com.medalert.patient.data.local.PatientDatabase
+import com.medalert.patient.data.local.PatientDatabaseProvider
+import com.medalert.patient.util.NetworkConnectivityManager
 import com.medalert.patient.data.repository.DoseTrackingRepository
 import com.medalert.patient.data.repository.TranslationRepository
 import com.medalert.patient.data.service.GeminiService
@@ -156,5 +159,47 @@ object NetworkModule {
     @Singleton
     fun provideGeminiService(chatbotApiService: ChatbotApiService): GeminiService {
         return GeminiService(chatbotApiService)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideNetworkConnectivityManager(@ApplicationContext context: Context): NetworkConnectivityManager {
+        return NetworkConnectivityManager(context)
+    }
+    
+    @Provides
+    @Singleton
+    fun providePatientDatabase(@ApplicationContext context: Context): PatientDatabase {
+        return PatientDatabaseProvider.getDatabase(context)
+    }
+    
+    @Provides
+    @Singleton
+    fun providePatientDao(database: PatientDatabase): com.medalert.patient.data.local.PatientDao {
+        return database.patientDao()
+    }
+    
+    @Provides
+    @Singleton
+    fun provideMedicationDao(database: PatientDatabase): com.medalert.patient.data.local.MedicationDao {
+        return database.medicationDao()
+    }
+    
+    @Provides
+    @Singleton
+    fun provideMedicineNotificationDao(database: PatientDatabase): com.medalert.patient.data.local.MedicineNotificationDao {
+        return database.medicineNotificationDao()
+    }
+    
+    @Provides
+    @Singleton
+    fun provideVisitDao(database: PatientDatabase): com.medalert.patient.data.local.VisitDao {
+        return database.visitDao()
+    }
+    
+    @Provides
+    @Singleton
+    fun provideCaretakerApprovalDao(database: PatientDatabase): com.medalert.patient.data.local.CaretakerApprovalDao {
+        return database.caretakerApprovalDao()
     }
 }
