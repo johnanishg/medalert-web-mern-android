@@ -1,8 +1,9 @@
 export type SupportedLanguage = 'en' | 'hi' | 'kn';
 
 export async function translate(text: string, targetLanguage: SupportedLanguage, sourceLanguage?: SupportedLanguage): Promise<string> {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/';
-  const url = new URL('translate/translate', baseUrl).toString();
+  const baseUrlRaw = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+  const baseUrl = (baseUrlRaw as string).replace(/\/+$/, '');
+  const url = `${baseUrl}/translate/translate`;
 
   const response = await fetch(url, {
     method: 'POST',
@@ -21,8 +22,9 @@ export async function translate(text: string, targetLanguage: SupportedLanguage,
 
 export async function translateBatch(texts: string[], targetLanguage: SupportedLanguage, sourceLanguage?: SupportedLanguage): Promise<string[]> {
   if (texts.length === 0) return [];
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/';
-  const url = new URL('translate/batch', baseUrl).toString();
+  const baseUrlRaw = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+  const baseUrl = (baseUrlRaw as string).replace(/\/+$/, '');
+  const url = `${baseUrl}/translate/batch`;
 
   const response = await fetch(url, {
     method: 'POST',
