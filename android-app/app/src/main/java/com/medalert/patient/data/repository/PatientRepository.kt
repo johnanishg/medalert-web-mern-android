@@ -3,6 +3,17 @@ package com.medalert.patient.data.repository
 import com.medalert.patient.data.api.ApiService
 import com.medalert.patient.data.model.*
 import com.medalert.patient.data.local.UserPreferences
+import com.medalert.patient.data.local.PatientDao
+import com.medalert.patient.data.local.MedicationDao
+import com.medalert.patient.data.local.MedicineNotificationDao
+import com.medalert.patient.data.local.VisitDao
+import com.medalert.patient.data.local.CaretakerApprovalDao
+import com.medalert.patient.data.local.PatientEntity
+import com.medalert.patient.data.local.MedicationEntity
+import com.medalert.patient.data.local.MedicineNotificationEntity
+import com.medalert.patient.data.local.VisitEntity
+import com.medalert.patient.data.local.CaretakerApprovalEntity
+import com.medalert.patient.util.NetworkConnectivityManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
@@ -11,7 +22,13 @@ import javax.inject.Singleton
 @Singleton
 class PatientRepository @Inject constructor(
     private val apiService: ApiService,
-    private val userPreferences: UserPreferences
+    private val userPreferences: UserPreferences,
+    private val patientDao: PatientDao,
+    private val medicationDao: MedicationDao,
+    private val medicineNotificationDao: MedicineNotificationDao,
+    private val visitDao: VisitDao,
+    private val caretakerApprovalDao: CaretakerApprovalDao,
+    private val networkConnectivityManager: NetworkConnectivityManager
 ) {
     
     // Authentication
@@ -28,6 +45,10 @@ class PatientRepository @Inject constructor(
                 // Save token and user data
                 userPreferences.saveAuthToken(authResponse.token)
                 userPreferences.saveUserData(authResponse.user)
+                
+                // Sync patient data to local database after successful login
+                syncPatientDataToLocal(authResponse.user.getPatientId())
+                
                 Result.success(authResponse)
             } else {
                 android.util.Log.e("PatientRepository", "Login failed: ${response.code()} - ${response.message()}")
@@ -58,6 +79,15 @@ class PatientRepository @Inject constructor(
     
     suspend fun logout() {
         userPreferences.clearAuthData()
+    }
+    
+    // Helper function to check connectivity before update operations
+    private fun requireConnectivity(): Result<Unit> {
+        return if (networkConnectivityManager.isConnected()) {
+            Result.success(Unit)
+        } else {
+            Result.failure(Exception("No internet connection. Please connect to the internet to make updates."))
+        }
     }
     
     // Patient Profile
@@ -101,11 +131,19 @@ class PatientRepository @Inject constructor(
     
     suspend fun updatePatientProfile(patient: Patient): Result<Patient> {
         return try {
+            // Check connectivity first
+            requireConnectivity().getOrThrow()
+            
             val patientId = patient.getPatientId()
             val response = apiService.updatePatientProfile(patientId, patient)
             if (response.isSuccessful && response.body()?.data != null) {
                 // Update local user data
                 userPreferences.saveUserData(response.body()!!.data!!)
+                
+                // Also update local database
+                val patientEntity = PatientEntity.fromPatient(response.body()!!.data!!)
+                patientDao.updatePatient(patientEntity)
+                
                 Result.success(response.body()!!.data!!)
             } else {
                 Result.failure(Exception(response.message() ?: "Failed to update profile"))
@@ -118,6 +156,9 @@ class PatientRepository @Inject constructor(
     // Medicine Management
     suspend fun updateMedicine(medicineIndex: Int, updateData: Map<String, Any>): Result<Medication> {
         return try {
+            // Check connectivity first
+            requireConnectivity().getOrThrow()
+            
             val response = apiService.updateMedicine(medicineIndex, updateData)
             if (response.isSuccessful && response.body()?.data != null) {
                 Result.success(response.body()!!.data!!)
@@ -131,6 +172,9 @@ class PatientRepository @Inject constructor(
     
     suspend fun addMedicine(medication: Medication): Result<Medication> {
         return try {
+            // Check connectivity first
+            requireConnectivity().getOrThrow()
+            
             val response = apiService.addMedicine(medication)
             if (response.isSuccessful && response.body()?.data != null) {
                 Result.success(response.body()!!.data!!)
@@ -144,6 +188,9 @@ class PatientRepository @Inject constructor(
     
            suspend fun deleteMedicine(medicineIndex: Int): Result<Boolean> {
                return try {
+                   // Check connectivity first
+                   requireConnectivity().getOrThrow()
+                   
                    val response = apiService.deleteMedicine(medicineIndex)
                    if (response.isSuccessful) {
                        Result.success(true)
@@ -166,6 +213,9 @@ class PatientRepository @Inject constructor(
                remainingTablets: Int? = null
            ): Result<Medication> {
                return try {
+                   // Check connectivity first
+                   requireConnectivity().getOrThrow()
+                   
                    val timingData = mutableMapOf<String, Any>()
                    
                    timing?.let { timingData["timing"] = it }
@@ -197,6 +247,9 @@ class PatientRepository @Inject constructor(
     // Medicine Notifications
     suspend fun setMedicineTimings(request: SetTimingsRequest): Result<MedicineNotification> {
         return try {
+            // Check connectivity first
+            requireConnectivity().getOrThrow()
+            
             val response = apiService.setMedicineTimings(request)
             if (response.isSuccessful && response.body()?.data != null) {
                 Result.success(response.body()!!.data!!)
@@ -234,6 +287,9 @@ class PatientRepository @Inject constructor(
         notes: String = ""
     ): Result<Boolean> {
         return try {
+            // Check connectivity first
+            requireConnectivity().getOrThrow()
+            
             val user = userPreferences.getUserData().first()
             if (user != null) {
                 val patientId = user.getPatientId()
@@ -272,6 +328,9 @@ class PatientRepository @Inject constructor(
     
     suspend fun assignCaretaker(caretakerUserId: String): Result<Boolean> {
         return try {
+            // Check connectivity first
+            requireConnectivity().getOrThrow()
+            
             val request = mapOf("caretakerUserId" to caretakerUserId)
             val response = apiService.assignCaretaker(request)
             if (response.isSuccessful) {
@@ -318,6 +377,12 @@ class PatientRepository @Inject constructor(
             // Fetch patient profile with medicines
             val patientResult = getPatientProfile()
             if (patientResult.isFailure) {
+                // If network fetch fails, try to get from local storage
+                android.util.Log.w("PatientRepository", "Failed to fetch from network, trying local storage")
+                val localData = getLocalPatientData(user.getPatientId())
+                if (localData != null) {
+                    return Result.success(localData)
+                }
                 return Result.failure(patientResult.exceptionOrNull() ?: Exception("Failed to fetch patient profile"))
             }
             
@@ -341,6 +406,9 @@ class PatientRepository @Inject constructor(
                 emptyList()
             }
             
+            // Sync fetched data to local database
+            syncPatientDataToLocal(user.getPatientId())
+            
             val dataBundle = PatientDataBundle(
                 patient = patient,
                 medicines = patient.currentMedications,
@@ -354,7 +422,98 @@ class PatientRepository @Inject constructor(
             
         } catch (e: Exception) {
             android.util.Log.e("PatientRepository", "Failed to fetch all patient data: ${e.message}", e)
+            // Try to return local data if available
+            val user = userPreferences.getUserData().first()
+            if (user != null) {
+                val localData = getLocalPatientData(user.getPatientId())
+                if (localData != null) {
+                    return Result.success(localData)
+                }
+            }
             Result.failure(e)
+        }
+    }
+    
+    // Sync patient data to local database
+    private suspend fun syncPatientDataToLocal(patientId: String) {
+        try {
+            android.util.Log.d("PatientRepository", "Syncing patient data to local database for: $patientId")
+            
+            // Get patient profile from network
+            val patientResult = getPatientProfile()
+            if (patientResult.isFailure) {
+                android.util.Log.w("PatientRepository", "Failed to fetch patient for sync: ${patientResult.exceptionOrNull()?.message}")
+                return
+            }
+            
+            val patient = patientResult.getOrThrow()
+            
+            // Save patient entity
+            val patientEntity = PatientEntity.fromPatient(patient)
+            patientDao.insertPatient(patientEntity)
+            
+            // Save medications
+            medicationDao.deleteMedicationsForPatient(patientId)
+            val medicationEntities = patient.currentMedications.map { 
+                MedicationEntity.fromMedication(it, patientId) 
+            }
+            medicationDao.insertMedications(medicationEntities)
+            
+            // Fetch and save notifications
+            val notificationsResult = getMedicineNotifications()
+            if (notificationsResult.isSuccess) {
+                medicineNotificationDao.deleteNotificationsForPatient(patientId)
+                val notificationEntities = notificationsResult.getOrThrow().map { 
+                    MedicineNotificationEntity.fromMedicineNotification(it) 
+                }
+                medicineNotificationDao.insertNotifications(notificationEntities)
+            }
+            
+            // Save visits
+            visitDao.deleteVisitsForPatient(patientId)
+            val visitEntities = patient.visits.map { 
+                VisitEntity.fromVisit(it, patientId) 
+            }
+            visitDao.insertVisits(visitEntities)
+            
+            // Save caretaker approvals
+            val approvalsResult = getCaretakerRequests()
+            if (approvalsResult.isSuccess) {
+                caretakerApprovalDao.deleteApprovalsForPatient(patientId)
+                val approvalEntities = approvalsResult.getOrThrow().map { 
+                    CaretakerApprovalEntity.fromCaretakerApproval(it, patientId) 
+                }
+                caretakerApprovalDao.insertApprovals(approvalEntities)
+            }
+            
+            android.util.Log.d("PatientRepository", "Successfully synced patient data to local database")
+        } catch (e: Exception) {
+            android.util.Log.e("PatientRepository", "Error syncing patient data: ${e.message}", e)
+        }
+    }
+    
+    // Get patient data from local database
+    private suspend fun getLocalPatientData(patientId: String): PatientDataBundle? {
+        try {
+            val patientEntity = patientDao.getPatient(patientId) ?: return null
+            val patient = patientEntity.toPatient().copy(
+                currentMedications = medicationDao.getMedications(patientId).map { it.toMedication() },
+                visits = visitDao.getVisits(patientId).map { it.toVisit() },
+                caretakerApprovals = caretakerApprovalDao.getApprovals(patientId).map { it.toCaretakerApproval() }
+            )
+            
+            val notifications = medicineNotificationDao.getNotifications(patientId).map { it.toMedicineNotification() }
+            
+            return PatientDataBundle(
+                patient = patient,
+                medicines = patient.currentMedications,
+                notifications = notifications,
+                caretakerRequests = patient.caretakerApprovals,
+                visits = patient.visits
+            )
+        } catch (e: Exception) {
+            android.util.Log.e("PatientRepository", "Error getting local patient data: ${e.message}", e)
+            return null
         }
     }
 }
