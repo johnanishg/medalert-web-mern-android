@@ -1,30 +1,76 @@
 import twilio from 'twilio';
 
-// Environment variables are loaded in server.js
-
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_AUTH_TOKEN;
-const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
-
-// Initialize Twilio client only if credentials are properly configured
+// Lazy initialization - client will be initialized on first use or when initializeTwilio() is called
 let client = null;
-if (accountSid && authToken && twilioPhoneNumber && 
-    accountSid.startsWith('AC') && 
-    accountSid !== 'your_twilio_account_sid_here') {
-  try {
-    client = twilio(accountSid, authToken);
-    console.log('✅ Twilio client initialized successfully');
-  } catch (error) {
-    console.error('❌ Failed to initialize Twilio client:', error.message);
-    client = null;
+let initialized = false;
+
+// Get environment variables (will be available after dotenv.config() is called)
+const getTwilioConfig = () => {
+  return {
+    accountSid: process.env.TWILIO_ACCOUNT_SID?.trim(),
+    authToken: process.env.TWILIO_AUTH_TOKEN?.trim(),
+    twilioPhoneNumber: process.env.TWILIO_PHONE_NUMBER?.trim()
+  };
+};
+
+// Initialize Twilio client - call this after .env is loaded
+export const initializeTwilio = () => {
+  if (initialized) return;
+  
+  const { accountSid, authToken, twilioPhoneNumber } = getTwilioConfig();
+  
+  // Debug logging
+  console.log('🔍 Twilio Configuration Check:');
+  console.log('   TWILIO_ACCOUNT_SID:', accountSid ? `Found (${accountSid.length} chars)` : 'MISSING');
+  console.log('   TWILIO_AUTH_TOKEN:', authToken ? `Found (${authToken.length} chars)` : 'MISSING');
+  console.log('   TWILIO_PHONE_NUMBER:', twilioPhoneNumber ? `Found (${twilioPhoneNumber})` : 'MISSING');
+
+  // Initialize Twilio client only if credentials are properly configured
+  if (accountSid && authToken && twilioPhoneNumber && 
+      accountSid.startsWith('AC') && 
+      accountSid !== 'your_twilio_account_sid_here' &&
+      accountSid !== 'your-twilio-account-sid') {
+    try {
+      client = twilio(accountSid, authToken);
+      console.log('✅ Twilio client initialized successfully');
+      initialized = true;
+    } catch (error) {
+      console.error('❌ Failed to initialize Twilio client:', error.message);
+      client = null;
+      initialized = true;
+    }
+  } else {
+    console.log('⚠️  Twilio credentials not configured. SMS functionality will be disabled.');
+    if (!accountSid) {
+      console.log('   ❌ TWILIO_ACCOUNT_SID is missing or empty');
+    } else if (!accountSid.startsWith('AC')) {
+      console.log(`   ❌ TWILIO_ACCOUNT_SID should start with 'AC', got: ${accountSid.substring(0, 5)}...`);
+    } else if (accountSid === 'your_twilio_account_sid_here' || accountSid === 'your-twilio-account-sid') {
+      console.log('   ❌ TWILIO_ACCOUNT_SID contains placeholder value');
+    }
+    if (!authToken) {
+      console.log('   ❌ TWILIO_AUTH_TOKEN is missing or empty');
+    }
+    if (!twilioPhoneNumber) {
+      console.log('   ❌ TWILIO_PHONE_NUMBER is missing or empty');
+    } else if (!twilioPhoneNumber.startsWith('+')) {
+      console.log(`   ❌ TWILIO_PHONE_NUMBER should start with '+', got: ${twilioPhoneNumber}`);
+    }
+    console.log('   📝 Please update backend/.env file with your Twilio credentials:');
+    console.log('      TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
+    console.log('      TWILIO_AUTH_TOKEN=your_auth_token_here');
+    console.log('      TWILIO_PHONE_NUMBER=+1234567890');
+    initialized = true;
   }
-} else {
-  console.log('⚠️  Twilio credentials not configured. SMS functionality will be disabled.');
-  console.log('   Please update .env file with your Twilio credentials:');
-  console.log('   - TWILIO_ACCOUNT_SID (starts with AC)');
-  console.log('   - TWILIO_AUTH_TOKEN');
-  console.log('   - TWILIO_PHONE_NUMBER (starts with +)');
-}
+};
+
+// Get or initialize client (lazy initialization on first use)
+const getClient = () => {
+  if (!initialized) {
+    initializeTwilio();
+  }
+  return client;
+};
 
 /**
  * Send medication reminder SMS to patient
@@ -38,8 +84,11 @@ if (accountSid && authToken && twilioPhoneNumber &&
  */
 export const sendMedicationReminder = async (phoneNumber, patientName, medicineName, dosage, frequency, doctorName) => {
   try {
+    const twilioClient = getClient();
+    const { twilioPhoneNumber } = getTwilioConfig();
+    
     // Check if Twilio client is available
-    if (!client) {
+    if (!twilioClient || !twilioPhoneNumber) {
       console.log('📱 SMS not sent - Twilio not configured. Would have sent:');
       console.log(`   To: ${phoneNumber}`);
       console.log(`   Message: Medication reminder for ${medicineName}`);
@@ -76,7 +125,7 @@ When: ${frequency}
 Prescribed by: Dr. ${doctorName}
 - MedAlert`;
 
-    const result = await client.messages.create({
+    const result = await twilioClient.messages.create({
       body: message,
       from: twilioPhoneNumber,
       to: formattedPhoneNumber
@@ -108,8 +157,11 @@ Prescribed by: Dr. ${doctorName}
  */
 export const sendAppointmentReminder = async (phoneNumber, patientName, appointmentDate, doctorName) => {
   try {
+    const twilioClient = getClient();
+    const { twilioPhoneNumber } = getTwilioConfig();
+    
     // Check if Twilio client is available
-    if (!client) {
+    if (!twilioClient || !twilioPhoneNumber) {
       console.log('📱 SMS not sent - Twilio not configured. Would have sent:');
       console.log(`   To: ${phoneNumber}`);
       console.log(`   Message: Appointment reminder for ${appointmentDate}`);
@@ -147,7 +199,7 @@ Doctor: Dr. ${doctorName}
 Please arrive 15 minutes early.
 - MedAlert`;
 
-    const result = await client.messages.create({
+    const result = await twilioClient.messages.create({
       body: message,
       from: twilioPhoneNumber,
       to: formattedPhoneNumber
@@ -178,8 +230,11 @@ Please arrive 15 minutes early.
  */
 export const sendGeneralNotification = async (phoneNumber, patientName, message) => {
   try {
+    const twilioClient = getClient();
+    const { twilioPhoneNumber } = getTwilioConfig();
+    
     // Check if Twilio client is available
-    if (!client) {
+    if (!twilioClient || !twilioPhoneNumber) {
       console.log('📱 SMS not sent - Twilio not configured. Would have sent:');
       console.log(`   To: ${phoneNumber}`);
       console.log(`   Message: ${message}`);
@@ -214,7 +269,7 @@ Hi ${patientName},
 ${message}
 - MedAlert Team`;
 
-    const result = await client.messages.create({
+    const result = await twilioClient.messages.create({
       body: fullMessage,
       from: twilioPhoneNumber,
       to: formattedPhoneNumber

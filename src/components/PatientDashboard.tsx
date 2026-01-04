@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000/api';
 import { useTheme } from '../contexts/ThemeContext';
-import { LogOut, Sun, Moon, Bell, Pill, Calendar, Clock, User, Trash2, X } from 'lucide-react';
+import { LogOut, Sun, Moon, Bell, Pill, Calendar, Clock, User, Trash2, X, History } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Chatbot from './Chatbot';
 import DoseBasedAdherenceTracker from './DoseBasedAdherenceTracker';
-import CalendarScheduleView from './CalendarScheduleView';
 import logger from '../services/logger';
 import { DashboardContext } from '../services/geminiService';
 import { useTranslation } from '../contexts/TranslationContext';
 import { SupportedLanguage } from '../services/translationService';
+import ReactCalendar from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
 
 const PatientDashboard: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
@@ -47,6 +48,10 @@ const PatientDashboard: React.FC = () => {
     foodTiming: ''
   });
 
+  // Visits states
+  const [visits, setVisits] = useState<any[]>([]);
+  const [loadingVisits, setLoadingVisits] = useState(false);
+
   // Per-user language preference
   useEffect(() => {
     try {
@@ -70,13 +75,13 @@ const PatientDashboard: React.FC = () => {
     } catch { }
   };
   // Active tab state
-  const [activeTab, setActiveTab] = useState<'profile' | 'medicines' | 'schedule' | 'visits' | 'notifications' | 'caretaker'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'medicines' | 'notifications' | 'caretaker' | 'schedule' | 'visits'>('profile');
 
   // Re-translate when key UI states change
   useEffect(() => {
     translatePage && translatePage();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, medicines, notifications, medicineNotifications, showEditMedicineModal, showNotificationModal, showCaretakerRequests]);
+  }, [activeTab, medicines, notifications, medicineNotifications, showEditMedicineModal, showNotificationModal, showCaretakerRequests, visits]);
 
   // Date range filter states
   const [dateRange, setDateRange] = useState({
@@ -168,6 +173,84 @@ const PatientDashboard: React.FC = () => {
     return number; // Default to days
   };
 
+  // Helper function to get medicine start date
+  const getMedicineStartDate = (medicine: any): Date => {
+    if (medicine.startDate) {
+      const date = new Date(medicine.startDate);
+      if (!isNaN(date.getTime())) return date;
+    }
+    if (medicine.prescribedDate) {
+      const date = new Date(medicine.prescribedDate);
+      if (!isNaN(date.getTime())) return date;
+    }
+    return new Date(); // Default to today
+  };
+
+  // Helper function to get medicine end date
+  const getMedicineEndDate = (medicine: any): Date => {
+    if (medicine.endDate) {
+      const date = new Date(medicine.endDate);
+      if (!isNaN(date.getTime())) return date;
+    }
+    const startDate = getMedicineStartDate(medicine);
+    const durationDays = parseDurationToDays(medicine.duration);
+    if (durationDays > 0) {
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + durationDays);
+      return endDate;
+    }
+    // Default to 30 days from start if no duration
+    const defaultEnd = new Date(startDate);
+    defaultEnd.setDate(defaultEnd.getDate() + 30);
+    return defaultEnd;
+  };
+
+  // Helper function to categorize medicine as new, present, or old
+  const categorizeMedicine = (medicine: any): 'new' | 'present' | 'old' => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const startDate = getMedicineStartDate(medicine);
+    startDate.setHours(0, 0, 0, 0);
+    
+    const endDate = getMedicineEndDate(medicine);
+    endDate.setHours(0, 0, 0, 0);
+
+    if (startDate > today) {
+      return 'new';
+    } else if (endDate < today) {
+      return 'old';
+    } else {
+      return 'present';
+    }
+  };
+
+  // Helper function to check if medicine is scheduled on a specific date
+  const isMedicineScheduledOnDate = (medicine: any, date: Date): boolean => {
+    const checkDate = new Date(date);
+    checkDate.setHours(0, 0, 0, 0);
+    
+    const startDate = getMedicineStartDate(medicine);
+    startDate.setHours(0, 0, 0, 0);
+    
+    const endDate = getMedicineEndDate(medicine);
+    endDate.setHours(0, 0, 0, 0);
+
+    return checkDate >= startDate && checkDate <= endDate;
+  };
+
+  // Helper function to get medicines for a specific date
+  const getMedicinesForDate = (date: Date) => {
+    return medicines.filter(medicine => isMedicineScheduledOnDate(medicine, date))
+      .map(medicine => ({
+        ...medicine,
+        category: categorizeMedicine(medicine)
+      }));
+  };
+
+  // State for schedule tab
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | null>(null);
+
   // Initialize date range disabled to allow calendar navigation
   /*
   useEffect(() => {
@@ -183,9 +266,6 @@ const PatientDashboard: React.FC = () => {
   const [loadingCaretakers, setLoadingCaretakers] = useState(false);
   const [caretakerSearchTerm, setCaretakerSearchTerm] = useState('');
 
-  // Visits state
-  const [visits, setVisits] = useState<any[]>([]);
-  const [loadingVisits, setLoadingVisits] = useState(false);
 
   // Dashboard context for chatbot
   const dashboardContext: DashboardContext = {
@@ -230,7 +310,6 @@ const PatientDashboard: React.FC = () => {
       'Set Notifications',
       'View Medical History',
       'Manage Caretakers',
-      'View Visits',
       'Analyze Health Trends',
       'Medication Adherence Tracking',
       'Diagnosis History Review',
@@ -319,49 +398,15 @@ const PatientDashboard: React.FC = () => {
     }
   }, []); // Remove user dependency to prevent loop
 
-  // Fetch visits from API
-  const fetchVisits = async () => {
-    try {
-      setLoadingVisits(true);
-      const token = localStorage.getItem('token');
-
-      if (!token) {
-        console.error('No token found for fetching visits');
-        return;
-      }
-
-      const response = await fetch(`${API_BASE_URL}/diagnosis/my-visits`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ Visits fetched successfully:', data.visits?.length || 0);
-        setVisits(data.visits || []);
-      } else {
-        console.error('❌ Failed to fetch visits:', response.status);
-        setVisits([]);
-      }
-    } catch (error) {
-      console.error('❌ Error fetching visits:', error);
-      setVisits([]);
-    } finally {
-      setLoadingVisits(false);
-    }
-  };
-
-  // Refresh data when switching to medicines, schedule, or visits tab
+  // Refresh data when switching to medicines tab
   useEffect(() => {
-    if (activeTab === 'medicines' || activeTab === 'schedule') {
-      console.log(`🔄 Switched to ${activeTab} tab, refreshing data...`);
-      logger.debug(`Switched to ${activeTab} tab, refreshing data...`, null, 'PatientDashboard', 'low');
+    if (activeTab === 'medicines') {
+      console.log('🔄 Switched to medicines tab, refreshing data...');
+      logger.debug('Switched to medicines tab, refreshing data...', null, 'PatientDashboard', 'low');
       // Only fetch if we have user data
       if (user && (user.id || user._id || user.userId)) {
         fetchPatientData();
       }
-    } else if (activeTab === 'visits') {
-      console.log('🔄 Switched to visits tab, fetching visits...');
-      fetchVisits();
     }
   }, [activeTab]); // Keep activeTab dependency but add user check
 
@@ -1251,10 +1296,40 @@ const PatientDashboard: React.FC = () => {
     }
   };
 
+  const fetchVisits = async () => {
+    try {
+      setLoadingVisits(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/diagnosis/my-visits`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setVisits(data.visits || []);
+      } else {
+        console.error('Failed to fetch visits');
+        setVisits([]);
+      }
+    } catch (error) {
+      console.error('Error fetching visits:', error);
+      setVisits([]);
+    } finally {
+      setLoadingVisits(false);
+    }
+  };
+
   // Fetch caretakers when caretaker tab is selected
   useEffect(() => {
     if (activeTab === 'caretaker') {
       fetchCaretakers();
+    }
+  }, [activeTab]);
+
+  // Fetch visits when visits tab is selected
+  useEffect(() => {
+    if (activeTab === 'visits') {
+      fetchVisits();
     }
   }, [activeTab]);
 
@@ -1318,11 +1393,7 @@ const PatientDashboard: React.FC = () => {
             <Pill size={18} /> Medicines
           </button>
           <button
-            onClick={() => {
-              console.log('📅 Schedule button clicked, setting activeTab to schedule');
-              setActiveTab('schedule');
-              console.log('📅 ActiveTab after click:', 'schedule');
-            }}
+            onClick={() => setActiveTab('schedule')}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium w-full transition-colors duration-200 ${activeTab === 'schedule'
               ? 'bg-primary-600 text-white'
               : theme === 'dark'
@@ -1341,7 +1412,7 @@ const PatientDashboard: React.FC = () => {
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
           >
-            <Calendar size={18} /> Visits
+            <History size={18} /> Visits
           </button>
           <button
             onClick={() => setActiveTab('notifications')}
@@ -1420,7 +1491,7 @@ const PatientDashboard: React.FC = () => {
             </div>
           )}
 
-          {loading && activeTab !== 'schedule' && (
+          {loading && (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
               <span className="ml-2">Loading your data...</span>
@@ -1433,12 +1504,6 @@ const PatientDashboard: React.FC = () => {
             </div>
           )}
 
-          {/* Tab Content - Debug */}
-          {(() => {
-            console.log('🔍 RENDER: activeTab =', activeTab, 'loading =', loading, 'schedule condition =', activeTab === 'schedule');
-            return null;
-          })()}
-          
           {activeTab === 'profile' && (
             <div className="space-y-6">
               {/* Patient Information Card */}
@@ -1852,407 +1917,50 @@ const PatientDashboard: React.FC = () => {
                   </div>
                 )}
               </div>
+            </div>
+          )}
 
-              {activeTab === 'schedule' ? (
-                (() => {
-                  console.log('✅ Schedule tab condition is TRUE, rendering content');
-                  return (
-                    <div className="space-y-6" data-testid="schedule-tab-content" style={{ minHeight: '200px', backgroundColor: 'rgba(255, 0, 0, 0.1)' }}>
-                      {/* Always visible header to verify tab is rendering */}
-                      <div className="bg-green-50 dark:bg-green-900/20 border-2 border-green-500 dark:border-green-700 rounded-lg p-4" style={{ zIndex: 9999, position: 'relative' }}>
-                    <h2 className="text-xl font-bold text-green-800 dark:text-green-200 mb-2">
-                      📅 Schedule Tab is Active
-                    </h2>
-                    <div className="text-sm text-green-700 dark:text-green-300 space-y-1">
-                      <div>Active Tab: <strong>{activeTab}</strong></div>
-                      <div>Loading: <strong>{loading ? 'Yes' : 'No'}</strong></div>
-                      <div>Medicines Count: <strong>{medicines.length}</strong></div>
-                      <div>Current User: <strong>{currentUser ? 'Yes' : 'No'}</strong></div>
-                      <div>Date Range: <strong>{dateRange?.from ? `${dateRange.from} to ${dateRange.to}` : 'Not set'}</strong></div>
-                    </div>
-                  </div>
-                  
-                  {loading && (
-                    <div className="flex items-center justify-center py-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
-                      <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Loading schedule data...</span>
-                    </div>
-                  )}
-                  
-                  {/* Date Range Filter */}
-                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        Schedule Date Range
-                      </h3>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => {
-                            const optimalRange = calculateOptimalDateRange();
-                            setDateRange(optimalRange);
-                          }}
-                          className="px-3 py-1 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
-                        >
-                          Auto Range
-                        </button>
-                        <button
-                          onClick={() => setShowDateRangeFilter(!showDateRangeFilter)}
-                          className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                        >
-                          {showDateRangeFilter ? 'Hide' : 'Custom Range'}
-                        </button>
-                      </div>
-                    </div>
-
-                    {showDateRangeFilter && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            From Date
-                          </label>
-                          <input
-                            type="date"
-                            value={dateRange.from}
-                            onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value }))}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            To Date
-                          </label>
-                          <input
-                            type="date"
-                            value={dateRange.to}
-                            onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value }))}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Medicine Summary */}
-                    <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Medicine Schedule Summary
-                      </h4>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                        <div>
-                          <span className="text-gray-500 dark:text-gray-400">Total Medicines:</span>
-                          <span className="ml-2 font-medium text-gray-900 dark:text-white">
-                            {medicines.length}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500 dark:text-gray-400">Active Medicines:</span>
-                          <span className="ml-2 font-medium text-gray-900 dark:text-white">
-                            {medicines.filter(m => m.duration && parseDurationToDays(m.duration) > 0).length}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500 dark:text-gray-400">Date Range:</span>
-                          <span className="ml-2 font-medium text-gray-900 dark:text-white">
-                            {dateRange.from && dateRange.to ?
-                              `${new Date(dateRange.from).toLocaleDateString()} - ${new Date(dateRange.to).toLocaleDateString()}` :
-                              'Not set'
-                            }
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500 dark:text-gray-400">Total Days:</span>
-                          <span className="ml-2 font-medium text-gray-900 dark:text-white">
-                            {dateRange.from && dateRange.to ?
-                              Math.ceil((new Date(dateRange.to).getTime() - new Date(dateRange.from).getTime()) / (1000 * 60 * 60 * 24)) + 1 :
-                              0
-                            }
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-
-                  {/* Calendar Schedule View (always render; handles empty state internally) */}
-                  {(() => {
-                    try {
-                      console.log('📅 Rendering CalendarScheduleView', {
-                        activeTab,
-                        medicinesCount: medicines.length,
-                        hasCurrentUser: !!currentUser,
-                        dateRange
-                      });
-                      
-                      const historyMedicines = currentUser?.medicationHistory || [];
-                      // Combine active medicines and history, ensuring no duplicates if any
-                      const calendarMedicines = [...medicines, ...historyMedicines];
-
-                      console.log('📅 Calendar medicines:', {
-                        active: medicines.length,
-                        history: historyMedicines.length,
-                        total: calendarMedicines.length
-                      });
-
-                      if (!CalendarScheduleView) {
-                        console.error('CalendarScheduleView component is not available');
-                        return (
-                          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
-                            <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">
-                              Component Error
-                            </h3>
-                            <p className="text-red-600 dark:text-red-300">
-                              CalendarScheduleView component is not available. Please refresh the page.
-                            </p>
-                          </div>
-                        );
-                      }
-
-                      return (
-                        <CalendarScheduleView
-                          medicines={calendarMedicines}
-                          patientId={currentUser?._id || currentUser?.id || currentUser?.userId || ''}
-                          onAdherenceUpdate={refreshMedicineData}
-                          onEditMedicine={openEditMedicineModal}
-                          onDeleteMedicine={handleDeleteMedicine}
-                          dateRange={dateRange}
-                        />
-                      );
-                    } catch (error) {
-                      console.error('Error rendering CalendarScheduleView:', error);
-                      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-                      return (
-                        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
-                          <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">
-                            Error Loading Schedule
-                          </h3>
-                          <p className="text-red-600 dark:text-red-300 mb-2">
-                            There was an error loading the calendar schedule. Please try refreshing the page.
-                          </p>
-                          <p className="text-xs text-red-500 dark:text-red-400 mb-4">
-                            Error: {error instanceof Error ? error.message : String(error)}
-                          </p>
-                          <button
-                            onClick={refreshMedicineData}
-                            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-                          >
-                            Retry
-                          </button>
-                        </div>
-                      );
-                    }
-                  })()}
-                    </div>
-                  );
-                })()
+          {activeTab === 'notifications' && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+              <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                <Bell size={20} /> Notifications
+              </h3>
+              {notifications.length === 0 ? (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <Bell size={48} className="mx-auto mb-4 opacity-50" />
+                  <p>No notifications yet.</p>
+                </div>
               ) : (
-                <div className="bg-red-500 text-white p-4 rounded">
-                  Schedule tab NOT active. Current: {String(activeTab)}
+                <div className="space-y-4">
+                  {notifications.map((notification, index) => (
+                    <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                      <h4 className="font-semibold">{notification.title}</h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {notification.message}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-500">
+                        {new Date(notification.date).toLocaleDateString()}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               )}
+            </div>
+          )}
 
-              {activeTab === 'visits' && (
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-semibold flex items-center gap-2">
-                      <Calendar size={20} /> Visit History
-                    </h3>
-                    <button
-                      onClick={fetchVisits}
-                      disabled={loadingVisits}
-                      className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      {loadingVisits ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                          Loading...
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                          </svg>
-                          Refresh
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  {loadingVisits ? (
-                    <div className="text-center py-12">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-                      <p className="text-gray-600 dark:text-gray-400">Loading visits...</p>
-                    </div>
-                  ) : visits.length > 0 ? (
-                    <div className="space-y-4">
-                      {visits.map((visit: any, index: number) => (
-                        <div key={visit.id || index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-5 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-800 hover:shadow-lg transition-shadow">
-                          <div className="flex justify-between items-start mb-4">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
-                                <Calendar size={20} className="text-primary-600 dark:text-primary-400" />
-                                <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-                                  {new Date(visit.visitDate).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric'
-                                  })}
-                                </h4>
-                              </div>
-                              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                                <User size={16} />
-                                <span className="font-medium">{visit.doctorName || 'Unknown Doctor'}</span>
-                                {visit.doctorSpecialization && (
-                                  <span className="text-gray-500 dark:text-gray-500">• {visit.doctorSpecialization}</span>
-                                )}
-                              </div>
-                            </div>
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              visit.visitType === 'consultation' || visit.visitType === 'medicine_prescription'
-                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                                : visit.visitType === 'follow_up'
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                : 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
-                            }`}>
-                              {visit.visitType ? visit.visitType.replace(/_/g, ' ').toUpperCase() : 'VISIT'}
-                            </span>
-                          </div>
-
-                          <div className="space-y-3 mt-4">
-                            {visit.diagnosis && (
-                              <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                                <span className="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Diagnosis:</span>
-                                <p className="text-gray-800 dark:text-gray-200">{visit.diagnosis}</p>
-                              </div>
-                            )}
-
-                            {visit.symptoms && visit.symptoms.length > 0 && (
-                              <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                                <span className="font-semibold text-gray-700 dark:text-gray-300 block mb-2">Symptoms:</span>
-                                <div className="flex flex-wrap gap-2">
-                                  {visit.symptoms.map((symptom: string, symIndex: number) => (
-                                    <span key={symIndex} className="px-2 py-1 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 text-xs rounded">
-                                      {symptom}
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
-                            {(visit.medications && visit.medications.length > 0) || (visit.medicines && visit.medicines.length > 0) ? (
-                              <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                                <span className="font-semibold text-gray-700 dark:text-gray-300 block mb-2">Medicines Prescribed:</span>
-                                <div className="space-y-2">
-                                  {(visit.medications || visit.medicines).map((medicine: any, medIndex: number) => (
-                                    <div key={medIndex} className="flex items-start gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
-                                      <Pill size={16} className="text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-                                      <div className="flex-1 min-w-0">
-                                        <span className="font-medium text-gray-800 dark:text-gray-200 block">{medicine.name}</span>
-                                        <div className="text-xs text-gray-600 dark:text-gray-400 space-x-2 mt-1">
-                                          <span>Dosage: {medicine.dosage}</span>
-                                          {medicine.frequency && <span>• Frequency: {medicine.frequency}</span>}
-                                          {medicine.duration && <span>• Duration: {medicine.duration}</span>}
-                                        </div>
-                                        {medicine.instructions && (
-                                          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 italic">{medicine.instructions}</p>
-                                        )}
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            ) : null}
-
-                            {visit.treatment && (
-                              <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                                <span className="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Treatment:</span>
-                                <p className="text-gray-800 dark:text-gray-200">{visit.treatment}</p>
-                              </div>
-                            )}
-
-                            {visit.notes && (
-                              <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                                <span className="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Notes:</span>
-                                <p className="text-gray-600 dark:text-gray-400">{visit.notes}</p>
-                              </div>
-                            )}
-
-                            {visit.followUpRequired && visit.followUpDate && (
-                              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-                                <div className="flex items-center gap-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg p-3">
-                                  <Clock size={18} className="text-orange-600 dark:text-orange-400" />
-                                  <div>
-                                    <span className="font-semibold text-orange-700 dark:text-orange-300 block">Follow-up Scheduled:</span>
-                                    <span className="text-orange-600 dark:text-orange-400 text-sm">
-                                      {new Date(visit.followUpDate).toLocaleDateString('en-US', {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric'
-                                      })}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                      <Calendar size={64} className="mx-auto mb-4 opacity-50" />
-                      <p className="text-lg font-medium mb-2">No visits recorded yet</p>
-                      <p className="text-sm">Your visit history will appear here after consultations with doctors.</p>
-                      <button
-                        onClick={fetchVisits}
-                        className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
-                      >
-                        Refresh Visits
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {activeTab === 'notifications' && (
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-                  <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                    <Bell size={20} /> Notifications
-                  </h3>
-                  {notifications.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                      <Bell size={48} className="mx-auto mb-4 opacity-50" />
-                      <p>No notifications yet.</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {notifications.map((notification, index) => (
-                        <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-                          <h4 className="font-semibold">{notification.title}</h4>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {notification.message}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-500">
-                            {new Date(notification.date).toLocaleDateString()}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {activeTab === 'caretaker' && (
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-semibold flex items-center gap-2">
-                      <User size={20} /> Caretaker Management
-                    </h3>
-                    <button
-                      onClick={handleRefresh}
-                      className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                    >
-                      Refresh
-                    </button>
-                  </div>
+          {activeTab === 'caretaker' && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold flex items-center gap-2">
+                  <User size={20} /> Caretaker Management
+                </h3>
+                <button
+                  onClick={handleRefresh}
+                  className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                >
+                  Refresh
+                </button>
+              </div>
 
                   {/* Current Caretaker Display */}
                   {currentUser?.selectedCaretaker ? (
@@ -2602,6 +2310,416 @@ const PatientDashboard: React.FC = () => {
                           )}
                         </div>
                       )}
+                    </div>
+                  )}
+            </div>
+          )}
+
+          {activeTab === 'visits' && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold flex items-center gap-2">
+                  <History size={20} /> Visit History
+                </h3>
+                <button
+                  onClick={fetchVisits}
+                  className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                  disabled={loadingVisits}
+                >
+                  {loadingVisits ? 'Loading...' : 'Refresh'}
+                </button>
+              </div>
+
+              {loadingVisits ? (
+                <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                  <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+                  </div>
+                  <h4 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Loading visit history...
+                  </h4>
+                  <p className="text-sm">Please wait while we fetch your visit records.</p>
+                </div>
+              ) : visits.length === 0 ? (
+                <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                  <History size={48} className="mx-auto mb-4 opacity-50" />
+                  <h4 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    No visit history found
+                  </h4>
+                  <p className="text-sm">You don't have any visit records yet. Visit history will appear here once you have consultations or diagnoses recorded.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {visits.map((visit, index) => {
+                    const visitDate = new Date(visit.visitDate);
+                    const visitTypeLabels: { [key: string]: string } = {
+                      consultation: 'Consultation',
+                      follow_up: 'Follow-up',
+                      emergency: 'Emergency',
+                      medicine_prescription: 'Medicine Prescription'
+                    };
+                    const visitTypeLabel = visitTypeLabels[visit.visitType] || visit.visitType || 'Visit';
+
+                    return (
+                      <div
+                        key={visit.id || index}
+                        className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                visit.visitType === 'emergency'
+                                  ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                                  : visit.visitType === 'follow_up'
+                                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                                  : visit.visitType === 'medicine_prescription'
+                                  ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                  : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+                              }`}>
+                                {visitTypeLabel}
+                              </div>
+                              <div className="text-sm text-gray-500 dark:text-gray-400">
+                                {visitDate.toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric'
+                                })} at {visitDate.toLocaleTimeString('en-US', {
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </div>
+                            </div>
+                            {visit.doctorName && (
+                              <div className="mb-2">
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Doctor: </span>
+                                <span className="text-sm text-gray-600 dark:text-gray-400">{visit.doctorName}</span>
+                                {visit.doctorSpecialization && (
+                                  <span className="text-sm text-gray-500 dark:text-gray-500 ml-2">
+                                    ({visit.doctorSpecialization})
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {visit.diagnosis && (
+                          <div className="mb-4">
+                            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Diagnosis:</h4>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">{visit.diagnosis}</p>
+                          </div>
+                        )}
+
+                        {(visit.symptoms && visit.symptoms.length > 0) && (
+                          <div className="mb-4">
+                            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Symptoms:</h4>
+                            <ul className="list-disc list-inside text-sm text-gray-600 dark:text-gray-400">
+                              {visit.symptoms.map((symptom: string, idx: number) => (
+                                <li key={idx}>{symptom}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {visit.treatment && (
+                          <div className="mb-4">
+                            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Treatment:</h4>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">{visit.treatment}</p>
+                          </div>
+                        )}
+
+                        {(visit.medicines && visit.medicines.length > 0) && (
+                          <div className="mb-4">
+                            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Prescribed Medicines:</h4>
+                            <div className="space-y-2">
+                              {visit.medicines.map((medicine: any, medIdx: number) => (
+                                <div
+                                  key={medIdx}
+                                  className="bg-gray-50 dark:bg-gray-700/50 rounded p-3 border border-gray-200 dark:border-gray-600"
+                                >
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                      <div className="font-medium text-sm text-gray-800 dark:text-gray-200">
+                                        {medicine.name}
+                                      </div>
+                                      {(medicine.dosage || medicine.frequency || medicine.duration) && (
+                                        <div className="mt-1 text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                                          {medicine.dosage && <div>Dosage: {medicine.dosage}</div>}
+                                          {medicine.frequency && <div>Frequency: {medicine.frequency}</div>}
+                                          {medicine.duration && <div>Duration: {medicine.duration}</div>}
+                                          {medicine.instructions && (
+                                            <div className="mt-1 italic">Instructions: {medicine.instructions}</div>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {(visit.medications && visit.medications.length > 0) && (
+                          <div className="mb-4">
+                            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Medications:</h4>
+                            <div className="space-y-2">
+                              {visit.medications.map((medication: any, medIdx: number) => (
+                                <div
+                                  key={medIdx}
+                                  className="bg-gray-50 dark:bg-gray-700/50 rounded p-3 border border-gray-200 dark:border-gray-600"
+                                >
+                                  <div className="font-medium text-sm text-gray-800 dark:text-gray-200">
+                                    {typeof medication === 'string' ? medication : medication.name || 'Medication'}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {visit.notes && (
+                          <div className="mb-4">
+                            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Notes:</h4>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{visit.notes}</p>
+                          </div>
+                        )}
+
+                        {visit.followUpRequired && visit.followUpDate && (
+                          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <div className="flex items-center gap-2 text-sm">
+                              <Calendar size={16} className="text-blue-600 dark:text-blue-400" />
+                              <span className="font-medium text-gray-700 dark:text-gray-300">Follow-up scheduled: </span>
+                              <span className="text-blue-600 dark:text-blue-400">
+                                {new Date(visit.followUpDate).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric'
+                                })}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'schedule' && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold flex items-center gap-2">
+                  <Calendar size={20} /> Medicine Schedule
+                </h3>
+              </div>
+
+              {medicines.length === 0 ? (
+                <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                  <Calendar size={48} className="mx-auto mb-4 opacity-50" />
+                  <p>No medicines scheduled yet.</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Legend */}
+                  <div className="flex flex-wrap gap-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-sm bg-blue-500"></div>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">New (Future)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-sm bg-green-500"></div>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Present (Active)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-sm bg-gray-400"></div>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Old (Completed)</span>
+                    </div>
+                  </div>
+
+                  {/* Calendar */}
+                  <div className="calendar-container">
+                    <ReactCalendar
+                      onChange={(value) => setSelectedCalendarDate(value as Date)}
+                      value={selectedCalendarDate}
+                      className={theme === 'dark' ? 'react-calendar-dark' : ''}
+                      tileContent={({ date, view }) => {
+                        if (view === 'month') {
+                          const medicinesOnDate = getMedicinesForDate(date);
+                          if (medicinesOnDate.length > 0) {
+                            const newCount = medicinesOnDate.filter(m => m.category === 'new').length;
+                            const presentCount = medicinesOnDate.filter(m => m.category === 'present').length;
+                            const oldCount = medicinesOnDate.filter(m => m.category === 'old').length;
+
+                            return (
+                              <div className="flex gap-0.5 justify-center mt-1">
+                                {newCount > 0 && (
+                                  <div className="w-3 h-3 rounded-sm bg-blue-500" title={`${newCount} new`}></div>
+                                )}
+                                {presentCount > 0 && (
+                                  <div className="w-3 h-3 rounded-sm bg-green-500" title={`${presentCount} present`}></div>
+                                )}
+                                {oldCount > 0 && (
+                                  <div className="w-3 h-3 rounded-sm bg-gray-400" title={`${oldCount} old`}></div>
+                                )}
+                              </div>
+                            );
+                          }
+                        }
+                        return null;
+                      }}
+                    />
+                  </div>
+
+                  {/* Selected Date Details */}
+                  {selectedCalendarDate && (
+                    <div className="border-t border-gray-200 dark:border-gray-600 pt-6">
+                      <h4 className="text-lg font-semibold mb-4">
+                        Medicines for {selectedCalendarDate.toLocaleDateString('en-US', { 
+                          weekday: 'long', 
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })}
+                      </h4>
+
+                      {(() => {
+                        const medicinesOnDate = getMedicinesForDate(selectedCalendarDate);
+                        
+                        if (medicinesOnDate.length === 0) {
+                          return (
+                            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                              <Pill size={48} className="mx-auto mb-4 opacity-50" />
+                              <p>No medicines scheduled for this date.</p>
+                            </div>
+                          );
+                        }
+
+                        const newMedicines = medicinesOnDate.filter(m => m.category === 'new');
+                        const presentMedicines = medicinesOnDate.filter(m => m.category === 'present');
+                        const oldMedicines = medicinesOnDate.filter(m => m.category === 'old');
+
+                        return (
+                          <div className="space-y-6">
+                            {/* New Medicines */}
+                            {newMedicines.length > 0 && (
+                              <div>
+                                <h5 className="text-md font-semibold mb-3 flex items-center gap-2 text-blue-600 dark:text-blue-400">
+                                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                                  New Medicines ({newMedicines.length})
+                                </h5>
+                                <div className="space-y-3">
+                                  {newMedicines.map((medicine, index) => (
+                                    <div key={index} className="border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+                                      <div className="flex justify-between items-start">
+                                        <div className="flex-1">
+                                          <h6 className="font-semibold text-gray-900 dark:text-white">{medicine.name}</h6>
+                                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                            <strong>Dosage:</strong> {medicine.dosage}
+                                          </p>
+                                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            <strong>Frequency:</strong> {medicine.frequency}
+                                          </p>
+                                          {medicine.timing && medicine.timing.length > 0 && (
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                              <strong>Timing:</strong> {medicine.timing.join(', ')}
+                                            </p>
+                                          )}
+                                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            <strong>Start Date:</strong> {getMedicineStartDate(medicine).toLocaleDateString()}
+                                          </p>
+                                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            <strong>End Date:</strong> {getMedicineEndDate(medicine).toLocaleDateString()}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Present Medicines */}
+                            {presentMedicines.length > 0 && (
+                              <div>
+                                <h5 className="text-md font-semibold mb-3 flex items-center gap-2 text-green-600 dark:text-green-400">
+                                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                  Present Medicines ({presentMedicines.length})
+                                </h5>
+                                <div className="space-y-3">
+                                  {presentMedicines.map((medicine, index) => (
+                                    <div key={index} className="border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
+                                      <div className="flex justify-between items-start">
+                                        <div className="flex-1">
+                                          <h6 className="font-semibold text-gray-900 dark:text-white">{medicine.name}</h6>
+                                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                            <strong>Dosage:</strong> {medicine.dosage}
+                                          </p>
+                                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            <strong>Frequency:</strong> {medicine.frequency}
+                                          </p>
+                                          {medicine.timing && medicine.timing.length > 0 && (
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                              <strong>Timing:</strong> {medicine.timing.join(', ')}
+                                            </p>
+                                          )}
+                                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            <strong>Start Date:</strong> {getMedicineStartDate(medicine).toLocaleDateString()}
+                                          </p>
+                                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            <strong>End Date:</strong> {getMedicineEndDate(medicine).toLocaleDateString()}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Old Medicines */}
+                            {oldMedicines.length > 0 && (
+                              <div>
+                                <h5 className="text-md font-semibold mb-3 flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                                  <div className="w-3 h-3 rounded-full bg-gray-400"></div>
+                                  Old Medicines ({oldMedicines.length})
+                                </h5>
+                                <div className="space-y-3">
+                                  {oldMedicines.map((medicine, index) => (
+                                    <div key={index} className="border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/20 rounded-lg p-4 opacity-75">
+                                      <div className="flex justify-between items-start">
+                                        <div className="flex-1">
+                                          <h6 className="font-semibold text-gray-900 dark:text-white">{medicine.name}</h6>
+                                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                            <strong>Dosage:</strong> {medicine.dosage}
+                                          </p>
+                                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            <strong>Frequency:</strong> {medicine.frequency}
+                                          </p>
+                                          {medicine.timing && medicine.timing.length > 0 && (
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                              <strong>Timing:</strong> {medicine.timing.join(', ')}
+                                            </p>
+                                          )}
+                                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            <strong>Start Date:</strong> {getMedicineStartDate(medicine).toLocaleDateString()}
+                                          </p>
+                                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            <strong>End Date:</strong> {getMedicineEndDate(medicine).toLocaleDateString()}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>

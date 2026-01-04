@@ -10,7 +10,14 @@ const __dirname = dirname(__filename);
 
 // Load environment variables from backend/.env
 // __dirname is backend/src, so ../.env points to backend/.env
-dotenv.config({ path: join(__dirname, '../.env') });
+const envPath = join(__dirname, '../.env');
+const result = dotenv.config({ path: envPath });
+if (result.error) {
+  console.log('⚠️  Warning: Could not load .env file from:', envPath);
+  console.log('   Error:', result.error.message);
+} else {
+  console.log('📁 Loading .env file from:', envPath);
+}
 
 // Now import other modules (they can now access process.env)
 import express from 'express';
@@ -40,6 +47,15 @@ console.log('🌐 GCLOUD_PROJECT_ID loaded:', process.env.GCLOUD_PROJECT_ID ? 'Y
 console.log('🌐 GCLOUD_PROJECT_ID value:', process.env.GCLOUD_PROJECT_ID || 'NOT SET');
 console.log('🤖 GEMINI_API_KEY loaded:', process.env.GEMINI_API_KEY ? 'YES' : 'NO');
 console.log('🤖 GEMINI_API_KEY value:', process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.substring(0, 10) + '...' : 'NOT SET');
+console.log('📱 TWILIO_ACCOUNT_SID loaded:', process.env.TWILIO_ACCOUNT_SID ? 'YES' : 'NO');
+console.log('📱 TWILIO_ACCOUNT_SID value:', process.env.TWILIO_ACCOUNT_SID ? (process.env.TWILIO_ACCOUNT_SID.startsWith('AC') ? process.env.TWILIO_ACCOUNT_SID.substring(0, 10) + '...' : 'INVALID (should start with AC)') : 'NOT SET');
+console.log('📱 TWILIO_AUTH_TOKEN loaded:', process.env.TWILIO_AUTH_TOKEN ? 'YES' : 'NO');
+console.log('📱 TWILIO_PHONE_NUMBER loaded:', process.env.TWILIO_PHONE_NUMBER ? 'YES' : 'NO');
+console.log('📱 TWILIO_PHONE_NUMBER value:', process.env.TWILIO_PHONE_NUMBER || 'NOT SET');
+
+// Initialize Twilio service now that .env is loaded
+import { initializeTwilio } from './services/twilioService.js';
+initializeTwilio();
 
 const app = express();
 const PORT = process.env.PORT || 5000;

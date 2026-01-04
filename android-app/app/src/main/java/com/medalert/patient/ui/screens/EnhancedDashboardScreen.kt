@@ -1,9 +1,12 @@
 package com.medalert.patient.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -11,9 +14,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
+import com.medalert.patient.R
 import com.medalert.patient.ui.components.MedicationCard
 import com.medalert.patient.ui.components.NumericTimingDialog
 import com.medalert.patient.ui.components.QuickStatsCard
@@ -40,12 +47,15 @@ fun EnhancedDashboardScreen(
     val notifications by patientViewModel.notifications.collectAsState()
     val uiState by patientViewModel.uiState.collectAsState()
     
-    var activeTab by remember { mutableStateOf(DashboardTab.PROFILE) }
+    var activeTab by remember { mutableStateOf(DashboardTab.MEDICINES) }
+    
+    // Drawer state
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
     
     // Language selector state
     val languageViewModel: LanguageViewModel = hiltViewModel()
     val lang by languageViewModel.language.collectAsState()
-    var langMenu by remember { mutableStateOf(false) }
     var uiTranslations by remember(lang) { mutableStateOf<Map<String, String>>(emptyMap()) }
     
     fun t(key: String): String = uiTranslations[key] ?: key
@@ -224,145 +234,144 @@ fun EnhancedDashboardScreen(
         patientViewModel.refreshAllData()
     }
     
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        // Header with theme toggle and logout
-        TopAppBar(
-            title = { 
-                Text(
-                    text = t("MedAlert Dashboard"),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            actions = {
-                // Refresh button
-                IconButton(
-                    onClick = { 
-                        patientViewModel.refreshAllData()
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            NavigationDrawerContent(
+                activeTab = activeTab,
+                onTabSelected = { tab ->
+                    activeTab = tab
+                    scope.launch {
+                        drawerState.close()
                     }
-                ) {
-                    Icon(
-                        Icons.Default.Refresh,
-                        contentDescription = t("Refresh"),
-                        tint = MaterialTheme.colorScheme.onSurface
+                },
+                notificationsCount = notifications.size,
+                lang = lang,
+                onLangSelected = { languageCode ->
+                    languageViewModel.setLanguage(languageCode)
+                },
+                onNavigateToNotifications = {
+                    onNavigateToNotifications()
+                    scope.launch {
+                        drawerState.close()
+                    }
+                },
+                onRefresh = {
+                    patientViewModel.refreshAllData()
+                    scope.launch {
+                        drawerState.close()
+                    }
+                },
+                onNavigateToChatbot = {
+                    onNavigateToChatbot()
+                    scope.launch {
+                        drawerState.close()
+                    }
+                },
+                onLogout = {
+                    onLogout()
+                    scope.launch {
+                        drawerState.close()
+                    }
+                },
+                translate = { key -> t(key) }
+            )
+        }
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            // Header with hamburger menu and MedAlert logo
+            TopAppBar(
+                title = { 
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.medalert_logo),
+                            contentDescription = null,
+                            modifier = Modifier.size(32.dp)
+                        )
+                        Text(
+                            text = "MedAlert",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = { 
+                        scope.launch {
+                            drawerState.open()
+                        }
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Menu,
+                            contentDescription = t("Menu")
+                        )
+                    }
+                }
+            )
+            
+            // Tab Content
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                when (activeTab) {
+                    DashboardTab.PROFILE -> ProfileTabContent(
+                        patient = patient,
+                        onEditProfile = onNavigateToProfile,
+                        translate = { key -> t(key) }
+                    )
+                    DashboardTab.MEDICINES -> MedicinesTabContent(
+                        medications = medications,
+                        onNavigateToMedications = onNavigateToMedications,
+                        onNavigateToCalendarSchedule = onNavigateToCalendarSchedule,
+                        patientViewModel = patientViewModel,
+                        translate = { key -> t(key) }
+                    )
+                    DashboardTab.SCHEDULE -> ScheduleTabContent(
+                        medications = medications,
+                        onNavigateToCalendarSchedule = onNavigateToCalendarSchedule,
+                        patientViewModel = patientViewModel,
+                        translate = { key -> t(key) }
+                    )
+                    DashboardTab.VISITS -> VisitsTabContent(
+                        patient = patient,
+                        translate = { key -> t(key) }
+                    )
+                    DashboardTab.NOTIFICATIONS -> NotificationsTabContent(
+                        notifications = notifications,
+                        translate = { key -> t(key) }
+                    )
+                    DashboardTab.CARETAKER -> CaretakerTabContent(
+                        patient = patient,
+                        patientViewModel = patientViewModel,
+                        translate = { key -> t(key) }
                     )
                 }
-                
-                // Language dropdown
-                Box {
-                    IconButton(onClick = { langMenu = true }) {
-                        Icon(Icons.Default.Translate, contentDescription = t("Language"))
-                    }
-                    DropdownMenu(expanded = langMenu, onDismissRequest = { langMenu = false }) {
-                        DropdownMenuItem(text = { Text("English") }, onClick = { languageViewModel.setLanguage("en"); langMenu = false })
-                        DropdownMenuItem(text = { Text("हिन्दी") }, onClick = { languageViewModel.setLanguage("hi"); langMenu = false })
-                        DropdownMenuItem(text = { Text("ಕನ್ನಡ") }, onClick = { languageViewModel.setLanguage("kn"); langMenu = false })
-                    }
-                }
-                
-                IconButton(onClick = onNavigateToNotifications) {
-                    Badge(
-                        containerColor = MaterialTheme.colorScheme.error,
-                        contentColor = MaterialTheme.colorScheme.onError
-                    ) {
-                        Text("${notifications.size}")
-                    }
-                    Icon(Icons.Default.Notifications, contentDescription = t("Notifications"))
-                }
-                
-                IconButton(onClick = onNavigateToChatbot) {
-                    Icon(Icons.Default.SmartToy, contentDescription = t("AI Assistant"))
-                }
-                
-                IconButton(onClick = onLogout) {
-                    Icon(Icons.Default.Logout, contentDescription = t("Logout"))
+            }
+            
+            // Loading indicator
+            if (uiState.isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
                 }
             }
-        )
-        
-        // Tab Navigation
-        TabRow(
-            selectedTabIndex = activeTab.ordinal,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            DashboardTab.values().forEach { tab ->
-                Tab(
-                    selected = activeTab == tab,
-                    onClick = { activeTab = tab },
-                    icon = {
-                        Icon(
-                            imageVector = tab.icon,
-                            contentDescription = t(tab.title)
-                        )
-                    },
-                    text = {
-                        Text(
-                            text = t(tab.title),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                )
-            }
-        }
-        
-        // Tab Content
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            when (activeTab) {
-                DashboardTab.PROFILE -> ProfileTabContent(
-                    patient = patient,
-                    onEditProfile = onNavigateToProfile,
-                    translate = { key -> t(key) }
-                )
-                DashboardTab.MEDICINES -> MedicinesTabContent(
-                    medications = medications,
-                    onNavigateToMedications = onNavigateToMedications,
-                    onNavigateToCalendarSchedule = onNavigateToCalendarSchedule,
-                    patientViewModel = patientViewModel,
-                    translate = { key -> t(key) }
-                )
-                DashboardTab.SCHEDULE -> ScheduleTabContent(
-                    medications = medications,
-                    onNavigateToCalendarSchedule = onNavigateToCalendarSchedule,
-                    patientViewModel = patientViewModel,
-                    translate = { key -> t(key) }
-                )
-                DashboardTab.VISITS -> VisitsTabContent(
-                    patient = patient,
-                    translate = { key -> t(key) }
-                )
-                DashboardTab.NOTIFICATIONS -> NotificationsTabContent(
-                    notifications = notifications,
-                    translate = { key -> t(key) }
-                )
-                DashboardTab.CARETAKER -> CaretakerTabContent(
-                    patient = patient,
-                    patientViewModel = patientViewModel,
-                    translate = { key -> t(key) }
-                )
-            }
-        }
-        
-        // Loading indicator
-        if (uiState.isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        }
-        
-        // Error handling
-        uiState.error?.let { error ->
-            LaunchedEffect(error) {
-                // Show error snackbar
-                patientViewModel.clearError()
+            
+            // Error handling
+            uiState.error?.let { error ->
+                LaunchedEffect(error) {
+                    // Show error snackbar
+                    patientViewModel.clearError()
+                }
             }
         }
     }
@@ -831,7 +840,7 @@ fun MedicinesTabContent(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(32.dp),
+                                .padding(20.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Icon(
@@ -1094,7 +1103,7 @@ fun NotificationsTabContent(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(24.dp),
+                                .padding(16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Icon(
@@ -1103,7 +1112,7 @@ fun NotificationsTabContent(
                                 modifier = Modifier.size(48.dp),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
                             Text(
                                 text = translate("No notifications set up"),
                                 style = MaterialTheme.typography.titleMedium,
@@ -1302,7 +1311,7 @@ fun CaretakerTabContent(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(24.dp),
+                                .padding(16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Icon(
@@ -1311,7 +1320,7 @@ fun CaretakerTabContent(
                                 modifier = Modifier.size(48.dp),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
                             Text(
                                 text = translate("No caretaker assigned"),
                                 style = MaterialTheme.typography.titleMedium,
@@ -1474,7 +1483,7 @@ fun ScheduleTabContent(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(24.dp),
+                            .padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Icon(
@@ -1483,7 +1492,7 @@ fun ScheduleTabContent(
                             modifier = Modifier.size(48.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             text = translate("No Medicines Scheduled"),
                             style = MaterialTheme.typography.titleMedium,
@@ -1520,7 +1529,7 @@ fun ScheduleTabContent(
                                 Icon(
                                     Icons.Default.Medication,
                                     contentDescription = null,
-                                    modifier = Modifier.size(20.dp),
+                                    modifier = Modifier.size(18.dp),
                                     tint = MaterialTheme.colorScheme.primary
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
@@ -1759,6 +1768,190 @@ fun parseTimingFromFrequency(medication: com.medalert.patient.data.model.Medicat
         return timing
     } catch (e: Exception) {
         return listOf("08:00") // Default fallback
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NavigationDrawerContent(
+    activeTab: DashboardTab,
+    onTabSelected: (DashboardTab) -> Unit,
+    notificationsCount: Int,
+    lang: String,
+    onLangSelected: (String) -> Unit,
+    onNavigateToNotifications: () -> Unit,
+    onRefresh: () -> Unit,
+    onNavigateToChatbot: () -> Unit,
+    onLogout: () -> Unit,
+    translate: (String) -> String
+) {
+    val scrollState = rememberScrollState()
+    
+    ModalDrawerSheet {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            // Header with logo and refresh button
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.medalert_logo),
+                            contentDescription = null,
+                            modifier = Modifier.size(32.dp)
+                        )
+                        Text(
+                            text = "MedAlert",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    IconButton(onClick = onRefresh) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = translate("Refresh"),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
+            
+            Divider()
+            
+            // Scrollable content
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(scrollState)
+            ) {
+                // Navigation Items (Tabs)
+                DashboardTab.values().forEach { tab ->
+                    NavigationDrawerItem(
+                        icon = {
+                            Icon(
+                                imageVector = tab.icon,
+                                contentDescription = translate(tab.title)
+                            )
+                        },
+                        label = { Text(translate(tab.title)) },
+                        selected = activeTab == tab,
+                        onClick = { onTabSelected(tab) },
+                        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                    )
+                }
+                
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                
+                // Actions Section
+                // Language - show current language in label
+                NavigationDrawerItem(
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Translate,
+                            contentDescription = translate("Language")
+                        )
+                    },
+                    label = { 
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(translate("Language"))
+                            Text(
+                                text = when (lang) {
+                                    "hi" -> "हिन्दी"
+                                    "kn" -> "ಕನ್ನಡ"
+                                    else -> "English"
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    },
+                    selected = false,
+                    onClick = {
+                        // Cycle through languages
+                        val nextLang = when (lang) {
+                            "en" -> "hi"
+                            "hi" -> "kn"
+                            else -> "en"
+                        }
+                        onLangSelected(nextLang)
+                    },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+                
+                // Notifications
+                NavigationDrawerItem(
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = translate("Notifications")
+                        )
+                    },
+                    label = { 
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(translate("Notifications"))
+                            if (notificationsCount > 0) {
+                                Badge {
+                                    Text("$notificationsCount")
+                                }
+                            }
+                        }
+                    },
+                    selected = false,
+                    onClick = onNavigateToNotifications,
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+                
+                // Chatbot
+                NavigationDrawerItem(
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.SmartToy,
+                            contentDescription = translate("AI Assistant")
+                        )
+                    },
+                    label = { Text(translate("AI Assistant")) },
+                    selected = false,
+                    onClick = onNavigateToChatbot,
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+                
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                
+                // Logout
+                NavigationDrawerItem(
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Logout,
+                            contentDescription = translate("Logout")
+                        )
+                    },
+                    label = { Text(translate("Logout")) },
+                    selected = false,
+                    onClick = onLogout,
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+            }
+        }
     }
 }
 

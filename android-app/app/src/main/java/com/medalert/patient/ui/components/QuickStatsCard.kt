@@ -30,7 +30,7 @@ fun QuickStatsCard(
                 fontWeight = FontWeight.Bold
             )
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             
             Row(
                 modifier = Modifier.fillMaxWidth(),

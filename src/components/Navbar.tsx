@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useTranslation } from '../contexts/TranslationContext';
-import { Pill, Menu, X, Moon, Sun } from 'lucide-react';
+import { Menu, X, Moon, Sun } from 'lucide-react';
 import Login from './Login';
 import Register from './Register';
 import AdminLogin from './AdminLogin';
@@ -110,7 +110,7 @@ const Navbar: React.FC = () => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <a href="#home" className="flex items-center text-primary-500 hover:text-primary-400 transition-colors">
-              <Pill className="h-8 w-8 mr-2" />
+              <img src="/MedAlert_Logo.png" alt="MedAlert" className="h-8 w-8 mr-2" />
               <span className="font-bold text-xl">MedAlert</span>
             </a>
           </div>

@@ -219,7 +219,7 @@ private fun NumericTimingRow(
             ) {
                 // Timing number indicator
                 Card(
-                    modifier = Modifier.size(32.dp),
+                    modifier = Modifier.size(28.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.primary
                     ),

@@ -41,28 +41,12 @@ const Hero: React.FC = () => {
               </a>
             </div>
           </div>
-          <div className="hidden md:block md:w-2/5">
-            <div className={`rounded-xl overflow-hidden shadow-xl p-8 ${
-              theme === 'dark' 
-                ? 'bg-gray-800/50 border border-gray-700' 
-                : 'bg-white border border-gray-200'
-            } backdrop-blur-sm`}>
-              <div className="flex items-center mb-4">
-                <div className="flex space-x-2">
-                  <div className="h-3 w-3 rounded-full bg-red-500"></div>
-                  <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
-                  <div className="h-3 w-3 rounded-full bg-green-500"></div>
-                </div>
-                <div className={`ml-4 h-6 w-full rounded ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`}></div>
-              </div>
-              <div className="space-y-3">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className={`h-4 w-full rounded ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`}></div>
-                ))}
-                <div className={`h-4 w-2/3 rounded ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`}></div>
-                <div className={`h-10 w-full rounded ${theme === 'dark' ? 'bg-orange-700/30' : 'bg-orange-100'}`}></div>
-              </div>
-            </div>
+          <div className="hidden md:block md:w-2/5 flex items-center justify-center">
+            <img 
+              src="/MedAlert_Logo.png" 
+              alt="MedAlert Logo" 
+              className="max-w-full h-auto"
+            />
           </div>
         </div>
       </div>

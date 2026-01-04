@@ -489,7 +489,7 @@ const DoctorDashboard: React.FC = () => {
       const totalTablets = parseInt(medicineForm.totalTablets);
       const tabletsPerDay = parseInt(medicineForm.tabletsPerDay);
       const days = Math.ceil(totalTablets / tabletsPerDay);
-      return `${days} days (${totalTablets} tablets total)`;
+      return `${days} days | Total Tablets: ${totalTablets} | ${tabletsPerDay} per day`;
     } else if (medicineForm.durationType === 'dateRange' && medicineForm.startDate && medicineForm.endDate) {
       const start = new Date(medicineForm.startDate);
       const end = new Date(medicineForm.endDate);
@@ -601,7 +601,14 @@ const DoctorDashboard: React.FC = () => {
 
   const updatePrescriptionMedicine = (index: number, field: string, value: any) => {
     const updatedMedicines = [...prescriptionMedicines];
-    updatedMedicines[index] = { ...updatedMedicines[index], [field]: value };
+    const updatedMedicine = { ...updatedMedicines[index], [field]: value };
+    
+    // When durationType changes to tabletCount, set startDate to today if not already set
+    if (field === 'durationType' && value === 'tabletCount' && !updatedMedicine.startDate) {
+      updatedMedicine.startDate = new Date().toISOString().split('T')[0];
+    }
+    
+    updatedMedicines[index] = updatedMedicine;
     setPrescriptionMedicines(updatedMedicines);
   };
 
@@ -626,9 +633,14 @@ const DoctorDashboard: React.FC = () => {
 
   // Helper function to calculate duration for prescription medicines
   const calculatePrescriptionDuration = (medicine: any) => {
-    // If manual duration is provided, use it
-    if (medicine.duration && medicine.duration.trim() !== '') {
-      return medicine.duration;
+    // Calculate from tablet count (prioritize this when tabletCount type is selected)
+    if (medicine.durationType === 'tabletCount') {
+      const totalTablets = medicine.totalTablets ? parseInt(String(medicine.totalTablets)) : 0;
+      const tabletsPerDay = medicine.tabletsPerDay ? parseInt(String(medicine.tabletsPerDay)) : 0;
+      if (totalTablets > 0 && tabletsPerDay > 0) {
+        const days = Math.ceil(totalTablets / tabletsPerDay);
+        return `${days} days | Total Tablets: ${totalTablets} | ${tabletsPerDay} per day`;
+      }
     }
     
     // Calculate from date range
@@ -638,16 +650,11 @@ const DoctorDashboard: React.FC = () => {
       const diffTime = Math.abs(end.getTime() - start.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
       return `${diffDays} days`;
-    } 
+    }
     
-    // Calculate from tablet count
-    if (medicine.durationType === 'tabletCount' && medicine.totalTablets && medicine.tabletsPerDay) {
-      const totalTablets = parseInt(medicine.totalTablets);
-      const tabletsPerDay = parseInt(medicine.tabletsPerDay);
-      if (totalTablets && tabletsPerDay) {
-        const days = Math.ceil(totalTablets / tabletsPerDay);
-        return `${days} days (${totalTablets} tablets, ${tabletsPerDay} per day)`;
-      }
+    // If manual duration is provided and no durationType is set, use it
+    if (medicine.duration && medicine.duration.trim() !== '') {
+      return medicine.duration;
     }
     
     // Fallback to a default duration
@@ -1813,7 +1820,16 @@ const DoctorDashboard: React.FC = () => {
                       name="durationType"
                       value="tabletCount"
                       checked={medicineForm.durationType === 'tabletCount'}
-                      onChange={(e) => setMedicineForm({ ...medicineForm, durationType: e.target.value })}
+                      onChange={(e) => {
+                        const newDurationType = e.target.value;
+                        setMedicineForm({ 
+                          ...medicineForm, 
+                          durationType: newDurationType,
+                          startDate: newDurationType === 'tabletCount' && !medicineForm.startDate 
+                            ? new Date().toISOString().split('T')[0] 
+                            : medicineForm.startDate
+                        });
+                      }}
                       className="mr-2"
                     />
                     Tablet Count
@@ -1846,25 +1862,36 @@ const DoctorDashboard: React.FC = () => {
 
                 {/* Tablet Count */}
                 {medicineForm.durationType === 'tabletCount' && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Total Tablets</label>
-                      <input
-                        type="number"
-                        value={medicineForm.totalTablets}
-                        onChange={(e) => setMedicineForm({ ...medicineForm, totalTablets: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                        placeholder="e.g., 30"
-                      />
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Total Tablets</label>
+                        <input
+                          type="number"
+                          value={medicineForm.totalTablets}
+                          onChange={(e) => setMedicineForm({ ...medicineForm, totalTablets: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          placeholder="e.g., 30"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Tablets per Day</label>
+                        <input
+                          type="number"
+                          value={medicineForm.tabletsPerDay}
+                          onChange={(e) => setMedicineForm({ ...medicineForm, tabletsPerDay: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          placeholder="e.g., 2"
+                        />
+                      </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Tablets per Day</label>
+                      <label className="block text-sm font-medium mb-1">Start Date</label>
                       <input
-                        type="number"
-                        value={medicineForm.tabletsPerDay}
-                        onChange={(e) => setMedicineForm({ ...medicineForm, tabletsPerDay: e.target.value })}
+                        type="date"
+                        value={medicineForm.startDate || new Date().toISOString().split('T')[0]}
+                        onChange={(e) => setMedicineForm({ ...medicineForm, startDate: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                        placeholder="e.g., 2"
                       />
                     </div>
                   </div>
@@ -2127,27 +2154,39 @@ const DoctorDashboard: React.FC = () => {
 
                             {/* Tablet Count */}
                             {medicine.durationType === 'tabletCount' && (
-                              <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                  <label className="block text-xs font-medium mb-1">Total Tablets</label>
-                                  <input
-                                    type="number"
-                                    value={medicine.totalTablets}
-                                    onChange={(e) => updatePrescriptionMedicine(index, 'totalTablets', e.target.value)}
-                                    disabled={editingMedicineIndex !== index}
-                                    className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600"
-                                    placeholder="e.g., 30"
-                                  />
+                              <div className="space-y-2">
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div>
+                                    <label className="block text-xs font-medium mb-1">Total Tablets</label>
+                                    <input
+                                      type="number"
+                                      value={medicine.totalTablets}
+                                      onChange={(e) => updatePrescriptionMedicine(index, 'totalTablets', e.target.value)}
+                                      disabled={editingMedicineIndex !== index}
+                                      className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600"
+                                      placeholder="e.g., 30"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-medium mb-1">Tablets per Day</label>
+                                    <input
+                                      type="number"
+                                      value={medicine.tabletsPerDay}
+                                      onChange={(e) => updatePrescriptionMedicine(index, 'tabletsPerDay', e.target.value)}
+                                      disabled={editingMedicineIndex !== index}
+                                      className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600"
+                                      placeholder="e.g., 2"
+                                    />
+                                  </div>
                                 </div>
                                 <div>
-                                  <label className="block text-xs font-medium mb-1">Tablets per Day</label>
+                                  <label className="block text-xs font-medium mb-1">Start Date</label>
                                   <input
-                                    type="number"
-                                    value={medicine.tabletsPerDay}
-                                    onChange={(e) => updatePrescriptionMedicine(index, 'tabletsPerDay', e.target.value)}
+                                    type="date"
+                                    value={medicine.startDate || ''}
+                                    onChange={(e) => updatePrescriptionMedicine(index, 'startDate', e.target.value)}
                                     disabled={editingMedicineIndex !== index}
                                     className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:bg-gray-100 dark:disabled:bg-gray-600"
-                                    placeholder="e.g., 2"
                                   />
                                 </div>
                               </div>

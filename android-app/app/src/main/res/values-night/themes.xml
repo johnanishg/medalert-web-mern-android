@@ -3,26 +3,26 @@
     <!-- Base application theme for dark mode. -->
     <style name="Base.Theme.MedAlert" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Material Design 3 color tokens for dark theme -->
-        <item name="colorPrimary">@color/medalert_primary</item>
+        <item name="colorPrimary">@color/medalert_primary_light</item>
         <item name="colorOnPrimary">@color/white</item>
         <item name="colorPrimaryContainer">@color/medalert_primary_dark</item>
         <item name="colorOnPrimaryContainer">@color/white</item>
-        <item name="colorSecondary">@color/medalert_secondary</item>
+        <item name="colorSecondary">@color/medalert_secondary_light</item>
         <item name="colorOnSecondary">@color/white</item>
-        <item name="colorSecondaryContainer">@color/medalert_secondary</item>
+        <item name="colorSecondaryContainer">@color/medalert_secondary_dark</item>
         <item name="colorOnSecondaryContainer">@color/white</item>
         <item name="colorTertiary">@color/medalert_success</item>
         <item name="colorOnTertiary">@color/white</item>
         <item name="colorError">@color/medalert_error</item>
         <item name="colorOnError">@color/white</item>
-        <item name="colorErrorContainer">@color/medalert_error</item>
-        <item name="colorOnErrorContainer">@color/white</item>
+        <item name="colorErrorContainer">#FF690005</item>
+        <item name="colorOnErrorContainer">#FFFFDAD6</item>
         <item name="colorSurface">@color/surface_dark</item>
-        <item name="colorOnSurface">@color/white</item>
-        <item name="colorSurfaceVariant">@color/surface_dark</item>
-        <item name="colorOnSurfaceVariant">@color/white</item>
-        <item name="colorOutline">@color/medalert_primary</item>
-        <item name="colorOnBackground">@color/white</item>
+        <item name="colorOnSurface">@color/on_surface_dark</item>
+        <item name="colorSurfaceVariant">#FF49454F</item>
+        <item name="colorOnSurfaceVariant">#FFCAC4D0</item>
+        <item name="colorOutline">#FF938F99</item>
+        <item name="colorOnBackground">@color/on_background_dark</item>
         <item name="android:statusBarColor">@color/medalert_primary</item>
     </style>
 

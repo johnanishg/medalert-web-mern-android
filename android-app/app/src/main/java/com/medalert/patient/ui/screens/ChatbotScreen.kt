@@ -404,7 +404,7 @@ private fun ChatMessageItem(message: ChatMessage) {
             // Assistant avatar
             Box(
                 modifier = Modifier
-                    .size(32.dp)
+                    .size(28.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.primary),
                 contentAlignment = Alignment.Center
@@ -470,7 +470,7 @@ private fun ChatMessageItem(message: ChatMessage) {
             // User avatar
             Box(
                 modifier = Modifier
-                    .size(32.dp)
+                    .size(28.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.secondary),
                 contentAlignment = Alignment.Center

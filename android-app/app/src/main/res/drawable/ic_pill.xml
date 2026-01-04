@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Pill/Capsule shape: rounded rectangle with ellipses on ends -->
+    <path
+        android:fillColor="@android:color/black"
+        android:pathData="M8,4C6.34,4 5,5.34 5,7L5,17C5,18.66 6.34,20 8,20L16,20C17.66,20 19,18.66 19,17L19,7C19,5.34 17.66,4 16,4L8,4ZM8,6L16,6C16.55,6 17,6.45 17,7L17,17C17,17.55 16.55,18 16,18L8,18C7.45,18 7,17.55 7,17L7,7C7,6.45 7.45,6 8,6Z"/>
+</vector>

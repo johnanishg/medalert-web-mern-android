@@ -49,7 +49,7 @@ fun SetTimingDialog(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 
                 // Timing Edit Section
                 onEditTiming?.let { editTimingCallback ->
@@ -58,7 +58,7 @@ fun SetTimingDialog(
                         onTimingUpdate = editTimingCallback
                     )
                     
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
                 
                 Text(
@@ -138,7 +138,7 @@ fun SetTimingDialog(
                     Text("Add Another Time")
                 }
                 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 
                 Card(
                     colors = CardDefaults.cardColors(
@@ -185,7 +185,7 @@ private fun TimingRow(
     ) {
         // Timing number indicator
         Card(
-            modifier = Modifier.size(32.dp),
+            modifier = Modifier.size(28.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.primary
             ),

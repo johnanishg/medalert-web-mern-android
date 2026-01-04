@@ -433,20 +433,35 @@ fun CalendarDay(
     val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) - 1 // Convert to 0-based
     val currentDateStr = dateFormat.format(date)
     
-    // Get doses for this date
-    val dayDoses = medications.flatMap { medication ->
-        medication.scheduledDoses.filter { dose ->
+    // Get doses for this date - first filter medications by their date range (like web app)
+    // then filter scheduledDoses by their individual date ranges and daysOfWeek
+    val dayDoses = medications.filter { medication ->
+        // First check if medication is active and date is within medication's startDate/endDate range
+        medication.isActive && isMedicationScheduledOnDate(medication, date)
+    }.flatMap { medication ->
+        // Get doses - use scheduledDoses if available, otherwise generate from timing array
+        val dosesToCheck = if (medication.scheduledDoses.isNotEmpty()) {
+            medication.scheduledDoses
+        } else if (medication.timing.isNotEmpty()) {
+            // Generate doses from timing array (like web app shows medicines based on timing)
+            generateDosesFromTiming(medication)
+        } else {
+            emptyList()
+        }
+        
+        // Filter doses by dose-level date range and daysOfWeek
+        dosesToCheck.filter { dose ->
             // Check if dose is active
             if (!dose.isActive) return@filter false
             
-            // Check if date is within startDate and endDate range
-            val startDate = dose.startDate
-            val endDate = dose.endDate
+            // Check if date is within dose's startDate and endDate range
+            val doseStartDate = dose.startDate
+            val doseEndDate = dose.endDate
             
-            if (startDate.isNotEmpty() && currentDateStr < startDate) {
+            if (doseStartDate.isNotEmpty() && currentDateStr < doseStartDate) {
                 return@filter false
             }
-            if (endDate.isNotEmpty() && currentDateStr > endDate) {
+            if (doseEndDate.isNotEmpty() && currentDateStr > doseEndDate) {
                 return@filter false
             }
             
@@ -524,6 +539,173 @@ fun CalendarDay(
 }
 
 /**
+ * Get medication start date (similar to web app's getMedicineStartDate)
+ */
+private fun getMedicationStartDate(medication: Medication): Date {
+    val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    val dateTimeFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+    dateTimeFormat.timeZone = TimeZone.getTimeZone("UTC")
+    
+    return when {
+        medication.startDate.isNotEmpty() -> {
+            try {
+                dateFormat.parse(medication.startDate) ?: Date()
+            } catch (e: Exception) {
+                Date()
+            }
+        }
+        medication.prescribedDate.isNotEmpty() -> {
+            try {
+                // Try parsing as date-time first, then as date
+                dateTimeFormat.parse(medication.prescribedDate) 
+                    ?: dateFormat.parse(medication.prescribedDate) 
+                    ?: Date()
+            } catch (e: Exception) {
+                Date()
+            }
+        }
+        else -> Date() // Default to today
+    }
+}
+
+/**
+ * Get medication end date (similar to web app's getMedicineEndDate)
+ */
+private fun getMedicationEndDate(medication: Medication): Date {
+    val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    val startDate = getMedicationStartDate(medication)
+    val calendar = Calendar.getInstance().apply { time = startDate }
+    
+    return when {
+        medication.endDate.isNotEmpty() -> {
+            try {
+                dateFormat.parse(medication.endDate) ?: calculateEndDateFromDuration(calendar, medication.duration)
+            } catch (e: Exception) {
+                calculateEndDateFromDuration(calendar, medication.duration)
+            }
+        }
+        else -> calculateEndDateFromDuration(calendar, medication.duration)
+    }
+}
+
+/**
+ * Calculate end date from duration string
+ */
+private fun calculateEndDateFromDuration(calendar: Calendar, duration: String): Date {
+    val durationLower = duration.lowercase()
+    return when {
+        durationLower.contains("day") -> {
+            val days = extractNumber(duration) ?: 30
+            calendar.add(Calendar.DAY_OF_MONTH, days - 1)
+            calendar.time
+        }
+        durationLower.contains("week") -> {
+            val weeks = extractNumber(duration) ?: 4
+            calendar.add(Calendar.WEEK_OF_YEAR, weeks)
+            calendar.add(Calendar.DAY_OF_MONTH, -1)
+            calendar.time
+        }
+        durationLower.contains("month") -> {
+            val months = extractNumber(duration) ?: 1
+            calendar.add(Calendar.MONTH, months)
+            calendar.add(Calendar.DAY_OF_MONTH, -1)
+            calendar.time
+        }
+        else -> {
+            // Default to 30 days from start if no duration
+            calendar.add(Calendar.DAY_OF_MONTH, 29)
+            calendar.time
+        }
+    }
+}
+
+/**
+ * Extract number from duration string
+ */
+private fun extractNumber(duration: String): Int? {
+    val regex = Regex("\\d+")
+    return regex.find(duration)?.value?.toIntOrNull()
+}
+
+/**
+ * Generate ScheduledDose objects from medication timing array (for medications without scheduledDoses)
+ */
+private fun generateDosesFromTiming(medication: Medication): List<ScheduledDose> {
+    if (medication.timing.isEmpty()) return emptyList()
+    
+    val startDate = if (medication.startDate.isNotEmpty()) medication.startDate else ""
+    val endDate = if (medication.endDate.isNotEmpty()) medication.endDate else ""
+    val allDaysOfWeek = listOf(0, 1, 2, 3, 4, 5, 6) // All days by default
+    
+    return medication.timing.map { time ->
+        ScheduledDose(
+            id = "${medication._id}_${time}", // Generate unique ID
+            time = time,
+            label = getTimeLabel(time),
+            dosage = medication.dosage,
+            isActive = true,
+            daysOfWeek = allDaysOfWeek,
+            startDate = startDate,
+            endDate = endDate,
+            notes = medication.instructions
+        )
+    }
+}
+
+/**
+ * Get time label from time string (e.g., "08:00" -> "Morning")
+ */
+private fun getTimeLabel(time: String): String {
+    return try {
+        val timeParts = time.split(":")
+        if (timeParts.size != 2) return "Custom"
+        val hours = timeParts[0].toInt()
+        when {
+            hours in 6..11 -> "Morning"
+            hours in 12..17 -> "Afternoon"
+            hours in 18..23 -> "Evening"
+            else -> "Night"
+        }
+    } catch (e: Exception) {
+        "Custom"
+    }
+}
+
+/**
+ * Check if medicine is scheduled on a specific date (similar to web app's isMedicineScheduledOnDate)
+ */
+private fun isMedicationScheduledOnDate(medication: Medication, date: Date): Boolean {
+    val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    val checkDate = Calendar.getInstance().apply { 
+        time = date
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }.time
+    
+    val startDate = getMedicationStartDate(medication)
+    val startCalendar = Calendar.getInstance().apply { 
+        time = startDate
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }.time
+    
+    val endDate = getMedicationEndDate(medication)
+    val endCalendar = Calendar.getInstance().apply { 
+        time = endDate
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }.time
+    
+    return checkDate >= startCalendar && checkDate <= endCalendar
+}
+
+/**
  * Check if a dose is active (30 minutes before to 2 hours after scheduled time)
  */
 fun isDoseActive(scheduledTime: String, scheduledDate: String): Boolean {
@@ -580,7 +762,7 @@ fun DoseItem(
     // Calculate scheduled datetime for this dose
     val scheduledDateTime = try {
         val timeParts = dose.time.split(":")
-        if (timeParts.size != 2) return@try null
+        if (timeParts.size != 2) throw IllegalArgumentException("Invalid time format")
         val hours = timeParts[0].toInt()
         val minutes = timeParts[1].toInt()
         calendar.time = dateFormat.parse(currentDateStr) ?: Date()

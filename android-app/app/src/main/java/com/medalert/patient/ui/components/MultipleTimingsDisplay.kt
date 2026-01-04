@@ -121,7 +121,7 @@ private fun TimingChip(
             // Timing number indicator
             Box(
                 modifier = Modifier
-                    .size(20.dp)
+                    .size(18.dp)
                     .clip(CircleShape)
                     .background(
                         if (isCurrentTime) {

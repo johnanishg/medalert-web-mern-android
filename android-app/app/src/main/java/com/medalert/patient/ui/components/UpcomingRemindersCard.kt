@@ -58,7 +58,7 @@ fun UpcomingRemindersCard(
                     Icon(
                         imageVector = Icons.Default.Schedule,
                         contentDescription = "No reminders",
-                        modifier = Modifier.size(32.dp),
+                        modifier = Modifier.size(28.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -108,7 +108,7 @@ private fun ReminderChip(reminder: UpcomingReminder) {
                     reminder.isDueNow -> MaterialTheme.colorScheme.onTertiaryContainer
                     else -> MaterialTheme.colorScheme.onSecondaryContainer
                 },
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(18.dp)
             )
             
             Spacer(modifier = Modifier.height(4.dp))

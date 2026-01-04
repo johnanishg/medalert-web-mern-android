@@ -1,5 +1,6 @@
 package com.medalert.patient.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -16,7 +17,9 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.painterResource
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.medalert.patient.R
 import com.medalert.patient.viewmodel.AuthViewModel
 import com.medalert.patient.viewmodel.LanguageViewModel
 import java.text.SimpleDateFormat
@@ -113,20 +116,19 @@ fun RegisterScreen(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(24.dp),
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(20.dp))
         
         // App Logo and Title
-        Icon(
-            imageVector = Icons.Default.LocalPharmacy,
+        Image(
+            painter = painterResource(id = R.drawable.medalert_logo),
             contentDescription = t("MedAlert Logo"),
-            modifier = Modifier.size(64.dp),
-            tint = MaterialTheme.colorScheme.primary
+            modifier = Modifier.size(64.dp)
         )
         
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
         
         Text(
             text = t("Create Patient Account"),
@@ -135,7 +137,7 @@ fun RegisterScreen(
             color = MaterialTheme.colorScheme.primary
         )
         
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         
         // Registration Form
         Card(
@@ -143,8 +145,8 @@ fun RegisterScreen(
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
             Column(
-                modifier = Modifier.padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // Name Fields
                 Row(
