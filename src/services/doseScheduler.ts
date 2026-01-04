@@ -319,12 +319,15 @@ export class DoseScheduler {
   }
 
   /**
-   * Check if a dose is active (within 1-hour window: 30 mins before to 30 mins after)
+   * Check if a dose is active (30 minutes before to 2 hours after scheduled time)
    */
   private static isActive(scheduledTime: Date): boolean {
     const now = new Date();
-    const timeDiff = Math.abs(scheduledTime.getTime() - now.getTime());
-    return timeDiff <= (30 * 60 * 1000); // Within 30 minutes before or after
+    const timeDiff = now.getTime() - scheduledTime.getTime(); // Positive if now is after scheduled time
+    const thirtyMinutes = 30 * 60 * 1000;
+    const twoHours = 2 * 60 * 60 * 1000;
+    // Active if: at least 30 minutes before (timeDiff >= -30 mins) AND at most 2 hours after (timeDiff <= 2 hours)
+    return timeDiff >= -thirtyMinutes && timeDiff <= twoHours;
   }
 
   /**

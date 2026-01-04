@@ -9,13 +9,13 @@ const router = express.Router();
 router.post('/test-visits/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     // Try to find patient by MongoDB _id first, then by userId field
     let patient = await Patient.findById(id);
     if (!patient) {
       patient = await Patient.findOne({ userId: id });
     }
-    
+
     if (!patient) {
       return res.status(404).json({ message: 'Patient not found' });
     }
@@ -24,7 +24,7 @@ router.post('/test-visits/:id', verifyToken, async (req, res) => {
     if (!patient.visits) {
       patient.visits = [];
     }
-    
+
     const sampleVisit = {
       visitDate: new Date(),
       visitType: 'consultation',
@@ -43,10 +43,10 @@ router.post('/test-visits/:id', verifyToken, async (req, res) => {
       followUpRequired: false,
       createdAt: new Date()
     };
-    
+
     patient.visits.push(sampleVisit);
     await patient.save();
-    
+
     res.status(200).json({
       message: 'Sample visit added successfully',
       visit: sampleVisit,
@@ -62,13 +62,13 @@ router.post('/test-visits/:id', verifyToken, async (req, res) => {
 router.get('/profile/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     // Try to find patient by MongoDB _id first, then by userId field
     let patient = await Patient.findById(id);
     if (!patient) {
       patient = await Patient.findOne({ userId: id });
     }
-    
+
     if (!patient) {
       return res.status(404).json({ message: 'Patient not found' });
     }
@@ -128,7 +128,7 @@ router.put('/profile/:id', verifyToken, async (req, res) => {
 router.get('/caretaker-requests', verifyToken, async (req, res) => {
   try {
     const patientId = req.user.userId;
-    
+
     // Check if user is patient
     if (req.user.role !== 'patient') {
       return res.status(403).json({ message: 'Access denied' });
@@ -158,7 +158,7 @@ router.put('/caretaker-approval/:caretakerId', verifyToken, async (req, res) => 
     const { caretakerId } = req.params;
     const { status } = req.body; // 'approved' or 'rejected'
     const patientId = req.user.userId;
-    
+
     // Check if user is patient
     if (req.user.role !== 'patient') {
       return res.status(403).json({ message: 'Access denied' });
@@ -184,7 +184,7 @@ router.put('/caretaker-approval/:caretakerId', verifyToken, async (req, res) => 
 
     // Update the caretaker's approval status
     const caretaker = await Caretaker.findById(caretakerId);
-    
+
     // Update the approval status
     patient.caretakerApprovals[approvalIndex].status = status;
     if (status === 'approved') {
@@ -206,7 +206,7 @@ router.put('/caretaker-approval/:caretakerId', verifyToken, async (req, res) => 
       const caretakerApprovalIndex = caretaker.patientApprovals.findIndex(
         approval => approval.patientId.toString() === patientId
       );
-      
+
       if (caretakerApprovalIndex !== -1) {
         caretaker.patientApprovals[caretakerApprovalIndex].status = status;
         if (status === 'approved') {
@@ -239,7 +239,7 @@ router.put('/caretaker-approval/:caretakerId', verifyToken, async (req, res) => 
 router.delete('/remove-caretaker', verifyToken, async (req, res) => {
   try {
     const patientId = req.user.userId;
-    
+
     // Check if user is patient
     if (req.user.role !== 'patient') {
       return res.status(403).json({ message: 'Access denied' });
@@ -255,7 +255,7 @@ router.delete('/remove-caretaker', verifyToken, async (req, res) => {
     }
 
     const caretakerId = patient.selectedCaretaker.caretakerId;
-    
+
     // Remove patient from caretaker's assignedPatients
     const caretaker = await Caretaker.findById(caretakerId);
     if (caretaker) {
@@ -285,7 +285,7 @@ router.put('/medicines/:medicineIndex', verifyToken, async (req, res) => {
   try {
     const { medicineIndex } = req.params;
     const updateData = req.body;
-    
+
     // Get the current user (patient) - req.user.userId is the MongoDB _id
     const patient = await Patient.findById(req.user.userId);
     if (!patient) {
@@ -299,7 +299,7 @@ router.put('/medicines/:medicineIndex', verifyToken, async (req, res) => {
 
     // Update the medicine
     const originalMedicine = patient.currentMedications[index];
-    
+
     console.log('Original medicine before update:', {
       index,
       name: originalMedicine.name,
@@ -307,9 +307,9 @@ router.put('/medicines/:medicineIndex', verifyToken, async (req, res) => {
       frequency: originalMedicine.frequency,
       timing: originalMedicine.timing
     });
-    
+
     console.log('Update data received:', updateData);
-    
+
     const updatedMedicine = {
       ...originalMedicine,
       ...updateData,
@@ -346,11 +346,11 @@ router.put('/medicines/:medicineIndex', verifyToken, async (req, res) => {
   }
 });
 
-// Delete a specific medicine (patient only)
+// Delete a specific medicine (patient only) - Archives it to history
 router.delete('/medicines/:medicineIndex', verifyToken, async (req, res) => {
   try {
     const { medicineIndex } = req.params;
-    
+
     // Get the current user (patient) - req.user.userId is the MongoDB _id
     const patient = await Patient.findById(req.user.userId);
     if (!patient) {
@@ -362,14 +362,27 @@ router.delete('/medicines/:medicineIndex', verifyToken, async (req, res) => {
       return res.status(400).json({ message: 'Invalid medicine index.' });
     }
 
-    // Remove the medicine
-    const deletedMedicine = patient.currentMedications[index];
+    // Get the medicine to be deleted
+    const medicineToArchive = patient.currentMedications[index];
+
+    // Add to medication history
+    if (!patient.medicationHistory) {
+      patient.medicationHistory = [];
+    }
+
+    patient.medicationHistory.push({
+      ...medicineToArchive.toObject(),
+      archivedAt: new Date(),
+      archivedReason: 'deleted'
+    });
+
+    // Remove from current medications
     patient.currentMedications.splice(index, 1);
     await patient.save();
 
     res.status(200).json({
-      message: 'Medicine deleted successfully',
-      deletedMedicine: deletedMedicine
+      message: 'Medicine moved to history successfully',
+      deletedMedicine: medicineToArchive
     });
   } catch (error) {
     console.error('Delete medicine error:', error);
@@ -475,39 +488,39 @@ router.get('/notifications/:id', verifyToken, async (req, res) => {
 router.post('/sync-notifications', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id;
-    
+
     console.log('Manual sync: Looking up patient with ID:', userId);
-    
+
     // Find patient
     let patient = await Patient.findById(userId);
     if (!patient) {
       patient = await Patient.findOne({ userId: userId });
     }
-    
+
     if (!patient) {
       return res.status(404).json({ message: 'Patient not found' });
     }
-    
+
     console.log('Manual sync: Found patient:', {
       _id: patient._id,
       userId: patient.userId,
       name: patient.name,
       currentMedicationsCount: patient.currentMedications?.length || 0
     });
-    
+
     // Import MedicineNotification model
     const MedicineNotification = (await import('../models/MedicineNotification.js')).default;
-    
+
     // Get all active notifications for this patient
     const notifications = await MedicineNotification.find({
       patientId: patient._id,
       isActive: true
     });
-    
+
     console.log('Manual sync: Found notifications:', notifications.length);
-    
+
     let syncCount = 0;
-    
+
     // Sync each notification to patient medicines
     for (const notification of notifications) {
       console.log('Manual sync: Processing notification:', {
@@ -515,38 +528,38 @@ router.post('/sync-notifications', verifyToken, async (req, res) => {
         dosage: notification.dosage,
         notificationTimes: notification.notificationTimes
       });
-      
+
       // Find matching medicines
       const matchingMedicines = patient.currentMedications
         .map((med, index) => ({ med, index }))
         .filter(({ med }) => med.name === notification.medicineName && med.dosage === notification.dosage);
-      
+
       if (matchingMedicines.length > 0) {
         const timingStrings = notification.notificationTimes.map(time => time.time);
-        
+
         // Update all matching medicines
         matchingMedicines.forEach(({ index }) => {
           patient.currentMedications[index].timing = timingStrings;
           patient.currentMedications[index].updatedAt = new Date().toISOString();
           patient.currentMedications[index].updatedBy = 'Patient';
         });
-        
+
         syncCount += matchingMedicines.length;
         console.log('Manual sync: Updated', matchingMedicines.length, 'medicines for', notification.medicineName);
       }
     }
-    
+
     if (syncCount > 0) {
       await patient.save();
       console.log('Manual sync: Saved patient with', syncCount, 'updated medicines');
     }
-    
+
     res.status(200).json({
       message: 'Notification sync completed',
       syncedMedicines: syncCount,
       totalNotifications: notifications.length
     });
-    
+
   } catch (error) {
     console.error('Manual sync error:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -558,7 +571,7 @@ router.get('/caretakers', verifyToken, async (req, res) => {
   try {
     const { search } = req.query;
     let query = { isActive: true };
-    
+
     // Add search functionality
     if (search) {
       query.$or = [
@@ -569,7 +582,7 @@ router.get('/caretakers', verifyToken, async (req, res) => {
     }
 
     const caretakers = await Caretaker.find(
-      query, 
+      query,
       'userId name email experience specializations hourlyRate'
     ).sort({ name: 1 });
 
@@ -588,7 +601,7 @@ router.post('/assign-caretaker', verifyToken, async (req, res) => {
   try {
     const { caretakerUserId } = req.body;
     const userId = req.user.id || req.user.userId;
-    
+
     console.log('Assign caretaker request:', { caretakerUserId, userId, userRole: req.user.role });
 
     // Find patient
@@ -668,7 +681,7 @@ router.post('/direct-assign-caretaker', verifyToken, async (req, res) => {
   try {
     const { caretakerUserId } = req.body;
     const userId = req.user.id || req.user.userId;
-    
+
     console.log('Direct assign caretaker request:', { caretakerUserId, userId, userRole: req.user.role });
 
     // Find patient

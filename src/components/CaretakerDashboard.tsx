@@ -296,6 +296,7 @@ const CaretakerDashboard: React.FC = () => {
             className={`w-full px-2 py-1 rounded border ${theme === 'dark' ? 'bg-gray-800 border-gray-700 text-gray-200' : 'bg-white border-gray-300 text-gray-800'}`}
             aria-label="Change language"
           >
+            {/* Language options always display in their native scripts */}
             <option value="en">English</option>
             <option value="hi">हिन्दी</option>
             <option value="kn">ಕನ್ನಡ</option>

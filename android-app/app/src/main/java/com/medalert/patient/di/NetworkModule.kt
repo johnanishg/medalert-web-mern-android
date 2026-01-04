@@ -100,12 +100,43 @@ object NetworkModule {
             level = HttpLoggingInterceptor.Level.BODY
         }
         
+        // Error handling interceptor to catch and log connection issues
+        val errorInterceptor = Interceptor { chain ->
+            val request = chain.request()
+            try {
+                val response = chain.proceed(request)
+                
+                // Log response details
+                if (!response.isSuccessful) {
+                    android.util.Log.e("NetworkModule", "HTTP Error: ${response.code} ${response.message} for ${request.url}")
+                }
+                
+                response
+            } catch (e: Exception) {
+                android.util.Log.e("NetworkModule", "Network error for ${request.url}: ${e.javaClass.simpleName} - ${e.message}", e)
+                
+                // Provide more specific error messages
+                val errorMessage = when {
+                    e is java.net.UnknownHostException -> "Cannot reach server. Check internet connection."
+                    e is java.net.SocketTimeoutException -> "Request timed out. Server may be slow or unreachable."
+                    e is java.net.ConnectException -> "Connection refused. Server may be down or ngrok tunnel inactive."
+                    e is java.net.NoRouteToHostException -> "No route to host. Check network connectivity or ngrok tunnel."
+                    else -> "Network error: ${e.message ?: e.javaClass.simpleName}"
+                }
+                
+                android.util.Log.e("NetworkModule", "Error details: $errorMessage")
+                throw e
+            }
+        }
+        
         return OkHttpClient.Builder()
             .addInterceptor(authInterceptor)
+            .addInterceptor(errorInterceptor)
             .addInterceptor(loggingInterceptor)
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
             .build()
     }
     

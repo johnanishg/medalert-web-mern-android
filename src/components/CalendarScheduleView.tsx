@@ -44,136 +44,238 @@ const CalendarScheduleView: React.FC<CalendarScheduleViewProps> = ({
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [schedules, setSchedules] = useState<{ [key: string]: MedicineSchedule }>({});
-  const [daySchedules, setDaySchedules] = useState<DaySchedule[]>([]);
   const [recording, setRecording] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [editingTiming, setEditingTiming] = useState<{medicine: Medicine, timeIndex: number, currentTime: string} | null>(null);
   const [newTime, setNewTime] = useState('');
 
-  // Generate schedules for all medicines
-  useEffect(() => {
-    console.log('📅 CalendarScheduleView: Received medicines:', medicines);
-    console.log('📅 CalendarScheduleView: Medicines count:', medicines.length);
+  // Initialize daySchedules immediately to ensure calendar is always visible
+  const initializeCalendar = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const startDate = new Date(year, month, 1);
+    const endDate = new Date(year, month + 1, 0);
     
-    if (medicines.length === 0) {
-      console.log('📅 CalendarScheduleView: No medicines provided, clearing schedules');
-      setSchedules({});
-      return;
+    // Adjust startDate to include the first day of the week (Sunday)
+    const firstDayOfWeek = startDate.getDay();
+    startDate.setDate(startDate.getDate() - firstDayOfWeek);
+    
+    // Adjust endDate to include the last day of the week (Saturday)
+    const lastDayOfWeek = endDate.getDay();
+    endDate.setDate(endDate.getDate() + (6 - lastDayOfWeek));
+    
+    const initialDaySchedules: DaySchedule[] = [];
+    const currentDay = new Date(startDate);
+    
+    while (currentDay <= endDate) {
+      const date = new Date(currentDay);
+      initialDaySchedules.push({
+        date,
+        doses: [],
+        medicines: {}
+      });
+      currentDay.setDate(currentDay.getDate() + 1);
     }
     
-    const newSchedules: { [key: string]: MedicineSchedule } = {};
-    
-    medicines.forEach((medicine, index) => {
-      console.log(`📅 CalendarScheduleView: Processing medicine ${index}:`, {
-        name: medicine.name,
-        dosage: medicine.dosage,
-        frequency: medicine.frequency,
-        timing: medicine.timing,
-        duration: medicine.duration,
-        prescribedDate: medicine.prescribedDate,
-        adherence: medicine.adherence?.length || 0
+    return initialDaySchedules;
+  };
+
+  // Initialize with default calendar immediately
+  const [daySchedules, setDaySchedules] = useState<DaySchedule[]>(initializeCalendar);
+
+  // Generate schedules for all medicines
+  useEffect(() => {
+    try {
+      console.log('📅 CalendarScheduleView: Received medicines:', medicines);
+      console.log('📅 CalendarScheduleView: Medicines count:', medicines.length);
+      
+      if (medicines.length === 0) {
+        console.log('📅 CalendarScheduleView: No medicines provided, clearing schedules');
+        setSchedules({});
+        return;
+      }
+      
+      const newSchedules: { [key: string]: MedicineSchedule } = {};
+      
+      medicines.forEach((medicine, index) => {
+        try {
+          // Validate medicine object
+          if (!medicine || typeof medicine !== 'object') {
+            console.warn(`⚠️ CalendarScheduleView: Invalid medicine object at index ${index}`);
+            return;
+          }
+
+          console.log(`📅 CalendarScheduleView: Processing medicine ${index}:`, {
+            name: medicine.name,
+            dosage: medicine.dosage,
+            frequency: medicine.frequency,
+            timing: medicine.timing,
+            duration: medicine.duration,
+            prescribedDate: medicine.prescribedDate,
+            adherence: medicine.adherence?.length || 0
+          });
+          
+          const schedule = DoseScheduler.getMedicineSchedule(medicine);
+          console.log(`📅 CalendarScheduleView: Generated schedule for ${medicine.name}:`, {
+            totalDoses: schedule.totalDoses,
+            doses: schedule.doses.length,
+            timing: schedule.timing,
+            firstDose: schedule.doses[0] ? {
+              id: schedule.doses[0].id,
+              scheduledTime: schedule.doses[0].scheduledTime,
+              taken: schedule.doses[0].taken
+            } : null
+          });
+          
+          if (schedule.doses.length === 0) {
+            console.warn(`⚠️ CalendarScheduleView: No doses generated for ${medicine.name}`);
+          }
+          
+          newSchedules[`${medicine.name}-${index}`] = schedule;
+        } catch (error) {
+          console.error(`❌ Error generating schedule for medicine at index ${index}:`, error);
+          logger.error(`Error generating schedule for medicine at index ${index}`, 'CalendarScheduleView');
+          // Continue processing other medicines even if one fails
+        }
       });
       
-      try {
-        const schedule = DoseScheduler.getMedicineSchedule(medicine);
-        console.log(`📅 CalendarScheduleView: Generated schedule for ${medicine.name}:`, {
-          totalDoses: schedule.totalDoses,
-          doses: schedule.doses.length,
-          timing: schedule.timing,
-          firstDose: schedule.doses[0] ? {
-            id: schedule.doses[0].id,
-            scheduledTime: schedule.doses[0].scheduledTime,
-            taken: schedule.doses[0].taken
-          } : null
-        });
-        
-        if (schedule.doses.length === 0) {
-          console.warn(`⚠️ CalendarScheduleView: No doses generated for ${medicine.name}`);
-        }
-        
-        newSchedules[`${medicine.name}-${index}`] = schedule;
-      } catch (error) {
-        console.error(`❌ Error generating schedule for ${medicine.name}:`, error);
-        logger.error(`Error generating schedule for ${medicine.name}`, 'CalendarScheduleView');
-      }
-    });
-    
-    console.log('📅 CalendarScheduleView: Final schedules:', newSchedules);
-    console.log('📅 CalendarScheduleView: Total schedules created:', Object.keys(newSchedules).length);
-    setSchedules(newSchedules);
+      console.log('📅 CalendarScheduleView: Final schedules:', newSchedules);
+      console.log('📅 CalendarScheduleView: Total schedules created:', Object.keys(newSchedules).length);
+      setSchedules(newSchedules);
+    } catch (error) {
+      console.error('❌ CalendarScheduleView: Critical error in schedule generation:', error);
+      logger.error('Critical error in schedule generation', 'CalendarScheduleView');
+      // Ensure schedules is set to empty object to prevent crashes
+      setSchedules({});
+    }
   }, [medicines]);
 
   // Generate day schedules for the current month or date range
   useEffect(() => {
     const generateDaySchedules = () => {
-      console.log('📅 CalendarScheduleView: Generating day schedules');
-      console.log('📅 CalendarScheduleView: Date range:', dateRange);
-      console.log('📅 CalendarScheduleView: Available schedules:', Object.keys(schedules));
-      console.log('📅 CalendarScheduleView: Schedules object:', schedules);
-      
-      // Even if there are no schedules yet, still render the month grid so the calendar is visible
-      if (Object.keys(schedules).length === 0) {
-        console.log('📅 CalendarScheduleView: No schedules available, will still render empty calendar days');
-      }
-      
-      let startDate: Date;
-      let endDate: Date;
-      
-      if (dateRange && dateRange.from && dateRange.to) {
-        // Use custom date range
-        startDate = new Date(dateRange.from);
-        endDate = new Date(dateRange.to);
-        console.log('📅 CalendarScheduleView: Using custom date range:', startDate, 'to', endDate);
-      } else {
-        // Use current month as fallback
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth();
-        startDate = new Date(year, month, 1);
-        endDate = new Date(year, month + 1, 0);
-        console.log('📅 CalendarScheduleView: Using current month fallback:', startDate, 'to', endDate);
-      }
-      
-      const daySchedules: DaySchedule[] = [];
-      const currentDay = new Date(startDate);
-      
-      while (currentDay <= endDate) {
-        const date = new Date(currentDay);
-        const daySchedule: DaySchedule = {
-          date,
-          doses: [],
-          medicines: {}
-        };
-
-        // Collect all doses for this day from all medicines
-        Object.entries(schedules).forEach(([medicineKey, schedule]) => {
-          const medicine = medicines.find(m => `${m.name}-${medicines.indexOf(m)}` === medicineKey);
-          if (!medicine) {
-            console.log(`📅 CalendarScheduleView: Medicine not found for key ${medicineKey}`);
-            return;
+      try {
+        console.log('📅 CalendarScheduleView: Generating day schedules');
+        console.log('📅 CalendarScheduleView: Date range:', dateRange);
+        console.log('📅 CalendarScheduleView: Available schedules:', Object.keys(schedules));
+        console.log('📅 CalendarScheduleView: Medicines count:', medicines.length);
+        
+        let startDate: Date;
+        let endDate: Date;
+        
+        if (dateRange && dateRange.from && dateRange.to) {
+          // Use custom date range
+          try {
+            startDate = new Date(dateRange.from);
+            endDate = new Date(dateRange.to);
+            // Validate dates
+            if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+              throw new Error('Invalid date range');
+            }
+            console.log('📅 CalendarScheduleView: Using custom date range:', startDate, 'to', endDate);
+          } catch (error) {
+            console.warn('📅 CalendarScheduleView: Invalid date range, using current month');
+            // Fall through to current month logic
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            startDate = new Date(year, month, 1);
+            endDate = new Date(year, month + 1, 0);
+            
+            const firstDayOfWeek = startDate.getDay();
+            startDate.setDate(startDate.getDate() - firstDayOfWeek);
+            
+            const lastDayOfWeek = endDate.getDay();
+            endDate.setDate(endDate.getDate() + (6 - lastDayOfWeek));
           }
+        } else {
+          // Use current month as fallback - show full month grid
+          const year = currentDate.getFullYear();
+          const month = currentDate.getMonth();
+          startDate = new Date(year, month, 1);
+          endDate = new Date(year, month + 1, 0);
+          
+          // Adjust startDate to include the first day of the week (Sunday)
+          const firstDayOfWeek = startDate.getDay();
+          startDate.setDate(startDate.getDate() - firstDayOfWeek);
+          
+          // Adjust endDate to include the last day of the week (Saturday)
+          const lastDayOfWeek = endDate.getDay();
+          endDate.setDate(endDate.getDate() + (6 - lastDayOfWeek));
+          
+          console.log('📅 CalendarScheduleView: Using current month fallback:', startDate, 'to', endDate);
+        }
+        
+        const daySchedules: DaySchedule[] = [];
+        const currentDay = new Date(startDate);
+        
+        while (currentDay <= endDate) {
+          try {
+            const date = new Date(currentDay);
+            const daySchedule: DaySchedule = {
+              date,
+              doses: [],
+              medicines: {}
+            };
 
-          const dayDoses = schedule.doses.filter(dose => {
-            const doseDate = new Date(dose.scheduledTime);
-            return doseDate.toDateString() === date.toDateString();
-          });
+            // Collect all doses for this day from all medicines
+            if (medicines.length > 0 && Object.keys(schedules).length > 0) {
+              Object.entries(schedules).forEach(([medicineKey, schedule]) => {
+                try {
+                  const medicine = medicines.find(m => `${m.name}-${medicines.indexOf(m)}` === medicineKey);
+                  if (!medicine) {
+                    console.log(`📅 CalendarScheduleView: Medicine not found for key ${medicineKey}`);
+                    return;
+                  }
 
-          if (dayDoses.length > 0) {
-            console.log(`📅 CalendarScheduleView: Found ${dayDoses.length} doses for ${medicine.name} on ${date.toDateString()}`);
-            daySchedule.medicines[medicine.name] = dayDoses;
-            daySchedule.doses.push(...dayDoses);
+                  if (!schedule || !schedule.doses || !Array.isArray(schedule.doses)) {
+                    console.warn(`📅 CalendarScheduleView: Invalid schedule for ${medicineKey}`);
+                    return;
+                  }
+
+                  const dayDoses = schedule.doses.filter(dose => {
+                    try {
+                      if (!dose || !dose.scheduledTime) return false;
+                      const doseDate = new Date(dose.scheduledTime);
+                      return doseDate.toDateString() === date.toDateString();
+                    } catch (error) {
+                      console.warn(`📅 CalendarScheduleView: Error filtering dose:`, error);
+                      return false;
+                    }
+                  });
+
+                  if (dayDoses.length > 0) {
+                    console.log(`📅 CalendarScheduleView: Found ${dayDoses.length} doses for ${medicine.name} on ${date.toDateString()}`);
+                    daySchedule.medicines[medicine.name] = dayDoses;
+                    daySchedule.doses.push(...dayDoses);
+                  }
+                } catch (error) {
+                  console.warn(`📅 CalendarScheduleView: Error processing medicine ${medicineKey}:`, error);
+                }
+              });
+            }
+
+            daySchedules.push(daySchedule);
+            currentDay.setDate(currentDay.getDate() + 1);
+          } catch (error) {
+            console.warn(`📅 CalendarScheduleView: Error processing day ${currentDay}:`, error);
+            // Continue to next day
+            currentDay.setDate(currentDay.getDate() + 1);
           }
-        });
+        }
 
-        daySchedules.push(daySchedule);
-        currentDay.setDate(currentDay.getDate() + 1);
+        console.log('📅 CalendarScheduleView: Generated day schedules:', daySchedules.length, 'days');
+        console.log('📅 CalendarScheduleView: Days with doses:', daySchedules.filter(ds => ds.doses.length > 0).length);
+        setDaySchedules(daySchedules);
+      } catch (error) {
+        console.error('❌ CalendarScheduleView: Error generating day schedules:', error);
+        logger.error('Error generating day schedules', 'CalendarScheduleView');
+        // Fallback to initialized calendar
+        const fallbackSchedules = initializeCalendar();
+        setDaySchedules(fallbackSchedules);
       }
-
-      console.log('📅 CalendarScheduleView: Generated day schedules:', daySchedules.length, 'days');
-      console.log('📅 CalendarScheduleView: Days with doses:', daySchedules.filter(ds => ds.doses.length > 0).length);
-      console.log('📅 CalendarScheduleView: Total doses across all days:', daySchedules.reduce((sum, ds) => sum + ds.doses.length, 0));
-      setDaySchedules(daySchedules);
     };
 
+    // Always generate day schedules, even if no medicines
     generateDaySchedules();
   }, [schedules, medicines, currentDate, dateRange]);
 
@@ -208,7 +310,19 @@ const CalendarScheduleView: React.FC<CalendarScheduleViewProps> = ({
         return;
       }
 
-      const response = await fetch(`${API_BASE_URL}/adherence/record/${dose.medicineIndex}`, {
+      // Find the medicine index from the dose ID or medicine name
+      // The dose ID format is: `${medicine.name}-${day}-${timingIndex}-${scheduledTime.getTime()}`
+      const doseIdParts = dose.id.split('-');
+      const medicineName = doseIdParts[0];
+      const medicineIndex = medicines.findIndex(m => m.name === medicineName);
+      
+      if (medicineIndex === -1) {
+        alert('Medicine not found');
+        setRecording(false);
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/adherence/record/${medicineIndex}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -218,6 +332,7 @@ const CalendarScheduleView: React.FC<CalendarScheduleViewProps> = ({
           doseId: dose.id,
           taken: taken,
           timestamp: new Date().toISOString(),
+          scheduledTime: dose.scheduledTime.toISOString(),
           notes: taken ? 'Marked as taken' : 'Marked as missed'
         })
       });
@@ -425,12 +540,26 @@ const CalendarScheduleView: React.FC<CalendarScheduleViewProps> = ({
   const totalDoses = Object.values(schedules).reduce((sum, schedule) => sum + schedule.doses.length, 0);
   const totalDayDoses = daySchedules.reduce((sum, ds) => sum + ds.doses.length, 0);
 
+  // Debug: Log render state
+  console.log('📅 CalendarScheduleView: Rendering component', {
+    medicinesCount: medicines.length,
+    schedulesCount: Object.keys(schedules).length,
+    daySchedulesCount: daySchedules.length,
+    dateRange,
+    patientId
+  });
+
+  // Ensure daySchedules is never empty
+  const displayDaySchedules = daySchedules.length > 0 ? daySchedules : initializeCalendar();
+
+  console.log('📅 CalendarScheduleView: About to render, displayDaySchedules count:', displayDaySchedules.length);
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 min-h-[400px] w-full" data-testid="calendar-schedule-view">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 space-y-4 lg:space-y-0">
         <div>
-          <h3 className="text-xl font-semibold flex items-center gap-2">
+          <h3 className="text-xl font-semibold flex items-center gap-2 text-gray-900 dark:text-white">
             <Calendar size={20} /> Medicine Schedule Calendar
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -494,7 +623,7 @@ const CalendarScheduleView: React.FC<CalendarScheduleViewProps> = ({
       )}
 
       {/* Smart Schedule Information */}
-      {medicines.some(med => med.smartScheduled && med.scheduleExplanation) && (
+      {medicines.some(med => (med as any).smartScheduled && (med as any).scheduleExplanation) && (
         <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0">
@@ -508,10 +637,10 @@ const CalendarScheduleView: React.FC<CalendarScheduleViewProps> = ({
               </h4>
               <div className="space-y-2">
                 {medicines
-                  .filter(med => med.smartScheduled && med.scheduleExplanation)
+                  .filter(med => (med as any).smartScheduled && (med as any).scheduleExplanation)
                   .map((med, index) => (
                     <div key={index} className="text-sm text-blue-700 dark:text-blue-300">
-                      <span className="font-medium">{med.name}:</span> {med.scheduleExplanation}
+                      <span className="font-medium">{med.name}:</span> {(med as any).scheduleExplanation}
                     </div>
                   ))}
               </div>
@@ -549,8 +678,15 @@ const CalendarScheduleView: React.FC<CalendarScheduleViewProps> = ({
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-1">
-        {daySchedules.map((daySchedule, index) => {
+      {displayDaySchedules.length === 0 ? (
+        <div className="text-center py-12 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 rounded-lg">
+          <Calendar className="w-16 h-16 mx-auto mb-4 opacity-50" />
+          <p className="text-lg font-medium mb-2">Initializing calendar...</p>
+          <p className="text-sm">Please wait while we generate your schedule</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-7 gap-1">
+          {displayDaySchedules.map((daySchedule, index) => {
           const isCurrentDay = isToday(daySchedule.date);
           const isPast = isPastDate(daySchedule.date);
           const hasDoses = daySchedule.doses.length > 0;
@@ -586,6 +722,10 @@ const CalendarScheduleView: React.FC<CalendarScheduleViewProps> = ({
                     <div key={columnIndex} className="space-y-1">
                       {columnData.map(({ medicine, dose }, doseIndex) => {
                         if (!dose) return null;
+                        
+                        // Find the medicine object to get dosage
+                        const medicineObj = medicines.find(m => m.name === medicine);
+                        const dosage = medicineObj?.dosage || 'Dose';
                         
                         return (
                           <div
@@ -632,7 +772,7 @@ const CalendarScheduleView: React.FC<CalendarScheduleViewProps> = ({
                                 {getDoseStatusText(dose)}
                               </span>
                               <span className="text-xs text-gray-500 dark:text-gray-400">
-                                {dose.dosage || 'Dose'}
+                                {dosage}
                               </span>
                             </div>
                           </div>
@@ -642,14 +782,18 @@ const CalendarScheduleView: React.FC<CalendarScheduleViewProps> = ({
                   ))}
                 </div>
               ) : (
-                <div className="text-xs text-gray-400 dark:text-gray-500 text-center py-4">
-                  No doses
+                <div className="text-xs text-gray-400 dark:text-gray-500 text-center py-2 flex flex-col items-center justify-center h-full min-h-[60px]">
+                  <span className="block mb-1">{medicines.length === 0 ? 'No medicines' : 'No doses'}</span>
+                  {medicines.length === 0 && (
+                    <span className="text-[10px] opacity-75">Prescribed medicines will appear here</span>
+                  )}
                 </div>
               )}
             </div>
           );
         })}
-      </div>
+        </div>
+      )}
 
       {/* Medicine Management */}
       <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">

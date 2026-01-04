@@ -1,8 +1,5 @@
 import { v3 as TranslateV3 } from '@google-cloud/translate';
 
-const projectId = process.env.GCLOUD_PROJECT_ID;
-const location = process.env.GCLOUD_TRANSLATE_LOCATION || 'global';
-
 let translateClient;
 
 export function getTranslateClient() {
@@ -14,6 +11,9 @@ export function getTranslateClient() {
 }
 
 export async function translateText({ text, targetLanguage, sourceLanguage }) {
+  const projectId = process.env.GCLOUD_PROJECT_ID;
+  const location = process.env.GCLOUD_TRANSLATE_LOCATION || 'global';
+  
   if (!projectId) {
     throw new Error('GCLOUD_PROJECT_ID is not set');
   }
@@ -36,6 +36,9 @@ export async function translateText({ text, targetLanguage, sourceLanguage }) {
 }
 
 export async function translateTexts({ texts, targetLanguage, sourceLanguage }) {
+  const projectId = process.env.GCLOUD_PROJECT_ID;
+  const location = process.env.GCLOUD_TRANSLATE_LOCATION || 'global';
+  
   if (!projectId) {
     throw new Error('GCLOUD_PROJECT_ID is not set');
   }

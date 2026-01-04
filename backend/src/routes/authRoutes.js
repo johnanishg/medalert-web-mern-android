@@ -1,6 +1,5 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
 import Patient from '../models/Patient.js';
 import Doctor from '../models/Doctor.js';
 import Caretaker from '../models/Caretaker.js';
@@ -8,12 +7,20 @@ import Manager from '../models/Manager.js';
 import Employee from '../models/Employee.js';
 import Admin from '../models/Admin.js';
 
-// Load environment variables
-dotenv.config();
+// Environment variables are loaded in server.js
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const ADMIN_ACCESS_KEY = 'medalert2025';
+
+// Get JWT_SECRET with lazy validation (validates when actually used)
+const getJWTSecret = () => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    console.error('❌ ERROR: JWT_SECRET is not set in environment variables!');
+    throw new Error('JWT_SECRET must be set in environment variables');
+  }
+  return secret;
+};
 
 // Helper function to get the appropriate model based on role
 const getModelByRole = (role) => {
@@ -76,7 +83,7 @@ router.post('/login', async (req, res) => {
         role: user.role,
         name: user.name 
       },
-      JWT_SECRET,
+      getJWTSecret(),
       { expiresIn: '7d' }
     );
 
@@ -223,7 +230,7 @@ router.post('/register', async (req, res) => {
         role: user.role,
         name: user.name 
       },
-      JWT_SECRET,
+      getJWTSecret(),
       { expiresIn: '7d' }
     );
 
@@ -289,7 +296,7 @@ router.post('/admin-login', async (req, res) => {
         role: admin.role,
         name: admin.name 
       },
-      JWT_SECRET,
+      getJWTSecret(),
       { expiresIn: '7d' }
     );
 

@@ -2,6 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import Patient from '../models/Patient.js';
 import { verifyToken } from '../middleware/auth.js';
+import { notifyCaretakerMissedDose } from '../services/caretakerNotificationService.js';
 
 const router = express.Router();
 
@@ -9,7 +10,7 @@ const router = express.Router();
 router.post('/record/:medicineIndex', verifyToken, async (req, res) => {
   try {
     const { medicineIndex } = req.params;
-    const { taken, timestamp, notes } = req.body;
+    const { doseId, taken, timestamp, scheduledTime, notes } = req.body;
 
     // Verify the user is a patient
     if (req.user.role !== 'patient') {
@@ -35,12 +36,35 @@ router.post('/record/:medicineIndex', verifyToken, async (req, res) => {
       medicine.adherence = [];
     }
 
-    // Create adherence record
+    // Parse scheduled time if provided
+    const scheduledDateTime = scheduledTime ? new Date(scheduledTime) : null;
+    const recordedTime = timestamp ? new Date(timestamp) : new Date();
+    
+    // Check if dose was missed (not taken within 2 hours after scheduled time)
+    let isMissed = false;
+    if (scheduledDateTime && taken === false) {
+      // If marked as not taken, check if it's past the 2-hour window
+      const twoHoursAfter = new Date(scheduledDateTime.getTime() + (2 * 60 * 60 * 1000));
+      if (recordedTime > twoHoursAfter) {
+        isMissed = true;
+      }
+    } else if (scheduledDateTime && taken === true) {
+      // If marked as taken, check if it was taken within 2 hours
+      const twoHoursAfter = new Date(scheduledDateTime.getTime() + (2 * 60 * 60 * 1000));
+      if (recordedTime > twoHoursAfter) {
+        isMissed = true;
+      }
+    }
+
+    // Create adherence record with dose information
     const adherenceRecord = {
-      timestamp: timestamp ? new Date(timestamp) : new Date(),
+      timestamp: recordedTime,
       taken: taken,
-      notes: notes || '',
-      recordedBy: req.user.role === 'patient' ? 'patient' : req.user.name
+      notes: notes || (taken ? 'Marked as taken' : 'Marked as missed'),
+      recordedBy: req.user.role === 'patient' ? 'patient' : req.user.name,
+      doseId: doseId || null,
+      scheduledTime: scheduledDateTime || null,
+      isMissed: isMissed
     };
 
     // Add to adherence history
@@ -48,15 +72,31 @@ router.post('/record/:medicineIndex', verifyToken, async (req, res) => {
 
     // Update last taken timestamp if medicine was taken
     if (taken) {
-      medicine.lastTaken = new Date();
+      medicine.lastTaken = recordedTime;
     }
 
     await patient.save();
 
+    // Notify caretaker if dose was missed
+    if (isMissed && patient.selectedCaretaker && patient.selectedCaretaker.caretakerId) {
+      try {
+        await notifyCaretakerMissedDose(
+          patient,
+          medicine,
+          scheduledDateTime,
+          recordedTime
+        );
+      } catch (notifyError) {
+        console.error('Error notifying caretaker:', notifyError);
+        // Don't fail the request if notification fails
+      }
+    }
+
     res.status(200).json({
       message: 'Adherence recorded successfully',
       adherence: adherenceRecord,
-      medicine: medicine
+      medicine: medicine,
+      isMissed: isMissed
     });
 
   } catch (error) {

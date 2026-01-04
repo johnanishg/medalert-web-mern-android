@@ -14,7 +14,7 @@ const patientSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: { type: String, default: 'patient' },
-  
+
   // Patient-specific fields
   dateOfBirth: { type: Date, required: true },
   age: { type: Number, required: false },
@@ -53,7 +53,29 @@ const patientSchema = new mongoose.Schema({
     lastEditedBy: String,
     lastEditedAt: Date
   }],
-  
+  medicationHistory: [{
+    name: String,
+    dosage: String,
+    frequency: String,
+    duration: String,
+    instructions: String,
+    timing: [String],
+    foodTiming: String,
+    prescribedBy: String,
+    prescribedDate: String,
+    prescriptionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Prescription' },
+    scheduleExplanation: String,
+    smartScheduled: { type: Boolean, default: false },
+    adherence: [{
+      timestamp: { type: Date, default: Date.now },
+      taken: { type: Boolean, required: true },
+      notes: String,
+      recordedBy: String
+    }],
+    archivedAt: { type: Date, default: Date.now },
+    archivedReason: String // 'completed', 'stopped', 'deleted'
+  }],
+
   // Visit history
   visits: [{
     visitDate: { type: Date, default: Date.now },
@@ -73,7 +95,7 @@ const patientSchema = new mongoose.Schema({
     followUpRequired: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now }
   }],
-  
+
   // Caretaker assignments
   selectedCaretaker: {
     caretakerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Caretaker' },
@@ -82,7 +104,7 @@ const patientSchema = new mongoose.Schema({
     caretakerEmail: { type: String }, // Caretaker's email for display
     assignedAt: { type: Date, default: Date.now }
   },
-  
+
   // Caretaker approvals
   caretakerApprovals: [{
     caretakerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Caretaker' },
@@ -91,7 +113,7 @@ const patientSchema = new mongoose.Schema({
     approvedAt: Date,
     rejectedAt: Date
   }],
-  
+
   // System fields
   isActive: { type: Boolean, default: true },
   lastLogin: Date,
@@ -100,35 +122,35 @@ const patientSchema = new mongoose.Schema({
 });
 
 // Pre-save hook to generate unique ID, hash password, and calculate age
-patientSchema.pre('save', async function(next) {
+patientSchema.pre('save', async function (next) {
   try {
     // Always generate unique ID if not already set
     if (!this.userId) {
       this.userId = generateUniqueId();
     }
-    
+
     // Hash password if modified
     if (this.isModified('password')) {
       this.password = await bcrypt.hash(this.password, 10);
     }
-    
+
     // Calculate age from date of birth if not already set or if date of birth changed
     if (this.dateOfBirth && (!this.age || this.isModified('dateOfBirth'))) {
       const today = new Date();
       const birthDate = new Date(this.dateOfBirth);
       let age = today.getFullYear() - birthDate.getFullYear();
       const monthDiff = today.getMonth() - birthDate.getMonth();
-      
+
       if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
         age--;
       }
-      
+
       this.age = age;
     }
-    
+
     // Update timestamp
     this.updatedAt = new Date();
-    
+
     next();
   } catch (error) {
     next(error);
@@ -136,7 +158,7 @@ patientSchema.pre('save', async function(next) {
 });
 
 // Post-save hook to ensure userId is set
-patientSchema.post('save', function(doc) {
+patientSchema.post('save', function (doc) {
   if (!doc.userId) {
     doc.userId = generateUniqueId();
     doc.save().catch(err => console.error('Error setting userId:', err));
@@ -144,7 +166,7 @@ patientSchema.post('save', function(doc) {
 });
 
 // Method to compare password
-patientSchema.methods.comparePassword = async function(candidatePassword) {
+patientSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 

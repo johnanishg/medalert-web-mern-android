@@ -354,6 +354,7 @@ const ProfileEdit: React.FC<ProfileEditProps> = ({ isOpen, onClose, user, userTy
             onChange={(e) => handleInputChange('preferredLanguage', e.target.value as SupportedLanguage)}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           >
+            {/* Language options always display in their native scripts */}
             <option value="en">English</option>
             <option value="hi">हिन्दी</option>
             <option value="kn">ಕನ್ನಡ</option>

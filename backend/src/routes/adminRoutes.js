@@ -9,33 +9,12 @@ import Admin from '../models/Admin.js';
 import Prescription from '../models/Prescription.js';
 import MedicineNotification from '../models/MedicineNotification.js';
 import Device from '../models/Device.js';
+import { verifyAdminToken as verifyAdminTokenMiddleware } from '../middleware/auth.js';
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-// Middleware to verify admin token
-const verifyAdminToken = (req, res, next) => {
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  
-  console.log('Admin token verification:', { token: token ? 'present' : 'missing' });
-  
-  if (!token) {
-    return res.status(401).json({ message: 'No token provided' });
-  }
-
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    console.log('Token decoded:', decoded);
-    if (decoded.role !== 'admin') {
-      return res.status(403).json({ message: 'Access denied' });
-    }
-    req.user = decoded;
-    next();
-  } catch (error) {
-    console.log('Token verification error:', error.message);
-    res.status(401).json({ message: 'Invalid token' });
-  }
-};
+// Use the centralized admin token verification from middleware
+const verifyAdminToken = verifyAdminTokenMiddleware;
 
 
 // Get all doctors

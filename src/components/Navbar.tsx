@@ -140,6 +140,7 @@ const Navbar: React.FC = () => {
                 }`}
                 aria-label="Change language"
               >
+                {/* Language options always display in their native scripts */}
                 <option value="en">English</option>
                 <option value="hi">हिन्दी</option>
                 <option value="kn">ಕನ್ನಡ</option>

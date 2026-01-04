@@ -26,10 +26,12 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.medalert.patient.data.model.Medication
 import com.medalert.patient.data.model.ScheduledDose
+import com.medalert.patient.data.model.DoseStatus
 import com.medalert.patient.viewmodel.LanguageViewModel
 import com.medalert.patient.viewmodel.PatientViewModel
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.TimeZone
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -184,9 +186,37 @@ fun CalendarScheduleScreen(
             onDateSelected = { selectedDate = it },
             onDoseTaken = { medication, dose ->
                 // Handle dose taken
+                val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val calendar = Calendar.getInstance()
+                val currentDateStr = dateFormat.format(calendar.time)
+                
+                // Create scheduled time string (ISO format)
+                val scheduledDateTime = try {
+                    val timeParts = dose.time.split(":")
+                    if (timeParts.size != 2) {
+                        null
+                    } else {
+                        val hours = timeParts[0].toInt()
+                        val minutes = timeParts[1].toInt()
+                        calendar.time = dateFormat.parse(currentDateStr) ?: Date()
+                        calendar.set(Calendar.HOUR_OF_DAY, hours)
+                        calendar.set(Calendar.MINUTE, minutes)
+                        calendar.set(Calendar.SECOND, 0)
+                        calendar.set(Calendar.MILLISECOND, 0)
+                        val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+                        isoFormat.timeZone = TimeZone.getTimeZone("UTC")
+                        isoFormat.format(calendar.time)
+                    }
+                } catch (e: Exception) {
+                    null
+                }
+                
                 patientViewModel.recordAdherence(
                     medications.indexOf(medication), 
-                    true
+                    true,
+                    "",
+                    dose.id,
+                    scheduledDateTime
                 )
             },
             translate = { key -> t(key) }
@@ -395,13 +425,37 @@ fun CalendarDay(
     translate: (String) -> String
 ) {
     val dayOfMonth = SimpleDateFormat("d", Locale.getDefault()).format(date)
+    val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    val calendar = Calendar.getInstance()
+    calendar.time = date
+    
+    // Get day of week (0=Sunday, 1=Monday, etc.)
+    val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) - 1 // Convert to 0-based
+    val currentDateStr = dateFormat.format(date)
     
     // Get doses for this date
     val dayDoses = medications.flatMap { medication ->
         medication.scheduledDoses.filter { dose ->
-            // Check if dose is scheduled for this date
-            // This is a simplified check - you might want to implement proper date matching
-            true // For now, show all doses
+            // Check if dose is active
+            if (!dose.isActive) return@filter false
+            
+            // Check if date is within startDate and endDate range
+            val startDate = dose.startDate
+            val endDate = dose.endDate
+            
+            if (startDate.isNotEmpty() && currentDateStr < startDate) {
+                return@filter false
+            }
+            if (endDate.isNotEmpty() && currentDateStr > endDate) {
+                return@filter false
+            }
+            
+            // Check if day of week matches
+            if (dose.daysOfWeek.isNotEmpty() && !dose.daysOfWeek.contains(dayOfWeek)) {
+                return@filter false
+            }
+            
+            true
         }.map { dose -> medication to dose }
     }
     
@@ -469,6 +523,42 @@ fun CalendarDay(
     }
 }
 
+/**
+ * Check if a dose is active (30 minutes before to 2 hours after scheduled time)
+ */
+fun isDoseActive(scheduledTime: String, scheduledDate: String): Boolean {
+    try {
+        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        
+        val timeParts = scheduledTime.split(":")
+        if (timeParts.size != 2) return false
+        
+        val hours = timeParts[0].toInt()
+        val minutes = timeParts[1].toInt()
+        val date = dateFormat.parse(scheduledDate) ?: return false
+        
+        val calendar = Calendar.getInstance()
+        calendar.time = date
+        calendar.set(Calendar.HOUR_OF_DAY, hours)
+        calendar.set(Calendar.MINUTE, minutes)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        
+        val scheduledDateTime = calendar.timeInMillis
+        val now = System.currentTimeMillis()
+        
+        val timeDiff = now - scheduledDateTime
+        val thirtyMinutes = 30 * 60 * 1000L
+        val twoHours = 2 * 60 * 60 * 1000L
+        
+        // Active if: at least 30 minutes before (timeDiff >= -30 mins) AND at most 2 hours after (timeDiff <= 2 hours)
+        return timeDiff >= -thirtyMinutes && timeDiff <= twoHours
+    } catch (e: Exception) {
+        return false
+    }
+}
+
 @Composable
 fun DoseItem(
     medication: Medication,
@@ -476,9 +566,37 @@ fun DoseItem(
     onDoseTaken: () -> Unit,
     translate: (String) -> String
 ) {
-    val isTaken = false // You'll need to implement this based on your data model
-    val isOverdue = false // You'll need to implement this based on your data model
-    val isCurrent = false // You'll need to implement this based on your data model
+    val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    val calendar = Calendar.getInstance()
+    val currentDateStr = dateFormat.format(calendar.time)
+    
+    // Check if dose is taken by looking at dose records
+    val isTaken = medication.doseRecords.any { record ->
+        record.scheduledDoseId == dose.id && 
+        record.scheduledDate == currentDateStr && 
+        record.status == DoseStatus.TAKEN
+    }
+    
+    // Calculate scheduled datetime for this dose
+    val scheduledDateTime = try {
+        val timeParts = dose.time.split(":")
+        if (timeParts.size != 2) return@try null
+        val hours = timeParts[0].toInt()
+        val minutes = timeParts[1].toInt()
+        calendar.time = dateFormat.parse(currentDateStr) ?: Date()
+        calendar.set(Calendar.HOUR_OF_DAY, hours)
+        calendar.set(Calendar.MINUTE, minutes)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        calendar.timeInMillis
+    } catch (e: Exception) {
+        null
+    }
+    
+    val now = System.currentTimeMillis()
+    val isActive = scheduledDateTime != null && isDoseActive(dose.time, currentDateStr)
+    val isOverdue = scheduledDateTime != null && now > scheduledDateTime + (2 * 60 * 60 * 1000L) && !isTaken
+    val isCurrent = scheduledDateTime != null && Math.abs(now - scheduledDateTime) <= (30 * 60 * 1000L)
     
     val backgroundColor = when {
         isTaken -> Color.Green.copy(alpha = 0.2f)
@@ -520,12 +638,14 @@ fun DoseItem(
             
             IconButton(
                 onClick = onDoseTaken,
-                modifier = Modifier.size(12.dp)
+                modifier = Modifier.size(12.dp),
+                enabled = isActive && !isTaken
             ) {
                 Icon(
                     if (isTaken) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
-                contentDescription = if (isTaken) translate("Taken") else translate("Mark as taken"),
-                    modifier = Modifier.size(8.dp)
+                    contentDescription = if (isTaken) translate("Taken") else translate("Mark as taken"),
+                    modifier = Modifier.size(8.dp),
+                    tint = if (isTaken) Color.Green else if (isActive) Color.Blue else Color.Gray
                 )
             }
         }

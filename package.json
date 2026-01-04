@@ -12,7 +12,12 @@
     "seed-mongodb": "tsx src/lib/mongodb-seed.ts",
     "backend": "node backend/src/server.js",
     "tunnel": "npx lt --port 5000 --subdomain medalert123",
-    "backend:tunnel": "concurrently \"npm run backend\" \"npm run tunnel\" --names \"BACKEND,TUNNEL\" --prefix-colors \"blue,green\""
+    "tunnel:ngrok": "ngrok http 5000",
+    "tunnel:ngrok:stable": "ngrok http 5000 --domain=medalert.ngrok.io",
+    "backend:tunnel": "concurrently \"npm run backend\" \"npm run tunnel\" --names \"BACKEND,TUNNEL\" --prefix-colors \"blue,green\"",
+    "backend:ngrok": "concurrently \"npm run backend\" \"npm run tunnel:ngrok\" --names \"BACKEND,NGROK\" --prefix-colors \"blue,green\"",
+    "backend:ngrok:auto": "./scripts/start-backend-with-ngrok.sh",
+    "backend:local": "node backend/src/server.js"
   },
   "dependencies": {
     "@google-cloud/text-to-speech": "^6.3.0",

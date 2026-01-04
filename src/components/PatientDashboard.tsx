@@ -20,11 +20,11 @@ const PatientDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentUser, setCurrentUser] = useState<any>(null);
-  
+
   // Caretaker approval states
   const [caretakerRequests, setCaretakerRequests] = useState<any[]>([]);
   const [showCaretakerRequests, setShowCaretakerRequests] = useState(false);
-  
+
   // Medicine notification states
   const [medicineNotifications, setMedicineNotifications] = useState<any[]>([]);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
@@ -33,7 +33,7 @@ const PatientDashboard: React.FC = () => {
     times: [{ time: '', label: 'Custom', isActive: true }]
   });
   const [showPresetOptions, setShowPresetOptions] = useState(false);
-  
+
   // Medicine editing states
   const [showEditMedicineModal, setShowEditMedicineModal] = useState(false);
   const [editingMedicine, setEditingMedicine] = useState<any>(null);
@@ -46,7 +46,7 @@ const PatientDashboard: React.FC = () => {
     timing: [] as string[],
     foodTiming: ''
   });
-  
+
   // Per-user language preference
   useEffect(() => {
     try {
@@ -55,7 +55,7 @@ const PatientDashboard: React.FC = () => {
       const userId = user?.id || user?._id || user?.userId || 'anon';
       const saved = localStorage.getItem(`lang_${userId}`) as SupportedLanguage | null;
       if (saved && saved !== language) setLanguage(saved);
-    } catch {}
+    } catch { }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -67,32 +67,36 @@ const PatientDashboard: React.FC = () => {
       const user = storedUser ? JSON.parse(storedUser) : null;
       const userId = user?.id || user?._id || user?.userId || 'anon';
       localStorage.setItem(`lang_${userId}`, newLang);
-    } catch {}
+    } catch { }
   };
   // Active tab state
   const [activeTab, setActiveTab] = useState<'profile' | 'medicines' | 'schedule' | 'visits' | 'notifications' | 'caretaker'>('profile');
-  
+
   // Re-translate when key UI states change
   useEffect(() => {
     translatePage && translatePage();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, medicines, notifications, medicineNotifications, showEditMedicineModal, showNotificationModal, showCaretakerRequests]);
-  
+
   // Date range filter states
   const [dateRange, setDateRange] = useState({
     from: '',
     to: ''
   });
   const [showDateRangeFilter, setShowDateRangeFilter] = useState(false);
-  
+
+  // Function to calculate optimal date range based on medicines
   // Function to calculate optimal date range based on medicines
   const calculateOptimalDateRange = () => {
-    if (!medicines || medicines.length === 0) {
+    const historyMedicines = currentUser?.medicationHistory || [];
+    const allMedicines = [...(medicines || []), ...historyMedicines];
+
+    if (!allMedicines || allMedicines.length === 0) {
       // Default to current month if no medicines
       const today = new Date();
       const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
       const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-      
+
       return {
         from: firstDay.toISOString().split('T')[0],
         to: lastDay.toISOString().split('T')[0]
@@ -102,49 +106,57 @@ const PatientDashboard: React.FC = () => {
     // Find the earliest prescribed date and latest end date
     let earliestDate = new Date();
     let latestDate = new Date();
-    
-    medicines.forEach(medicine => {
+    let hasDates = false;
+
+    allMedicines.forEach(medicine => {
       // Get prescribed date
       if (medicine.prescribedDate) {
         const prescribedDate = new Date(medicine.prescribedDate);
-        if (prescribedDate < earliestDate) {
-          earliestDate = prescribedDate;
+        if (!isNaN(prescribedDate.getTime())) {
+          if (!hasDates || prescribedDate < earliestDate) {
+            earliestDate = prescribedDate;
+            hasDates = true;
+          }
         }
       }
-      
+
       // Calculate end date based on duration
-      if (medicine.duration) {
+      if (medicine.duration && medicine.prescribedDate) {
         const durationDays = parseDurationToDays(medicine.duration);
         if (durationDays > 0) {
-          const endDate = new Date(medicine.prescribedDate || new Date());
-          endDate.setDate(endDate.getDate() + durationDays);
-          if (endDate > latestDate) {
-            latestDate = endDate;
+          const start = new Date(medicine.prescribedDate);
+          if (!isNaN(start.getTime())) {
+            const endDate = new Date(start);
+            endDate.setDate(endDate.getDate() + durationDays);
+            if (!hasDates || endDate > latestDate) {
+              latestDate = endDate;
+              hasDates = true;
+            }
           }
         }
       }
     });
-    
+
     // Add some buffer days
     earliestDate.setDate(earliestDate.getDate() - 7); // 1 week before
     latestDate.setDate(latestDate.getDate() + 7); // 1 week after
-    
+
     return {
       from: earliestDate.toISOString().split('T')[0],
       to: latestDate.toISOString().split('T')[0]
     };
   };
-  
+
   // Helper function to parse duration to days
   const parseDurationToDays = (duration: string): number => {
     if (!duration) return 0;
-    
+
     const lowerDuration = duration.toLowerCase();
     const match = lowerDuration.match(/(\d+)/);
     if (!match) return 0;
-    
+
     const number = parseInt(match[1]);
-    
+
     if (lowerDuration.includes('day')) {
       return number;
     } else if (lowerDuration.includes('week')) {
@@ -152,22 +164,28 @@ const PatientDashboard: React.FC = () => {
     } else if (lowerDuration.includes('month')) {
       return number * 30;
     }
-    
+
     return number; // Default to days
   };
-  
-  // Initialize date range when medicines change or on component mount
+
+  // Initialize date range disabled to allow calendar navigation
+  /*
   useEffect(() => {
     if (!dateRange.from || !dateRange.to) {
       const optimalRange = calculateOptimalDateRange();
       setDateRange(optimalRange);
     }
   }, [medicines]);
-  
+  */
+
   // Caretaker selection states
   const [availableCaretakers, setAvailableCaretakers] = useState<any[]>([]);
   const [loadingCaretakers, setLoadingCaretakers] = useState(false);
   const [caretakerSearchTerm, setCaretakerSearchTerm] = useState('');
+
+  // Visits state
+  const [visits, setVisits] = useState<any[]>([]);
+  const [loadingVisits, setLoadingVisits] = useState(false);
 
   // Dashboard context for chatbot
   const dashboardContext: DashboardContext = {
@@ -178,7 +196,7 @@ const PatientDashboard: React.FC = () => {
       visits: currentUser?.visits || [],
       notifications: medicineNotifications,
       caretakerApprovals: currentUser?.caretakerApprovals || [],
-      diagnoses: (currentUser?.visits || []).flatMap((visit: any) => 
+      diagnoses: (currentUser?.visits || []).flatMap((visit: any) =>
         visit.diagnosis ? [{
           condition: visit.diagnosis,
           date: visit.visitDate,
@@ -223,13 +241,13 @@ const PatientDashboard: React.FC = () => {
   // Edit profile state
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editFormData, setEditFormData] = useState<any>({});
-  
+
   // Last update tracking
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [previousMedicineCount, setPreviousMedicineCount] = useState(0);
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  
+
   // Debug: Log the initial user data
   console.log('🔍 PatientDashboard initial user data:', {
     token: token ? 'Present' : 'Missing',
@@ -242,33 +260,33 @@ const PatientDashboard: React.FC = () => {
 
   useEffect(() => {
     // Check if user is properly logged in
-    console.log('🔍 PatientDashboard auth check:', { 
-      hasToken: !!token, 
-      user, 
+    console.log('🔍 PatientDashboard auth check:', {
+      hasToken: !!token,
+      user,
       userId: user?.id || user?._id || user?.userId,
       userKeys: user ? Object.keys(user) : 'no user object'
     });
-    
+
     if (!token || !user || (!user.id && !user._id && !user.userId)) {
       console.error('User not properly authenticated:', { token: !!token, user });
       setError('Authentication failed. Please log in again.');
       return;
     }
-    
+
     // Clear any existing error state when component initializes
     setError('');
     fetchPatientData();
     logger.info('PatientDashboard initialized', { user }, 'PatientDashboard', 'low');
     setCurrentUser(user);
-    
+
     // Listen for prescription creation events (disabled to prevent loops)
     // const handlePatientDataRefresh = () => {
     //   logger.info('Patient data refresh event received', {}, 'PatientDashboard', 'low');
     //   fetchPatientData();
     // };
-    
+
     // window.addEventListener('patientDataRefresh', handlePatientDataRefresh);
-    
+
     // return () => {
     //   window.removeEventListener('patientDataRefresh', handlePatientDataRefresh);
     // };
@@ -301,15 +319,49 @@ const PatientDashboard: React.FC = () => {
     }
   }, []); // Remove user dependency to prevent loop
 
+  // Fetch visits from API
+  const fetchVisits = async () => {
+    try {
+      setLoadingVisits(true);
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        console.error('No token found for fetching visits');
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/diagnosis/my-visits`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Visits fetched successfully:', data.visits?.length || 0);
+        setVisits(data.visits || []);
+      } else {
+        console.error('❌ Failed to fetch visits:', response.status);
+        setVisits([]);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching visits:', error);
+      setVisits([]);
+    } finally {
+      setLoadingVisits(false);
+    }
+  };
+
   // Refresh data when switching to medicines, schedule, or visits tab
   useEffect(() => {
-    if (activeTab === 'medicines' || activeTab === 'schedule' || activeTab === 'visits') {
+    if (activeTab === 'medicines' || activeTab === 'schedule') {
       console.log(`🔄 Switched to ${activeTab} tab, refreshing data...`);
       logger.debug(`Switched to ${activeTab} tab, refreshing data...`, null, 'PatientDashboard', 'low');
       // Only fetch if we have user data
       if (user && (user.id || user._id || user.userId)) {
         fetchPatientData();
       }
+    } else if (activeTab === 'visits') {
+      console.log('🔄 Switched to visits tab, fetching visits...');
+      fetchVisits();
     }
   }, [activeTab]); // Keep activeTab dependency but add user check
 
@@ -329,26 +381,26 @@ const PatientDashboard: React.FC = () => {
     try {
       setLoading(true);
       setError('');
-      
-      console.log('🔄 fetchPatientData starting...', { 
-        hasToken: !!token, 
-        user, 
-        userId: user?.id || user?._id || user?.userId 
+
+      console.log('🔄 fetchPatientData starting...', {
+        hasToken: !!token,
+        user,
+        userId: user?.id || user?._id || user?.userId
       });
-      
+
       if (!token) {
         throw new Error('No authentication token found. Please log in again.');
       }
-      
+
       // Fetch caretaker requests
       console.log('📞 Fetching caretaker requests...');
       const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000/api';
       const caretakerResponse = await fetch(`${API_BASE_URL}/patients/caretaker-requests`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       console.log('📞 Caretaker response status:', caretakerResponse.status);
-      
+
       if (caretakerResponse.ok) {
         const caretakerData = await caretakerResponse.json();
         console.log('📞 Caretaker data received:', caretakerData);
@@ -356,18 +408,18 @@ const PatientDashboard: React.FC = () => {
       } else {
         console.error('📞 Caretaker request failed:', caretakerResponse.status, await caretakerResponse.text());
       }
-      
+
       // Fetch updated patient data including medications
       // Use MongoDB ObjectId for API calls (like Android app does)
       const userId = user._id || user.id || user.userId;
-      
+
       console.log('👤 Patient profile fetch - userId:', userId);
       console.log('👤 User object details:', { _id: user._id, id: user.id, userId: user.userId });
-      
+
       if (!userId) {
         throw new Error('User ID not found. Please log in again.');
       }
-      
+
       if (userId) {
         console.log('📞 Fetching patient profile for userId:', userId);
         console.log('📞 User object:', user);
@@ -376,30 +428,30 @@ const PatientDashboard: React.FC = () => {
         const patientResponse = await fetch(`${API_BASE_URL}/patients/profile/${userId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        
+
         console.log('📞 Patient profile response status:', patientResponse.status);
         console.log('📞 Patient profile response headers:', Object.fromEntries(patientResponse.headers.entries()));
-        
+
         if (patientResponse.ok) {
           const patientData = await patientResponse.json();
           const updatedUser = patientData.patient || patientData;
           console.log('📞 Patient profile loaded - visits count:', updatedUser?.visits?.length || 0);
-          
+
           // Update current user state
           setCurrentUser(updatedUser);
-          
+
           // Set medicines from current medications with validation
           const newMedicines = updatedUser.currentMedications || [];
           console.log('💊 fetchPatientData: Raw medicines data:', newMedicines);
           console.log('💊 fetchPatientData: Validating medicines:', newMedicines.length);
-          
+
           // Validate medicine data
           const validMedicines = newMedicines.filter((med, index) => {
             if (!med || typeof med !== 'object') {
               console.log(`⚠️ fetchPatientData: Invalid medicine object at index ${index}:`, med);
               return false;
             }
-            
+
             if (!med.name || !med.dosage) {
               console.log(`⚠️ fetchPatientData: Invalid medicine at index ${index}:`, {
                 name: med.name,
@@ -409,29 +461,29 @@ const PatientDashboard: React.FC = () => {
               });
               return false;
             }
-            
+
             // Ensure timing is an array
             if (med.timing && !Array.isArray(med.timing)) {
               console.log(`⚠️ fetchPatientData: Invalid timing format at index ${index}:`, med.timing);
               med.timing = [];
             }
-            
+
             // Log smart scheduling information
             if (med.smartScheduled && med.scheduleExplanation) {
               console.log(`🤖 Smart schedule for ${med.name}:`, med.scheduleExplanation);
             }
-            
+
             return true;
           });
-          
+
           if (validMedicines.length !== newMedicines.length) {
             console.log(`⚠️ fetchPatientData: Filtered out ${newMedicines.length - validMedicines.length} invalid medicines`);
           }
-          
+
           console.log('💊 fetchPatientData: Valid medicines after filtering:', validMedicines);
           console.log('💊 fetchPatientData: Setting valid medicines:', validMedicines.length);
           setMedicines(validMedicines);
-          
+
           // Check for new medicines
           const currentCount = validMedicines.length;
           if (previousMedicineCount > 0 && currentCount > previousMedicineCount) {
@@ -439,21 +491,21 @@ const PatientDashboard: React.FC = () => {
             // You could add a toast notification here
           }
           setPreviousMedicineCount(currentCount);
-          
+
           // Update localStorage
           localStorage.setItem('user', JSON.stringify(updatedUser));
-          
+
           // Update last updated time
           setLastUpdated(new Date());
-          
+
           logger.success('Patient data refreshed', { medicineCount: currentCount }, 'PatientDashboard', 'medium');
-          
+
           // Clear any previous errors since data loaded successfully
           setError('');
 
           // Visits data is now included in the patient profile response
           console.log('🔍 Patient dashboard - visits from profile:', updatedUser.visits?.length || 0);
-          
+
           // Clear error if we successfully loaded patient data
           setError('');
 
@@ -461,7 +513,7 @@ const PatientDashboard: React.FC = () => {
           const notificationsResponse = await fetch(`${API_BASE_URL}/medicine-notifications/patient/${userId}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
-          
+
           if (notificationsResponse.ok) {
             const notificationsData = await notificationsResponse.json();
             setMedicineNotifications(notificationsData.notifications || []);
@@ -472,12 +524,12 @@ const PatientDashboard: React.FC = () => {
           setError('Failed to load patient profile. Please try again.');
         }
       }
-      
+
       // Fetch notifications from database (use medicine-notifications route)
       const notificationsResponse = await fetch(`${API_BASE_URL}/medicine-notifications/patient/${userId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       if (notificationsResponse.ok) {
         const notificationsData = await notificationsResponse.json();
         setNotifications(notificationsData.notifications || []);
@@ -486,11 +538,11 @@ const PatientDashboard: React.FC = () => {
         console.log('Failed to fetch notifications, setting empty array');
         setNotifications([]);
       }
-      
+
     } catch (err) {
       console.error('Error fetching patient data:', err);
       console.error('Error details:', err.message);
-      
+
       // Only show error for critical authentication failures
       if (err.message.includes('User ID not found') || err.message.includes('No authentication token')) {
         setError('Authentication failed. Please log in again.');
@@ -516,14 +568,14 @@ const PatientDashboard: React.FC = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      
+
       if (!token) {
         alert('Please log in again');
         return;
       }
 
       console.log('🔄 Syncing notification timings to medicine schedule...');
-      
+
       const response = await fetch(`${API_BASE_URL}/patients/sync-notifications`, {
         method: 'POST',
         headers: {
@@ -535,10 +587,10 @@ const PatientDashboard: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         console.log('✅ Sync completed:', data);
-        
+
         // Refresh patient data to show updated timings
         await fetchPatientData();
-        
+
         alert(`Sync completed! Updated ${data.syncedMedicines} medicine(s) from ${data.totalNotifications} notification(s).`);
       } else {
         const errorData = await response.json();
@@ -559,34 +611,34 @@ const PatientDashboard: React.FC = () => {
       console.log('❌ refreshMedicineData: currentUser is null');
       return;
     }
-    
+
     // Prevent multiple simultaneous calls
     if (loading) {
       console.log('⚠️ refreshMedicineData: Already loading, skipping');
       return;
     }
-    
+
     try {
       setLoading(true); // Set loading state
-      
+
       const userId = currentUser._id || currentUser.id || currentUser.userId;
       console.log('🔄 refreshMedicineData: Fetching data for userId:', userId);
-      
+
       const token = localStorage.getItem('token');
       if (!token) {
         console.log('❌ refreshMedicineData: No token found');
         setLoading(false);
         return;
       }
-      
+
       const patientResponse = await fetch(`${API_BASE_URL}/patients/profile/${userId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       if (patientResponse.ok) {
         const patientData = await patientResponse.json();
         const updatedUser = patientData.patient || patientData;
-        
+
         console.log('📊 refreshMedicineData: Received patient data:', {
           name: updatedUser.name,
           medicinesCount: updatedUser.currentMedications?.length || 0,
@@ -596,18 +648,18 @@ const PatientDashboard: React.FC = () => {
             adherenceCount: updatedUser.currentMedications[0].adherence?.length || 0
           } : null
         });
-        
+
         // Validate medicine data before setting
         const newMedicines = updatedUser.currentMedications || [];
         console.log('💊 refreshMedicineData: Validating medicines:', newMedicines.length);
-        
+
         // Check each medicine for required fields
         const validMedicines = newMedicines.filter((med, index) => {
           if (!med || typeof med !== 'object') {
             console.log(`⚠️ refreshMedicineData: Invalid medicine object at index ${index}:`, med);
             return false;
           }
-          
+
           if (!med.name || !med.dosage) {
             console.log(`⚠️ refreshMedicineData: Invalid medicine at index ${index}:`, {
               name: med.name,
@@ -617,29 +669,29 @@ const PatientDashboard: React.FC = () => {
             });
             return false;
           }
-          
+
           // Ensure timing is an array
           if (med.timing && !Array.isArray(med.timing)) {
             console.log(`⚠️ refreshMedicineData: Invalid timing format at index ${index}:`, med.timing);
             med.timing = [];
           }
-          
+
           return true;
         });
-        
+
         if (validMedicines.length !== newMedicines.length) {
           console.log(`⚠️ refreshMedicineData: Filtered out ${newMedicines.length - validMedicines.length} invalid medicines`);
         }
-        
+
         console.log('💊 refreshMedicineData: Setting valid medicines:', validMedicines.length);
         setMedicines(validMedicines);
-        
+
         // Update currentUser state as well
         setCurrentUser(updatedUser);
-        
+
         // Update localStorage
         localStorage.setItem('user', JSON.stringify(updatedUser));
-        
+
         logger.info('Medicine data refreshed for adherence', 'PatientDashboard');
         console.log('✅ refreshMedicineData: Successfully refreshed medicine data');
       } else {
@@ -658,12 +710,12 @@ const PatientDashboard: React.FC = () => {
   // Medicine notification management functions
   const openNotificationModal = (medicine: any) => {
     setSelectedMedicine(medicine);
-    
+
     // Check if notification already exists for this medicine
     const existingNotification = medicineNotifications.find(
       notif => notif.medicineName === medicine.name && notif.dosage === medicine.dosage
     );
-    
+
     if (existingNotification) {
       setNotificationForm({
         times: existingNotification.notificationTimes || [{ time: '', label: 'Custom', isActive: true }]
@@ -673,7 +725,7 @@ const PatientDashboard: React.FC = () => {
         times: [{ time: '', label: 'Custom', isActive: true }]
       });
     }
-    
+
     setShowNotificationModal(true);
   };
 
@@ -691,7 +743,7 @@ const PatientDashboard: React.FC = () => {
 
   const updateNotificationTime = (index: number, field: string, value: any) => {
     setNotificationForm(prev => ({
-      times: prev.times.map((time, i) => 
+      times: prev.times.map((time, i) =>
         i === index ? { ...time, [field]: value } : time
       )
     }));
@@ -699,7 +751,7 @@ const PatientDashboard: React.FC = () => {
 
   // Generate frequency-based timing suggestions
   const generateTimingSuggestions = (frequency: string) => {
-    const suggestions: { [key: string]: Array<{time: string, label: string}> } = {
+    const suggestions: { [key: string]: Array<{ time: string, label: string }> } = {
       'Once daily': [
         { time: '08:00', label: 'Morning' },
         { time: '09:00', label: 'Morning' },
@@ -740,10 +792,10 @@ const PatientDashboard: React.FC = () => {
     // Try to match frequency text
     const frequencyLower = frequency.toLowerCase();
     for (const [key, times] of Object.entries(suggestions)) {
-      if (frequencyLower.includes(key.toLowerCase()) || 
-          (key === 'Twice daily' && (frequencyLower.includes('2') || frequencyLower.includes('twice'))) ||
-          (key === 'Three times daily' && (frequencyLower.includes('3') || frequencyLower.includes('three'))) ||
-          (key === 'Four times daily' && (frequencyLower.includes('4') || frequencyLower.includes('four')))) {
+      if (frequencyLower.includes(key.toLowerCase()) ||
+        (key === 'Twice daily' && (frequencyLower.includes('2') || frequencyLower.includes('twice'))) ||
+        (key === 'Three times daily' && (frequencyLower.includes('3') || frequencyLower.includes('three'))) ||
+        (key === 'Four times daily' && (frequencyLower.includes('4') || frequencyLower.includes('four')))) {
         return times;
       }
     }
@@ -782,13 +834,13 @@ const PatientDashboard: React.FC = () => {
 
     try {
       setLoading(true);
-      
+
       logger.apiCall('POST', '/api/medicine-notifications/set-timings', {
         medicineName: selectedMedicine.name,
         dosage: selectedMedicine.dosage,
         notificationTimes: notificationForm.times.filter(time => time.time.trim() !== '')
       });
-      
+
       const response = await fetch(`${API_BASE_URL}/medicine-notifications/set-timings`, {
         method: 'POST',
         headers: {
@@ -808,30 +860,30 @@ const PatientDashboard: React.FC = () => {
       });
 
       logger.apiResponse('POST', '/api/medicine-notifications/set-timings', response.status);
-      
+
       if (response.ok) {
         const data = await response.json();
         logger.success('Notification timings set successfully', data, 'PatientDashboard', 'high');
-        
+
         setShowNotificationModal(false);
         setSelectedMedicine(null);
         setNotificationForm({ times: [{ time: '', label: 'Custom', isActive: true }] });
         setShowPresetOptions(false);
-        
+
         // Add a small delay to ensure backend has processed the update
         console.log('🔄 Waiting for backend to process notification sync...');
         await new Promise(resolve => setTimeout(resolve, 1000));
-        
+
         // Refresh data to show updated notifications and sync with Dose Schedule & Adherence
         console.log('🔄 Refreshing patient data after notification timing update');
         await fetchPatientData();
-        
+
         // Force a second refresh to ensure data is synced
         console.log('🔄 Second refresh to ensure sync is complete...');
         setTimeout(async () => {
           await fetchPatientData();
         }, 500);
-        
+
         alert('Medicine notification timings set successfully! The schedule has been updated.');
       } else {
         const errorData = await response.json();
@@ -853,9 +905,9 @@ const PatientDashboard: React.FC = () => {
 
     try {
       setLoading(true);
-      
+
       logger.apiCall('DELETE', `/api/medicine-notifications/${notificationId}`, { notificationId });
-      
+
       const response = await fetch(`${API_BASE_URL}/medicine-notifications/${notificationId}`, {
         method: 'DELETE',
         headers: {
@@ -864,16 +916,16 @@ const PatientDashboard: React.FC = () => {
       });
 
       logger.apiResponse('DELETE', `/api/medicine-notifications/${notificationId}`, response.status);
-      
+
       if (response.ok) {
         // Remove the notification from local state
-        setMedicineNotifications(prev => 
+        setMedicineNotifications(prev =>
           prev.filter(notif => notif._id !== notificationId)
         );
-        
+
         // Refresh data to ensure consistency
         fetchPatientData();
-        
+
         logger.success('Medicine notification deleted successfully', { notificationId }, 'PatientDashboard', 'high');
         alert('Medicine notification deleted successfully!');
       } else {
@@ -910,7 +962,7 @@ const PatientDashboard: React.FC = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      
+
       const response = await fetch(`${API_BASE_URL}/patients/medicines/${editingMedicine.index}`, {
         method: 'PUT',
         headers: {
@@ -947,7 +999,7 @@ const PatientDashboard: React.FC = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      
+
       const response = await fetch(`${API_BASE_URL}/patients/medicines/${index}`, {
         method: 'DELETE',
         headers: {
@@ -1016,19 +1068,19 @@ const PatientDashboard: React.FC = () => {
 
     try {
       const userId = user._id || user.id;
-      
+
       if (!userId) {
         throw new Error('User ID not found. Please log in again.');
       }
 
       // Filter out fields that shouldn't be sent to the API
       const { _id, id, password, createdAt, updatedAt, __v, ...updateData } = editFormData;
-      
+
       // Ensure dateOfBirth is properly formatted
       if (updateData.dateOfBirth) {
         updateData.dateOfBirth = new Date(updateData.dateOfBirth).toISOString();
       }
-      
+
       // Ensure age is a number
       if (updateData.age) {
         updateData.age = parseInt(updateData.age) || 0;
@@ -1046,16 +1098,16 @@ const PatientDashboard: React.FC = () => {
       if (response.ok) {
         const updatedUser = await response.json();
         const newUserData = updatedUser.patient || updatedUser;
-        
+
         // Update localStorage
         localStorage.setItem('user', JSON.stringify(newUserData));
-        
+
         // Update current user state
         setCurrentUser(newUserData);
-        
+
         // Exit edit mode
         setIsEditingProfile(false);
-        
+
         // Show success message
         alert('Profile updated successfully!');
       } else {
@@ -1076,10 +1128,10 @@ const PatientDashboard: React.FC = () => {
     try {
       setLoadingCaretakers(true);
       const token = localStorage.getItem('token');
-      const url = searchTerm 
+      const url = searchTerm
         ? `${API_BASE_URL}/patients/caretakers?search=${encodeURIComponent(searchTerm)}`
         : `${API_BASE_URL}/patients/caretakers`;
-        
+
       const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -1112,19 +1164,19 @@ const PatientDashboard: React.FC = () => {
       const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE_URL}/patients/remove-caretaker`, {
         method: 'DELETE',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` 
+          Authorization: `Bearer ${token}`
         }
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log('Remove caretaker response:', data);
-        
+
         // Refresh user data
         await fetchPatientData();
-        
+
         alert('Caretaker removed successfully!');
       } else {
         const errorData = await response.json();
@@ -1145,7 +1197,7 @@ const PatientDashboard: React.FC = () => {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` }
         });
-        
+
         if (response.ok) {
           // Update current user state
           setCurrentUser(prev => ({
@@ -1168,13 +1220,13 @@ const PatientDashboard: React.FC = () => {
         const token = localStorage.getItem('token');
         const response = await fetch(`${API_BASE_URL}/patients/direct-assign-caretaker`, {
           method: 'POST',
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}` 
+            Authorization: `Bearer ${token}`
           },
           body: JSON.stringify({ caretakerUserId })
         });
-        
+
         if (response.ok) {
           const data = await response.json();
           // Update current user state
@@ -1240,78 +1292,76 @@ const PatientDashboard: React.FC = () => {
             <option value="kn">ಕನ್ನಡ</option>
           </select>
         </div>
-        
+
         {/* Navigation Tabs */}
         <div className="space-y-2 mb-4">
           <button
             onClick={() => setActiveTab('profile')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium w-full transition-colors duration-200 ${
-              activeTab === 'profile'
-                ? 'bg-primary-600 text-white'
-                : theme === 'dark'
-                  ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium w-full transition-colors duration-200 ${activeTab === 'profile'
+              ? 'bg-primary-600 text-white'
+              : theme === 'dark'
+                ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
           >
             <User size={18} /> Profile
           </button>
           <button
             onClick={() => setActiveTab('medicines')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium w-full transition-colors duration-200 ${
-              activeTab === 'medicines'
-                ? 'bg-primary-600 text-white'
-                : theme === 'dark'
-                  ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium w-full transition-colors duration-200 ${activeTab === 'medicines'
+              ? 'bg-primary-600 text-white'
+              : theme === 'dark'
+                ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
           >
             <Pill size={18} /> Medicines
           </button>
           <button
-            onClick={() => setActiveTab('schedule')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium w-full transition-colors duration-200 ${
-              activeTab === 'schedule'
-                ? 'bg-primary-600 text-white'
-                : theme === 'dark'
-                  ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            onClick={() => {
+              console.log('📅 Schedule button clicked, setting activeTab to schedule');
+              setActiveTab('schedule');
+              console.log('📅 ActiveTab after click:', 'schedule');
+            }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium w-full transition-colors duration-200 ${activeTab === 'schedule'
+              ? 'bg-primary-600 text-white'
+              : theme === 'dark'
+                ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
           >
             <Calendar size={18} /> Schedule
           </button>
           <button
             onClick={() => setActiveTab('visits')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium w-full transition-colors duration-200 ${
-              activeTab === 'visits'
-                ? 'bg-primary-600 text-white'
-                : theme === 'dark'
-                  ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium w-full transition-colors duration-200 ${activeTab === 'visits'
+              ? 'bg-primary-600 text-white'
+              : theme === 'dark'
+                ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
           >
             <Calendar size={18} /> Visits
           </button>
           <button
             onClick={() => setActiveTab('notifications')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium w-full transition-colors duration-200 ${
-              activeTab === 'notifications'
-                ? 'bg-primary-600 text-white'
-                : theme === 'dark'
-                  ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium w-full transition-colors duration-200 ${activeTab === 'notifications'
+              ? 'bg-primary-600 text-white'
+              : theme === 'dark'
+                ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
           >
             <Bell size={18} /> Notifications
           </button>
           <button
             onClick={() => setActiveTab('caretaker')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium w-full transition-colors duration-200 ${
-              activeTab === 'caretaker'
-                ? 'bg-primary-600 text-white'
-                : theme === 'dark'
-                  ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium w-full transition-colors duration-200 ${activeTab === 'caretaker'
+              ? 'bg-primary-600 text-white'
+              : theme === 'dark'
+                ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
           >
             <User size={18} /> Caretaker
           </button>
@@ -1319,28 +1369,26 @@ const PatientDashboard: React.FC = () => {
 
         <button
           onClick={toggleTheme}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium w-full transition-colors duration-200 mb-2 ${
-            theme === 'dark' 
-              ? 'bg-gray-800 text-primary-400 hover:bg-gray-700' 
-              : 'bg-gray-100 text-primary-600 hover:bg-primary-100'
-          }`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium w-full transition-colors duration-200 mb-2 ${theme === 'dark'
+            ? 'bg-gray-800 text-primary-400 hover:bg-gray-700'
+            : 'bg-gray-100 text-primary-600 hover:bg-primary-100'
+            }`}
           aria-label="Toggle theme"
         >
-          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />} 
+          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
           {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
         </button>
-        
+
         <div className="flex-1" />
-        
-        <button 
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium w-full transition-colors duration-200 ${
-            theme === 'dark' 
-              ? 'bg-red-400 text-black hover:bg-red-500' 
-              : 'bg-red-700 text-white hover:bg-red-800'
-          }`} 
+
+        <button
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium w-full transition-colors duration-200 ${theme === 'dark'
+            ? 'bg-red-400 text-black hover:bg-red-500'
+            : 'bg-red-700 text-white hover:bg-red-800'
+            }`}
           onClick={() => navigate('/')}
-        > 
-          <LogOut size={18} /> Logout 
+        >
+          <LogOut size={18} /> Logout
         </button>
       </aside>
 
@@ -1371,21 +1419,26 @@ const PatientDashboard: React.FC = () => {
               </div>
             </div>
           )}
-          
-          {loading && (
+
+          {loading && activeTab !== 'schedule' && (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
               <span className="ml-2">Loading your data...</span>
             </div>
           )}
-          
+
           {error && (
             <div className="bg-red-100 dark:bg-red-900 border border-red-400 text-red-700 dark:text-red-200 px-4 py-3 rounded mb-6">
               {error}
             </div>
           )}
 
-          {/* Tab Content */}
+          {/* Tab Content - Debug */}
+          {(() => {
+            console.log('🔍 RENDER: activeTab =', activeTab, 'loading =', loading, 'schedule condition =', activeTab === 'schedule');
+            return null;
+          })()}
+          
           {activeTab === 'profile' && (
             <div className="space-y-6">
               {/* Patient Information Card */}
@@ -1429,7 +1482,7 @@ const PatientDashboard: React.FC = () => {
                     </button>
                   )}
                 </div>
-                
+
                 {isEditingProfile ? (
                   <form onSubmit={handleProfileUpdate} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1438,7 +1491,7 @@ const PatientDashboard: React.FC = () => {
                         <input
                           type="text"
                           value={editFormData.name || ''}
-                          onChange={(e) => setEditFormData({...editFormData, name: e.target.value})}
+                          onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
                           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         />
                       </div>
@@ -1447,7 +1500,7 @@ const PatientDashboard: React.FC = () => {
                         <input
                           type="email"
                           value={editFormData.email || ''}
-                          onChange={(e) => setEditFormData({...editFormData, email: e.target.value})}
+                          onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
                           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         />
                       </div>
@@ -1456,7 +1509,7 @@ const PatientDashboard: React.FC = () => {
                         <input
                           type="number"
                           value={editFormData.age || ''}
-                          onChange={(e) => setEditFormData({...editFormData, age: e.target.value})}
+                          onChange={(e) => setEditFormData({ ...editFormData, age: e.target.value })}
                           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                           readOnly
                         />
@@ -1466,7 +1519,7 @@ const PatientDashboard: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Gender</label>
                         <select
                           value={editFormData.gender || ''}
-                          onChange={(e) => setEditFormData({...editFormData, gender: e.target.value})}
+                          onChange={(e) => setEditFormData({ ...editFormData, gender: e.target.value })}
                           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         >
                           <option value="">Select Gender</option>
@@ -1480,7 +1533,7 @@ const PatientDashboard: React.FC = () => {
                         <input
                           type="tel"
                           value={editFormData.phoneNumber || ''}
-                          onChange={(e) => setEditFormData({...editFormData, phoneNumber: e.target.value})}
+                          onChange={(e) => setEditFormData({ ...editFormData, phoneNumber: e.target.value })}
                           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         />
                       </div>
@@ -1492,7 +1545,7 @@ const PatientDashboard: React.FC = () => {
                           onChange={(e) => {
                             const newDate = e.target.value;
                             setEditFormData({
-                              ...editFormData, 
+                              ...editFormData,
                               dateOfBirth: newDate,
                               age: newDate ? Math.floor((new Date().getTime() - new Date(newDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : ''
                             });
@@ -1501,7 +1554,7 @@ const PatientDashboard: React.FC = () => {
                         />
                       </div>
                     </div>
-                    
+
                     <div className="flex justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                       <button
                         type="button"
@@ -1569,1396 +1622,1370 @@ const PatientDashboard: React.FC = () => {
                       </p>
                     )}
                   </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleRefresh}
-                    disabled={loading}
-                    className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 text-sm"
-                  >
-                    {loading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        Refreshing...
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        Refresh
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-              
-              {/* Date Range Summary */}
-              {dateRange.from && dateRange.to && (
-                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-4">
-                  <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
-                    📅 Schedule Date Range
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <span className="text-blue-600 dark:text-blue-300">From:</span>
-                      <span className="ml-2 font-medium text-blue-800 dark:text-blue-100">
-                        {new Date(dateRange.from).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-blue-600 dark:text-blue-300">To:</span>
-                      <span className="ml-2 font-medium text-blue-800 dark:text-blue-100">
-                        {new Date(dateRange.to).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-blue-600 dark:text-blue-300">Duration:</span>
-                      <span className="ml-2 font-medium text-blue-800 dark:text-blue-100">
-                        {Math.ceil((new Date(dateRange.to).getTime() - new Date(dateRange.from).getTime()) / (1000 * 60 * 60 * 24)) + 1} days
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {medicines.length === 0 ? (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  <Pill size={48} className="mx-auto mb-4 opacity-50" />
-                  <p>No medications recorded yet.</p>
-                  <p className="text-sm mt-2">Your doctor will add medications here when prescribed.</p>
-                  {loading && (
-                    <div className="mt-4 flex items-center justify-center gap-2 text-blue-500">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-                      <span className="text-sm">Checking for new medications...</span>
-                    </div>
-                  )}
-                  <div className="mt-4 text-xs text-gray-400">
-                    Debug: medicines.length = {medicines.length}, loading = {loading.toString()}
-                  </div>
-                </div>
-              ) : (
-                <div className={`space-y-4 transition-opacity duration-300 ${loading ? 'opacity-75' : 'opacity-100'}`}>
-                  {medicines.map((medicine, index) => {
-                    // Debug: Log medicine data
-                    console.log(`🔍 PatientDashboard: Rendering medicine ${index}:`, {
-                      name: medicine?.name,
-                      dosage: medicine?.dosage,
-                      frequency: medicine?.frequency,
-                      timing: medicine?.timing,
-                      prescribedBy: medicine?.prescribedBy,
-                      prescribedDate: medicine?.prescribedDate
-                    });
-
-                    // Validate medicine data before rendering
-                    if (!medicine || !medicine.name || !medicine.dosage) {
-                      console.log(`⚠️ PatientDashboard: Invalid medicine at index ${index}:`, medicine);
-                      return (
-                        <div key={index} className="border border-red-200 dark:border-red-600 rounded-lg p-4 bg-red-50 dark:bg-red-900/20">
-                          <div className="text-red-600 dark:text-red-400">
-                            <h4 className="font-semibold">Invalid Medicine Data</h4>
-                            <p className="text-sm">This medicine has missing or corrupted data. Please contact support.</p>
-                          </div>
-                        </div>
-                      );
-                    }
-
-                    return (
-                      <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-blue-50 dark:bg-blue-900/20">
-                        <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-semibold text-blue-800 dark:text-blue-200">{medicine.name}</h4>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
-                            {medicine.prescribedDate ? new Date(medicine.prescribedDate).toLocaleDateString() : 'Recently prescribed'}
-                          </span>
-                        </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                        <div>
-                          <span className="font-medium text-gray-700 dark:text-gray-300">Dosage:</span>
-                          <span className="ml-2 text-gray-600 dark:text-gray-400">{medicine.dosage}</span>
-                        </div>
-                        <div>
-                          <span className="font-medium text-gray-700 dark:text-gray-300">Frequency:</span>
-                          <span className="ml-2 text-gray-600 dark:text-gray-400">{medicine.frequency}</span>
-                        </div>
-                        <div>
-                          <span className="font-medium text-gray-700 dark:text-gray-300">Duration:</span>
-                          <span className="ml-2 text-gray-600 dark:text-gray-400">{medicine.duration || 'As prescribed'}</span>
-                        </div>
-                        <div>
-                          <span className="font-medium text-gray-700 dark:text-gray-300">Prescribed by:</span>
-                          <span className="ml-2 text-gray-600 dark:text-gray-400">
-                            {medicine.prescribedBy ? `Dr. ${medicine.prescribedBy}` : 'Not specified'}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      {/* Enhanced timing information */}
-                      {medicine.timing && medicine.timing.length > 0 && (
-                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
-                          <span className="font-medium text-gray-700 dark:text-gray-300 text-sm">Timing:</span>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {medicine.timing.map((time: string, index: number) => (
-                              <span key={index} className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs rounded">
-                                {time.charAt(0).toUpperCase() + time.slice(1)}
-                              </span>
-                            ))}
-                            {medicine.foodTiming && (
-                              <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-xs rounded">
-                                {medicine.foodTiming} food
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                      {medicine.instructions && (
-                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
-                          <span className="font-medium text-gray-700 dark:text-gray-300 text-sm">Instructions:</span>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{medicine.instructions}</p>
-                        </div>
-                      )}
-                      
-                      {/* Notification Management */}
-                      <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <span className="font-medium text-gray-700 dark:text-gray-300 text-sm">Notifications:</span>
-                            {(() => {
-                              const existingNotification = medicineNotifications.find(
-                                notif => notif.medicineName === medicine.name && notif.dosage === medicine.dosage
-                              );
-                              if (existingNotification && existingNotification.notificationTimes.length > 0) {
-                                return (
-                                  <div className="flex flex-wrap gap-1 mt-1">
-                                    {existingNotification.notificationTimes.map((time: any, index: number) => (
-                                      <span key={index} className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs rounded">
-                                        {time.time} {time.isActive ? '✅' : '❌'}
-                                      </span>
-                                    ))}
-                                  </div>
-                                );
-                              } else {
-                                return <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">Not set</span>;
-                              }
-                            })()}
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => openNotificationModal(medicine)}
-                              className="px-3 py-1 bg-purple-500 text-white text-xs rounded-md hover:bg-purple-600 transition-colors"
-                            >
-                              <Bell size={14} className="inline mr-1" />
-                              Set Notifications
-                            </button>
-                            <button
-                              onClick={() => openEditMedicineModal(medicine, index)}
-                              className="px-3 py-1 bg-blue-500 text-white text-xs rounded-md hover:bg-blue-600 transition-colors"
-                              title="Edit medicine"
-                            >
-                              <User size={14} className="inline mr-1" />
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleDeleteMedicine(medicine, index)}
-                              className="px-3 py-1 bg-red-500 text-white text-xs rounded-md hover:bg-red-600 transition-colors"
-                              title="Delete medicine"
-                            >
-                              <Trash2 size={14} className="inline mr-1" />
-                              Delete
-                            </button>
-                            {(() => {
-                              const existingNotification = medicineNotifications.find(
-                                notif => notif.medicineName === medicine.name && notif.dosage === medicine.dosage
-                              );
-                              if (existingNotification) {
-                                return (
-                                  <button
-                                    onClick={() => handleDeleteNotification(existingNotification._id)}
-                                    className="px-3 py-1 bg-orange-500 text-white text-xs rounded-md hover:bg-orange-600 transition-colors"
-                                    title="Delete notification"
-                                  >
-                                    <Trash2 size={14} className="inline mr-1" />
-                                    Delete Notification
-                                  </button>
-                                );
-                              }
-                              return null;
-                            })()}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Dose-Based Adherence Tracker */}
-                      <DoseBasedAdherenceTracker
-                        medicine={medicine}
-                        medicineIndex={index}
-                        patientId={currentUser?.id || currentUser?._id || currentUser?.userId || ''}
-                        onAdherenceUpdate={refreshMedicineData}
-                      />
-                    </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-          {activeTab === 'schedule' && (
-            <div className="space-y-6">
-              {/* Date Range Filter */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Schedule Date Range
-                  </h3>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => {
-                        const optimalRange = calculateOptimalDateRange();
-                        setDateRange(optimalRange);
-                      }}
-                      className="px-3 py-1 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                      onClick={handleRefresh}
+                      disabled={loading}
+                      className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 text-sm"
                     >
-                      Auto Range
-                    </button>
-                    <button
-                      onClick={() => setShowDateRangeFilter(!showDateRangeFilter)}
-                      className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                    >
-                      {showDateRangeFilter ? 'Hide' : 'Custom Range'}
+                      {loading ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          Refreshing...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                          Refresh
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
-                
-                {showDateRangeFilter && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        From Date
-                      </label>
-                      <input
-                        type="date"
-                        value={dateRange.from}
-                        onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        To Date
-                      </label>
-                      <input
-                        type="date"
-                        value={dateRange.to}
-                        onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      />
+
+                {/* Date Range Summary */}
+                {dateRange.from && dateRange.to && (
+                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-4">
+                    <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
+                      📅 Schedule Date Range
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <span className="text-blue-600 dark:text-blue-300">From:</span>
+                        <span className="ml-2 font-medium text-blue-800 dark:text-blue-100">
+                          {new Date(dateRange.from).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-blue-600 dark:text-blue-300">To:</span>
+                        <span className="ml-2 font-medium text-blue-800 dark:text-blue-100">
+                          {new Date(dateRange.to).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-blue-600 dark:text-blue-300">Duration:</span>
+                        <span className="ml-2 font-medium text-blue-800 dark:text-blue-100">
+                          {Math.ceil((new Date(dateRange.to).getTime() - new Date(dateRange.from).getTime()) / (1000 * 60 * 60 * 24)) + 1} days
+                        </span>
+                      </div>
                     </div>
                   </div>
                 )}
-                
-                {/* Medicine Summary */}
-                <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Medicine Schedule Summary
-                  </h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-500 dark:text-gray-400">Total Medicines:</span>
-                      <span className="ml-2 font-medium text-gray-900 dark:text-white">
-                        {medicines.length}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500 dark:text-gray-400">Active Medicines:</span>
-                      <span className="ml-2 font-medium text-gray-900 dark:text-white">
-                        {medicines.filter(m => m.duration && parseDurationToDays(m.duration) > 0).length}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500 dark:text-gray-400">Date Range:</span>
-                      <span className="ml-2 font-medium text-gray-900 dark:text-white">
-                        {dateRange.from && dateRange.to ? 
-                          `${new Date(dateRange.from).toLocaleDateString()} - ${new Date(dateRange.to).toLocaleDateString()}` :
-                          'Not set'
-                        }
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500 dark:text-gray-400">Total Days:</span>
-                      <span className="ml-2 font-medium text-gray-900 dark:text-white">
-                        {dateRange.from && dateRange.to ? 
-                          Math.ceil((new Date(dateRange.to).getTime() - new Date(dateRange.from).getTime()) / (1000 * 60 * 60 * 24)) + 1 :
-                          0
-                        }
-                      </span>
+
+                {medicines.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <Pill size={48} className="mx-auto mb-4 opacity-50" />
+                    <p>No medications recorded yet.</p>
+                    <p className="text-sm mt-2">Your doctor will add medications here when prescribed.</p>
+                    {loading && (
+                      <div className="mt-4 flex items-center justify-center gap-2 text-blue-500">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                        <span className="text-sm">Checking for new medications...</span>
+                      </div>
+                    )}
+                    <div className="mt-4 text-xs text-gray-400">
+                      Debug: medicines.length = {medicines.length}, loading = {loading.toString()}
                     </div>
                   </div>
-                </div>
-              </div>
-              
+                ) : (
+                  <div className={`space-y-4 transition-opacity duration-300 ${loading ? 'opacity-75' : 'opacity-100'}`}>
+                    {medicines.map((medicine, index) => {
+                      // Debug: Log medicine data
+                      console.log(`🔍 PatientDashboard: Rendering medicine ${index}:`, {
+                        name: medicine?.name,
+                        dosage: medicine?.dosage,
+                        frequency: medicine?.frequency,
+                        timing: medicine?.timing,
+                        prescribedBy: medicine?.prescribedBy,
+                        prescribedDate: medicine?.prescribedDate
+                      });
 
-              {/* Calendar Schedule View (always render; handles empty state internally) */}
-              <CalendarScheduleView
-                medicines={medicines}
-                patientId={currentUser?._id || currentUser?.id || currentUser?.userId || ''}
-                onAdherenceUpdate={refreshMedicineData}
-                onEditMedicine={openEditMedicineModal}
-                onDeleteMedicine={handleDeleteMedicine}
-                dateRange={dateRange}
-              />
-            </div>
-          )}
-
-          {activeTab === 'visits' && (
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-semibold flex items-center gap-2">
-                  <Calendar size={20} /> Visit History
-                </h3>
-                <button
-                  onClick={handleRefresh}
-                  disabled={loading}
-                  className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 text-sm"
-                >
-                  {loading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Refreshing...
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      Refresh
-                    </>
-                  )}
-                </button>
-              </div>
-              
-
-
-              {/* Debug: Show visits data */}
-              <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
-                  🔍 Visits Debug Info
-                </h4>
-                <div className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
-                  <div>Current user visits: {currentUser?.visits?.length || 0}</div>
-                  <div>Current user ID: {currentUser?._id || currentUser?.id || currentUser?.userId || 'Not available'}</div>
-                  <div>Loading state: {loading ? 'Yes' : 'No'}</div>
-                  <div>Error state: {error || 'None'}</div>
-                  <div>User object keys: {currentUser ? Object.keys(currentUser).join(', ') : 'No user'}</div>
-                  <div>User object: {JSON.stringify(currentUser, null, 2)}</div>
-                  {currentUser?.visits && currentUser.visits.length > 0 && (
-                    <div>
-                      <div>First visit: {JSON.stringify(currentUser.visits[0], null, 2)}</div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {(currentUser?.visits && currentUser.visits.length > 0) ? (
-                <div className="space-y-4">
-                  {currentUser.visits.map((visit, index) => (
-                    <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-green-50 dark:bg-green-900/20">
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <h4 className="font-semibold text-green-800 dark:text-green-200">
-                            {new Date(visit.visitDate).toLocaleDateString()}
-                          </h4>
-                          <p className="text-sm text-green-600 dark:text-green-300">
-                            Dr. {visit.doctorName}
-                          </p>
-                        </div>
-                        <span className={`px-2 py-1 rounded text-xs ${
-                          visit.visitType === 'consultation' 
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                            : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                        }`}>
-                          {visit.visitType ? visit.visitType.replace('_', ' ').toUpperCase() : 'VISIT'}
-                        </span>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <div>
-                          <span className="font-medium text-gray-700 dark:text-gray-300">Diagnosis:</span>
-                          <p className="text-gray-600 dark:text-gray-400">{visit.diagnosis}</p>
-                        </div>
-                        
-                        {visit.medicines && visit.medicines.length > 0 && (
-                          <div>
-                            <span className="font-medium text-gray-700 dark:text-gray-300">Medicines Prescribed:</span>
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {visit.medicines.map((medicine, medIndex) => (
-                                <span key={medIndex} className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded">
-                                  {medicine.name} ({medicine.dosage})
-                                </span>
-                              ))}
+                      // Validate medicine data before rendering
+                      if (!medicine || !medicine.name || !medicine.dosage) {
+                        console.log(`⚠️ PatientDashboard: Invalid medicine at index ${index}:`, medicine);
+                        return (
+                          <div key={index} className="border border-red-200 dark:border-red-600 rounded-lg p-4 bg-red-50 dark:bg-red-900/20">
+                            <div className="text-red-600 dark:text-red-400">
+                              <h4 className="font-semibold">Invalid Medicine Data</h4>
+                              <p className="text-sm">This medicine has missing or corrupted data. Please contact support.</p>
                             </div>
                           </div>
-                        )}
-                        
-                        {visit.notes && (
-                          <div>
-                            <span className="font-medium text-gray-700 dark:text-gray-300">Notes:</span>
-                            <p className="text-gray-600 dark:text-gray-400">{visit.notes}</p>
+                        );
+                      }
+
+                      return (
+                        <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-blue-50 dark:bg-blue-900/20">
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-semibold text-blue-800 dark:text-blue-200">{medicine.name}</h4>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              {medicine.prescribedDate ? new Date(medicine.prescribedDate).toLocaleDateString() : 'Recently prescribed'}
+                            </span>
                           </div>
-                        )}
-                        
-                        {visit.followUpRequired && visit.followUpDate && (
-                          <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
-                            <div className="flex items-center gap-2">
-                              <Clock size={16} className="text-orange-500" />
-                              <span className="font-medium text-orange-700 dark:text-orange-300">Follow-up Scheduled:</span>
-                              <span className="text-orange-600 dark:text-orange-400">
-                                {new Date(visit.followUpDate).toLocaleDateString()}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                            <div>
+                              <span className="font-medium text-gray-700 dark:text-gray-300">Dosage:</span>
+                              <span className="ml-2 text-gray-600 dark:text-gray-400">{medicine.dosage}</span>
+                            </div>
+                            <div>
+                              <span className="font-medium text-gray-700 dark:text-gray-300">Frequency:</span>
+                              <span className="ml-2 text-gray-600 dark:text-gray-400">{medicine.frequency}</span>
+                            </div>
+                            <div>
+                              <span className="font-medium text-gray-700 dark:text-gray-300">Duration:</span>
+                              <span className="ml-2 text-gray-600 dark:text-gray-400">{medicine.duration || 'As prescribed'}</span>
+                            </div>
+                            <div>
+                              <span className="font-medium text-gray-700 dark:text-gray-300">Prescribed by:</span>
+                              <span className="ml-2 text-gray-600 dark:text-gray-400">
+                                {medicine.prescribedBy ? `Dr. ${medicine.prescribedBy}` : 'Not specified'}
                               </span>
                             </div>
-                            {visit.followUpNotes && (
-                              <p className="text-sm text-orange-600 dark:text-orange-400 mt-1">{visit.followUpNotes}</p>
-                            )}
                           </div>
-                        )}
+
+                          {/* Enhanced timing information */}
+                          {medicine.timing && medicine.timing.length > 0 && (
+                            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                              <span className="font-medium text-gray-700 dark:text-gray-300 text-sm">Timing:</span>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {medicine.timing.map((time: string, index: number) => (
+                                  <span key={index} className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs rounded">
+                                    {time.charAt(0).toUpperCase() + time.slice(1)}
+                                  </span>
+                                ))}
+                                {medicine.foodTiming && (
+                                  <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-xs rounded">
+                                    {medicine.foodTiming} food
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          {medicine.instructions && (
+                            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                              <span className="font-medium text-gray-700 dark:text-gray-300 text-sm">Instructions:</span>
+                              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{medicine.instructions}</p>
+                            </div>
+                          )}
+
+                          {/* Notification Management */}
+                          <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <span className="font-medium text-gray-700 dark:text-gray-300 text-sm">Notifications:</span>
+                                {(() => {
+                                  const existingNotification = medicineNotifications.find(
+                                    notif => notif.medicineName === medicine.name && notif.dosage === medicine.dosage
+                                  );
+                                  if (existingNotification && existingNotification.notificationTimes.length > 0) {
+                                    return (
+                                      <div className="flex flex-wrap gap-1 mt-1">
+                                        {existingNotification.notificationTimes.map((time: any, index: number) => (
+                                          <span key={index} className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs rounded">
+                                            {time.time} {time.isActive ? '✅' : '❌'}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    );
+                                  } else {
+                                    return <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">Not set</span>;
+                                  }
+                                })()}
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => openNotificationModal(medicine)}
+                                  className="px-3 py-1 bg-purple-500 text-white text-xs rounded-md hover:bg-purple-600 transition-colors"
+                                >
+                                  <Bell size={14} className="inline mr-1" />
+                                  Set Notifications
+                                </button>
+                                <button
+                                  onClick={() => openEditMedicineModal(medicine, index)}
+                                  className="px-3 py-1 bg-blue-500 text-white text-xs rounded-md hover:bg-blue-600 transition-colors"
+                                  title="Edit medicine"
+                                >
+                                  <User size={14} className="inline mr-1" />
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteMedicine(medicine, index)}
+                                  className="px-3 py-1 bg-red-500 text-white text-xs rounded-md hover:bg-red-600 transition-colors"
+                                  title="Delete medicine"
+                                >
+                                  <Trash2 size={14} className="inline mr-1" />
+                                  Delete
+                                </button>
+                                {(() => {
+                                  const existingNotification = medicineNotifications.find(
+                                    notif => notif.medicineName === medicine.name && notif.dosage === medicine.dosage
+                                  );
+                                  if (existingNotification) {
+                                    return (
+                                      <button
+                                        onClick={() => handleDeleteNotification(existingNotification._id)}
+                                        className="px-3 py-1 bg-orange-500 text-white text-xs rounded-md hover:bg-orange-600 transition-colors"
+                                        title="Delete notification"
+                                      >
+                                        <Trash2 size={14} className="inline mr-1" />
+                                        Delete Notification
+                                      </button>
+                                    );
+                                  }
+                                  return null;
+                                })()}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Dose-Based Adherence Tracker */}
+                          <DoseBasedAdherenceTracker
+                            medicine={medicine}
+                            medicineIndex={index}
+                            patientId={currentUser?.id || currentUser?._id || currentUser?.userId || ''}
+                            onAdherenceUpdate={refreshMedicineData}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {activeTab === 'schedule' ? (
+                (() => {
+                  console.log('✅ Schedule tab condition is TRUE, rendering content');
+                  return (
+                    <div className="space-y-6" data-testid="schedule-tab-content" style={{ minHeight: '200px', backgroundColor: 'rgba(255, 0, 0, 0.1)' }}>
+                      {/* Always visible header to verify tab is rendering */}
+                      <div className="bg-green-50 dark:bg-green-900/20 border-2 border-green-500 dark:border-green-700 rounded-lg p-4" style={{ zIndex: 9999, position: 'relative' }}>
+                    <h2 className="text-xl font-bold text-green-800 dark:text-green-200 mb-2">
+                      📅 Schedule Tab is Active
+                    </h2>
+                    <div className="text-sm text-green-700 dark:text-green-300 space-y-1">
+                      <div>Active Tab: <strong>{activeTab}</strong></div>
+                      <div>Loading: <strong>{loading ? 'Yes' : 'No'}</strong></div>
+                      <div>Medicines Count: <strong>{medicines.length}</strong></div>
+                      <div>Current User: <strong>{currentUser ? 'Yes' : 'No'}</strong></div>
+                      <div>Date Range: <strong>{dateRange?.from ? `${dateRange.from} to ${dateRange.to}` : 'Not set'}</strong></div>
+                    </div>
+                  </div>
+                  
+                  {loading && (
+                    <div className="flex items-center justify-center py-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
+                      <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Loading schedule data...</span>
+                    </div>
+                  )}
+                  
+                  {/* Date Range Filter */}
+                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        Schedule Date Range
+                      </h3>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            const optimalRange = calculateOptimalDateRange();
+                            setDateRange(optimalRange);
+                          }}
+                          className="px-3 py-1 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                        >
+                          Auto Range
+                        </button>
+                        <button
+                          onClick={() => setShowDateRangeFilter(!showDateRangeFilter)}
+                          className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                        >
+                          {showDateRangeFilter ? 'Hide' : 'Custom Range'}
+                        </button>
                       </div>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  <Calendar size={48} className="mx-auto mb-4 opacity-50" />
-                  <p>No visits recorded yet.</p>
-                  <p className="text-sm mt-2">Your visit history will appear here after consultations.</p>
-                  <div className="flex gap-2 justify-center mt-4">
-                    <button
-                      onClick={handleRefresh}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-                    >
-                      Refresh Visits
-                    </button>
-                    <button
-                      onClick={() => {
-                        // Test with sample data
-                        const sampleVisits = [
-                          {
-                            visitDate: new Date().toISOString(),
-                            visitType: 'consultation',
-                            doctorName: 'Dr. Smith',
-                            diagnosis: 'Regular checkup',
-                            notes: 'Patient is doing well',
-                            medicines: [
-                              { name: 'Vitamin D', dosage: '1000mg', frequency: 'once daily' }
-                            ],
-                            followUpRequired: false
-                          }
-                        ];
-                        console.log('🧪 Setting sample visits:', sampleVisits);
-                        setCurrentUser(prev => ({ ...prev, visits: sampleVisits }));
-                      }}
-                      className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
-                    >
-                      Test with Sample Data
-                    </button>
-                    <button
-                      onClick={async () => {
-                        // Add sample visit to database
-                        try {
-                          const token = localStorage.getItem('token');
-                          const userId = currentUser?._id || currentUser?.id || currentUser?.userId;
-                          
-                          if (!token || !userId) {
-                            alert('Please log in again');
-                            return;
-                          }
-                          
-                          console.log('🧪 Adding sample visit to database for userId:', userId);
-                          
-                          const response = await fetch(`${API_BASE_URL}/patients/test-visits/${userId}`, {
-                            method: 'POST',
-                            headers: {
-                              'Authorization': `Bearer ${token}`
-                            }
-                          });
-                          
-                          if (response.ok) {
-                            const result = await response.json();
-                            console.log('✅ Sample visit added:', result);
-                            alert('Sample visit added to database!');
-                            handleRefresh(); // Refresh the data
-                          } else {
-                            const error = await response.json();
-                            console.error('❌ Failed to add sample visit:', error);
-                            alert('Failed to add sample visit: ' + error.message);
-                          }
-                        } catch (error) {
-                          console.error('❌ Error adding sample visit:', error);
-                          alert('Error adding sample visit');
-                        }
-                      }}
-                      className="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors"
-                    >
-                      Add Sample Visit to DB
-                    </button>
-                    <button
-                      onClick={() => {
-                        console.log('🔧 Manual fetch triggered');
-                        fetchPatientData();
-                      }}
-                      className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
-                    >
-                      Debug Fetch
-                    </button>
-                    <button
-                      onClick={async () => {
-                        // Test API call directly
-                        try {
-                          const token = localStorage.getItem('token');
-                          const userId = currentUser?._id || currentUser?.id || currentUser?.userId;
-                          
-                          if (!token || !userId) {
-                            alert('Please log in again');
-                            return;
-                          }
-                          
-                          console.log('🧪 Testing API call directly for userId:', userId);
-                          
-                          const response = await fetch(`${API_BASE_URL}/patients/profile/${userId}`, {
-                            headers: { Authorization: `Bearer ${token}` }
-                          });
-                          
-                          console.log('🧪 API Response status:', response.status);
-                          const responseData = await response.json();
-                          console.log('🧪 API Response data:', responseData);
-                          console.log('🧪 Patient visits:', responseData.patient?.visits || responseData.visits);
-                          
-                          alert(`API Response: ${response.status}\nVisits count: ${(responseData.patient?.visits || responseData.visits || []).length}`);
-                        } catch (error) {
-                          console.error('❌ Error testing API:', error);
-                          alert('Error testing API: ' + error);
-                        }
-                      }}
-                      className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-                    >
-                      Test API Direct
-                    </button>
-                    <button
-                      onClick={() => {
-                        // Check localStorage data
-                        const token = localStorage.getItem('token');
-                        const userData = localStorage.getItem('user');
-                        const parsedUser = userData ? JSON.parse(userData) : null;
-                        
-                        console.log('🔍 localStorage check:');
-                        console.log('Token:', token ? 'Present' : 'Missing');
-                        console.log('User data:', userData);
-                        console.log('Parsed user:', parsedUser);
-                        console.log('User keys:', parsedUser ? Object.keys(parsedUser) : 'No user');
-                        
-                        alert(`Token: ${token ? 'Present' : 'Missing'}\nUser: ${userData || 'Missing'}\nUser keys: ${parsedUser ? Object.keys(parsedUser).join(', ') : 'No user'}`);
-                      }}
-                      className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors"
-                    >
-                      Check localStorage
-                    </button>
-                    <button
-                      onClick={() => {
-                        // Manually set user data from localStorage
-                        const userData = localStorage.getItem('user');
-                        if (userData) {
-                          const parsedUser = JSON.parse(userData);
-                          console.log('🔧 Manually setting user data:', parsedUser);
-                          setCurrentUser(parsedUser);
-                          alert('User data set from localStorage');
-                        } else {
-                          alert('No user data in localStorage');
-                        }
-                      }}
-                      className="px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors"
-                    >
-                      Set User from localStorage
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
 
-          {activeTab === 'notifications' && (
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-              <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                <Bell size={20} /> Notifications
-              </h3>
-              {notifications.length === 0 ? (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  <Bell size={48} className="mx-auto mb-4 opacity-50" />
-                  <p>No notifications yet.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {notifications.map((notification, index) => (
-                    <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-                      <h4 className="font-semibold">{notification.title}</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {notification.message}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-500">
-                        {new Date(notification.date).toLocaleDateString()}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'caretaker' && (
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold flex items-center gap-2">
-                  <User size={20} /> Caretaker Management
-                </h3>
-                <button
-                  onClick={handleRefresh}
-                  className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                >
-                  Refresh
-                </button>
-              </div>
-              
-              {/* Current Caretaker Display */}
-              {currentUser?.selectedCaretaker ? (
-                <div className="mb-6 p-6 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800 rounded-xl">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-                          <User size={24} className="text-green-600 dark:text-green-400" />
+                    {showDateRangeFilter && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            From Date
+                          </label>
+                          <input
+                            type="date"
+                            value={dateRange.from}
+                            onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          />
                         </div>
                         <div>
-                          <h4 className="text-lg font-semibold text-green-800 dark:text-green-200">Your Current Caretaker</h4>
-                          <p className="text-sm text-green-600 dark:text-green-300">
-                            {currentUser.selectedCaretaker.caretakerName || 'Caretaker Name'}
-                          </p>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            To Date
+                          </label>
+                          <input
+                            type="date"
+                            value={dateRange.to}
+                            onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          />
                         </div>
                       </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm font-medium text-green-600 dark:text-green-300">Caretaker ID:</span>
-                            <code className="bg-white dark:bg-gray-800 px-3 py-1 rounded text-sm font-mono font-bold text-green-800 dark:text-green-200 border border-green-300 dark:border-green-600">
-                              {currentUser.selectedCaretaker.caretakerUserId || 'ID Not Available'}
-                            </code>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm font-medium text-green-600 dark:text-green-300">Email:</span>
-                            <span className="text-sm text-green-700 dark:text-green-300">
-                              {currentUser.selectedCaretaker.caretakerEmail || 'N/A'}
-                            </span>
-                          </div>
+                    )}
+
+                    {/* Medicine Summary */}
+                    <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Medicine Schedule Summary
+                      </h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Total Medicines:</span>
+                          <span className="ml-2 font-medium text-gray-900 dark:text-white">
+                            {medicines.length}
+                          </span>
                         </div>
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm font-medium text-green-600 dark:text-green-300">Assigned:</span>
-                            <span className="text-sm text-green-700 dark:text-green-300">
-                              {currentUser.selectedCaretaker.assignedAt ? new Date(currentUser.selectedCaretaker.assignedAt).toLocaleDateString() : 'Unknown'}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm font-medium text-green-600 dark:text-green-300">Status:</span>
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                              ✓ Active
-                            </span>
-                          </div>
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Active Medicines:</span>
+                          <span className="ml-2 font-medium text-gray-900 dark:text-white">
+                            {medicines.filter(m => m.duration && parseDurationToDays(m.duration) > 0).length}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Date Range:</span>
+                          <span className="ml-2 font-medium text-gray-900 dark:text-white">
+                            {dateRange.from && dateRange.to ?
+                              `${new Date(dateRange.from).toLocaleDateString()} - ${new Date(dateRange.to).toLocaleDateString()}` :
+                              'Not set'
+                            }
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500 dark:text-gray-400">Total Days:</span>
+                          <span className="ml-2 font-medium text-gray-900 dark:text-white">
+                            {dateRange.from && dateRange.to ?
+                              Math.ceil((new Date(dateRange.to).getTime() - new Date(dateRange.from).getTime()) / (1000 * 60 * 60 * 24)) + 1 :
+                              0
+                            }
+                          </span>
                         </div>
                       </div>
                     </div>
-                    <div className="flex flex-col items-end gap-3">
-                            <div className="text-green-400 dark:text-green-500">
-                              <User size={48} className="opacity-60" />
-                            </div>
-                            <button
-                              onClick={() => handleRemoveCaretaker()}
-                              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
-                            >
-                              Remove Caretaker
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ) : currentUser?.caretakerApprovals?.some(approval => approval.status === 'pending') ? (
-                      <div className="mb-6 space-y-4">
-                        <div className="p-6 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h4 className="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-3">Caretaker Approval Requests</h4>
-                              <p className="text-yellow-700 dark:text-yellow-300">
-                                You have pending caretaker approval requests. Review and accept or reject them below.
-                              </p>
-                            </div>
-                            <div className="text-yellow-400 dark:text-yellow-500">
-                              <User size={48} className="opacity-60" />
-                            </div>
-                          </div>
-                        </div>
+                  </div>
 
-                        {/* Pending Approval Requests */}
-                        <div className="space-y-4">
-                          {currentUser.caretakerApprovals
-                            .filter(approval => approval.status === 'pending')
-                            .map((approval, index) => (
-                              <div key={index} className="p-6 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-sm">
-                                <div className="flex items-start justify-between">
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-3 mb-3">
-                                      <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                                        <User size={24} className="text-blue-600 dark:text-blue-400" />
-                                      </div>
-                                      <div>
-                                        <h5 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                          {approval.caretakerId?.name || 'Unknown Caretaker'}
-                                        </h5>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                                          Caretaker ID: {approval.caretakerId?.userId || 'N/A'}
-                                        </p>
+
+                  {/* Calendar Schedule View (always render; handles empty state internally) */}
+                  {(() => {
+                    try {
+                      console.log('📅 Rendering CalendarScheduleView', {
+                        activeTab,
+                        medicinesCount: medicines.length,
+                        hasCurrentUser: !!currentUser,
+                        dateRange
+                      });
+                      
+                      const historyMedicines = currentUser?.medicationHistory || [];
+                      // Combine active medicines and history, ensuring no duplicates if any
+                      const calendarMedicines = [...medicines, ...historyMedicines];
+
+                      console.log('📅 Calendar medicines:', {
+                        active: medicines.length,
+                        history: historyMedicines.length,
+                        total: calendarMedicines.length
+                      });
+
+                      if (!CalendarScheduleView) {
+                        console.error('CalendarScheduleView component is not available');
+                        return (
+                          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+                            <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">
+                              Component Error
+                            </h3>
+                            <p className="text-red-600 dark:text-red-300">
+                              CalendarScheduleView component is not available. Please refresh the page.
+                            </p>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <CalendarScheduleView
+                          medicines={calendarMedicines}
+                          patientId={currentUser?._id || currentUser?.id || currentUser?.userId || ''}
+                          onAdherenceUpdate={refreshMedicineData}
+                          onEditMedicine={openEditMedicineModal}
+                          onDeleteMedicine={handleDeleteMedicine}
+                          dateRange={dateRange}
+                        />
+                      );
+                    } catch (error) {
+                      console.error('Error rendering CalendarScheduleView:', error);
+                      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+                      return (
+                        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+                          <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">
+                            Error Loading Schedule
+                          </h3>
+                          <p className="text-red-600 dark:text-red-300 mb-2">
+                            There was an error loading the calendar schedule. Please try refreshing the page.
+                          </p>
+                          <p className="text-xs text-red-500 dark:text-red-400 mb-4">
+                            Error: {error instanceof Error ? error.message : String(error)}
+                          </p>
+                          <button
+                            onClick={refreshMedicineData}
+                            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                          >
+                            Retry
+                          </button>
+                        </div>
+                      );
+                    }
+                  })()}
+                    </div>
+                  );
+                })()
+              ) : (
+                <div className="bg-red-500 text-white p-4 rounded">
+                  Schedule tab NOT active. Current: {String(activeTab)}
+                </div>
+              )}
+
+              {activeTab === 'visits' && (
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-semibold flex items-center gap-2">
+                      <Calendar size={20} /> Visit History
+                    </h3>
+                    <button
+                      onClick={fetchVisits}
+                      disabled={loadingVisits}
+                      className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {loadingVisits ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          Loading...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                          Refresh
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {loadingVisits ? (
+                    <div className="text-center py-12">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+                      <p className="text-gray-600 dark:text-gray-400">Loading visits...</p>
+                    </div>
+                  ) : visits.length > 0 ? (
+                    <div className="space-y-4">
+                      {visits.map((visit: any, index: number) => (
+                        <div key={visit.id || index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-5 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-800 hover:shadow-lg transition-shadow">
+                          <div className="flex justify-between items-start mb-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <Calendar size={20} className="text-primary-600 dark:text-primary-400" />
+                                <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                                  {new Date(visit.visitDate).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                  })}
+                                </h4>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                <User size={16} />
+                                <span className="font-medium">{visit.doctorName || 'Unknown Doctor'}</span>
+                                {visit.doctorSpecialization && (
+                                  <span className="text-gray-500 dark:text-gray-500">• {visit.doctorSpecialization}</span>
+                                )}
+                              </div>
+                            </div>
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              visit.visitType === 'consultation' || visit.visitType === 'medicine_prescription'
+                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                                : visit.visitType === 'follow_up'
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                : 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+                            }`}>
+                              {visit.visitType ? visit.visitType.replace(/_/g, ' ').toUpperCase() : 'VISIT'}
+                            </span>
+                          </div>
+
+                          <div className="space-y-3 mt-4">
+                            {visit.diagnosis && (
+                              <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                                <span className="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Diagnosis:</span>
+                                <p className="text-gray-800 dark:text-gray-200">{visit.diagnosis}</p>
+                              </div>
+                            )}
+
+                            {visit.symptoms && visit.symptoms.length > 0 && (
+                              <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                                <span className="font-semibold text-gray-700 dark:text-gray-300 block mb-2">Symptoms:</span>
+                                <div className="flex flex-wrap gap-2">
+                                  {visit.symptoms.map((symptom: string, symIndex: number) => (
+                                    <span key={symIndex} className="px-2 py-1 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 text-xs rounded">
+                                      {symptom}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {(visit.medications && visit.medications.length > 0) || (visit.medicines && visit.medicines.length > 0) ? (
+                              <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                                <span className="font-semibold text-gray-700 dark:text-gray-300 block mb-2">Medicines Prescribed:</span>
+                                <div className="space-y-2">
+                                  {(visit.medications || visit.medicines).map((medicine: any, medIndex: number) => (
+                                    <div key={medIndex} className="flex items-start gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
+                                      <Pill size={16} className="text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                                      <div className="flex-1 min-w-0">
+                                        <span className="font-medium text-gray-800 dark:text-gray-200 block">{medicine.name}</span>
+                                        <div className="text-xs text-gray-600 dark:text-gray-400 space-x-2 mt-1">
+                                          <span>Dosage: {medicine.dosage}</span>
+                                          {medicine.frequency && <span>• Frequency: {medicine.frequency}</span>}
+                                          {medicine.duration && <span>• Duration: {medicine.duration}</span>}
+                                        </div>
+                                        {medicine.instructions && (
+                                          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 italic">{medicine.instructions}</p>
+                                        )}
                                       </div>
                                     </div>
-                                    
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                                      <div>
-                                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Email:</span>
-                                        <p className="text-sm text-gray-900 dark:text-white">{approval.caretakerId?.email || 'N/A'}</p>
-                                      </div>
-                                      <div>
-                                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Experience:</span>
-                                        <p className="text-sm text-gray-900 dark:text-white">{approval.caretakerId?.experience || 'N/A'} years</p>
-                                      </div>
-                                      <div>
-                                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Requested:</span>
-                                        <p className="text-sm text-gray-900 dark:text-white">{new Date(approval.requestedAt).toLocaleDateString()}</p>
-                                      </div>
-                                      <div>
-                                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Status:</span>
-                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                                          ⏳ Pending
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  
-                                  <div className="flex flex-col gap-2 ml-6">
-                                    <button
-                                      onClick={() => handleCaretakerApproval(approval.caretakerId._id, 'approved')}
-                                      className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center gap-2"
-                                    >
-                                      <span>✓</span> Accept
-                                    </button>
-                                    <button
-                                      onClick={() => handleCaretakerApproval(approval.caretakerId._id, 'rejected')}
-                                      className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center gap-2"
-                                    >
-                                      <span>✗</span> Reject
-                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : null}
+
+                            {visit.treatment && (
+                              <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                                <span className="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Treatment:</span>
+                                <p className="text-gray-800 dark:text-gray-200">{visit.treatment}</p>
+                              </div>
+                            )}
+
+                            {visit.notes && (
+                              <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                                <span className="font-semibold text-gray-700 dark:text-gray-300 block mb-1">Notes:</span>
+                                <p className="text-gray-600 dark:text-gray-400">{visit.notes}</p>
+                              </div>
+                            )}
+
+                            {visit.followUpRequired && visit.followUpDate && (
+                              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                                <div className="flex items-center gap-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg p-3">
+                                  <Clock size={18} className="text-orange-600 dark:text-orange-400" />
+                                  <div>
+                                    <span className="font-semibold text-orange-700 dark:text-orange-300 block">Follow-up Scheduled:</span>
+                                    <span className="text-orange-600 dark:text-orange-400 text-sm">
+                                      {new Date(visit.followUpDate).toLocaleDateString('en-US', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric'
+                                      })}
+                                    </span>
                                   </div>
                                 </div>
                               </div>
-                            ))}
+                            )}
+                          </div>
                         </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                      <Calendar size={64} className="mx-auto mb-4 opacity-50" />
+                      <p className="text-lg font-medium mb-2">No visits recorded yet</p>
+                      <p className="text-sm">Your visit history will appear here after consultations with doctors.</p>
+                      <button
+                        onClick={fetchVisits}
+                        className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+                      >
+                        Refresh Visits
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
 
-                        {/* Approval History */}
-                        {currentUser.caretakerApprovals.some(approval => approval.status !== 'pending') && (
-                          <div className="mt-8">
-                            <h5 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Approval History</h5>
-                            <div className="space-y-3">
-                              {currentUser.caretakerApprovals
-                                .filter(approval => approval.status !== 'pending')
-                                .map((approval, index) => (
-                                  <div key={index} className="p-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center">
-                                          <User size={16} className="text-gray-600 dark:text-gray-400" />
-                                        </div>
-                                        <div>
-                                          <p className="font-medium text-gray-900 dark:text-white">
-                                            {approval.caretakerId?.name || 'Unknown Caretaker'}
-                                          </p>
-                                          <p className="text-sm text-gray-500 dark:text-gray-400">
-                                            {approval.caretakerId?.userId || 'N/A'} • {new Date(approval.requestedAt).toLocaleDateString()}
-                                          </p>
-                                        </div>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                          approval.status === 'approved' 
-                                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                                        }`}>
-                                          {approval.status === 'approved' ? '✓ Approved' : '✗ Rejected'}
-                                        </span>
-                                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                                          {approval.status === 'approved' && approval.approvedAt 
-                                            ? new Date(approval.approvedAt).toLocaleDateString()
-                                            : approval.rejectedAt 
-                                            ? new Date(approval.rejectedAt).toLocaleDateString()
-                                            : ''
-                                          }
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
+              {activeTab === 'notifications' && (
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+                  <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                    <Bell size={20} /> Notifications
+                  </h3>
+                  {notifications.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                      <Bell size={48} className="mx-auto mb-4 opacity-50" />
+                      <p>No notifications yet.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {notifications.map((notification, index) => (
+                        <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                          <h4 className="font-semibold">{notification.title}</h4>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {notification.message}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-500">
+                            {new Date(notification.date).toLocaleDateString()}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'caretaker' && (
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-semibold flex items-center gap-2">
+                      <User size={20} /> Caretaker Management
+                    </h3>
+                    <button
+                      onClick={handleRefresh}
+                      className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                    >
+                      Refresh
+                    </button>
+                  </div>
+
+                  {/* Current Caretaker Display */}
+                  {currentUser?.selectedCaretaker ? (
+                    <div className="mb-6 p-6 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800 rounded-xl">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                              <User size={24} className="text-green-600 dark:text-green-400" />
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="mb-6 p-6 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-900/20 dark:to-slate-900/20 border border-gray-200 dark:border-gray-800 rounded-xl">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-3">
-                              <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                                <User size={24} className="text-gray-600 dark:text-gray-400" />
-                              </div>
-                              <div>
-                                <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200">No Caretaker Assigned</h4>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">You don't have a caretaker yet</p>
-                              </div>
-                            </div>
-                            <div className="space-y-2">
-                              <p className="text-gray-600 dark:text-gray-400">
-                                You don't have a caretaker assigned yet. You can:
+                            <div>
+                              <h4 className="text-lg font-semibold text-green-800 dark:text-green-200">Your Current Caretaker</h4>
+                              <p className="text-sm text-green-600 dark:text-green-300">
+                                {currentUser.selectedCaretaker.caretakerName || 'Caretaker Name'}
                               </p>
-                              <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1 ml-4">
-                                <li>• Search for available caretakers below</li>
-                                <li>• Wait for a caretaker to send you a request</li>
-                                <li>• Contact support for assistance</li>
-                              </ul>
                             </div>
                           </div>
-                          <div className="text-gray-400 dark:text-gray-500 ml-4">
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-3">
+                                <span className="text-sm font-medium text-green-600 dark:text-green-300">Caretaker ID:</span>
+                                <code className="bg-white dark:bg-gray-800 px-3 py-1 rounded text-sm font-mono font-bold text-green-800 dark:text-green-200 border border-green-300 dark:border-green-600">
+                                  {currentUser.selectedCaretaker.caretakerUserId || 'ID Not Available'}
+                                </code>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span className="text-sm font-medium text-green-600 dark:text-green-300">Email:</span>
+                                <span className="text-sm text-green-700 dark:text-green-300">
+                                  {currentUser.selectedCaretaker.caretakerEmail || 'N/A'}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-3">
+                                <span className="text-sm font-medium text-green-600 dark:text-green-300">Assigned:</span>
+                                <span className="text-sm text-green-700 dark:text-green-300">
+                                  {currentUser.selectedCaretaker.assignedAt ? new Date(currentUser.selectedCaretaker.assignedAt).toLocaleDateString() : 'Unknown'}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span className="text-sm font-medium text-green-600 dark:text-green-300">Status:</span>
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                  ✓ Active
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-3">
+                          <div className="text-green-400 dark:text-green-500">
+                            <User size={48} className="opacity-60" />
+                          </div>
+                          <button
+                            onClick={() => handleRemoveCaretaker()}
+                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+                          >
+                            Remove Caretaker
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : currentUser?.caretakerApprovals?.some(approval => approval.status === 'pending') ? (
+                    <div className="mb-6 space-y-4">
+                      <div className="p-6 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-3">Caretaker Approval Requests</h4>
+                            <p className="text-yellow-700 dark:text-yellow-300">
+                              You have pending caretaker approval requests. Review and accept or reject them below.
+                            </p>
+                          </div>
+                          <div className="text-yellow-400 dark:text-yellow-500">
                             <User size={48} className="opacity-60" />
                           </div>
                         </div>
                       </div>
-                    )}
 
-                    {/* Caretaker Search and Selection */}
-                    {!currentUser?.selectedCaretaker && (
-                      <div className="space-y-6">
-                        {/* Search Bar */}
-                        <div>
-                          <label className="block text-sm font-medium mb-3 text-gray-700 dark:text-gray-300">
-                            Search Caretakers
-                          </label>
-                          <div className="relative">
-                            <input
-                              type="text"
-                              placeholder="Search by name, ID, or email..."
-                              value={caretakerSearchTerm}
-                              onChange={(e) => handleCaretakerSearch(e.target.value)}
-                              className={`w-full px-4 py-3 pl-10 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
-                                theme === 'dark'
-                                  ? 'bg-gray-700 border-gray-600 text-gray-100'
-                                  : 'bg-white border-gray-300 text-gray-900'
-                              } transition-colors`}
-                            />
-                            <User size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                          </div>
-                        </div>
-
-                        {/* Caretaker Selection Dropdown */}
-                        <div>
-                          <label className="block text-sm font-medium mb-3 text-gray-700 dark:text-gray-300">
-                            Select a Caretaker
-                          </label>
-                          <select
-                            value={currentUser?.selectedCaretaker?.caretakerUserId || ''}
-                            onChange={(e) => handleCaretakerChange(e.target.value)}
-                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-lg ${
-                              theme === 'dark'
-                                ? 'bg-gray-700 border-gray-600 text-gray-100'
-                                : 'bg-white border-gray-300 text-gray-900'
-                            } transition-colors`}
-                            disabled={loadingCaretakers}
-                          >
-                            <option value="">Choose a caretaker...</option>
-                            {availableCaretakers.map((caretaker) => (
-                              <option key={caretaker.userId} value={caretaker.userId}>
-                                {caretaker.name} ({caretaker.userId})
-                              </option>
-                            ))}
-                          </select>
-                          {loadingCaretakers && (
-                            <div className="flex items-center gap-2 mt-2 text-sm text-gray-500 dark:text-gray-400">
-                              <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
-                              <span>Searching for caretakers...</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Available Caretakers List */}
-                        {availableCaretakers.length > 0 && (
-                          <div>
-                            <h4 className="font-semibold mb-3 text-gray-700 dark:text-gray-300">
-                              Available Caretakers ({availableCaretakers.length})
-                            </h4>
-                            <div className="space-y-3 max-h-60 overflow-y-auto">
-                              {availableCaretakers.map((caretaker) => (
-                                <div key={caretaker.userId} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                  <div className="flex justify-between items-start">
-                                    <div className="flex-1">
-                                      <h5 className="font-semibold text-gray-900 dark:text-white">{caretaker.name}</h5>
-                                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                                        <strong>ID:</strong> {caretaker.userId}
-                                      </p>
-                                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                                        <strong>Experience:</strong> {caretaker.experience} years
-                                      </p>
-                                      {caretaker.specializations && caretaker.specializations.length > 0 && (
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                                          <strong>Specializations:</strong> {caretaker.specializations.join(', ')}
-                                        </p>
-                                      )}
+                      {/* Pending Approval Requests */}
+                      <div className="space-y-4">
+                        {currentUser.caretakerApprovals
+                          .filter(approval => approval.status === 'pending')
+                          .map((approval, index) => (
+                            <div key={index} className="p-6 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-sm">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-3 mb-3">
+                                    <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                                      <User size={24} className="text-blue-600 dark:text-blue-400" />
                                     </div>
-                                    <button
-                                      onClick={() => handleCaretakerChange(caretaker.userId)}
-                                      className="ml-4 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
-                                    >
-                                      Select
-                                    </button>
+                                    <div>
+                                      <h5 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                        {approval.caretakerId?.name || 'Unknown Caretaker'}
+                                      </h5>
+                                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                                        Caretaker ID: {approval.caretakerId?.userId || 'N/A'}
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                                    <div>
+                                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Email:</span>
+                                      <p className="text-sm text-gray-900 dark:text-white">{approval.caretakerId?.email || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Experience:</span>
+                                      <p className="text-sm text-gray-900 dark:text-white">{approval.caretakerId?.experience || 'N/A'} years</p>
+                                    </div>
+                                    <div>
+                                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Requested:</span>
+                                      <p className="text-sm text-gray-900 dark:text-white">{new Date(approval.requestedAt).toLocaleDateString()}</p>
+                                    </div>
+                                    <div>
+                                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Status:</span>
+                                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                                        ⏳ Pending
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="flex flex-col gap-2 ml-6">
+                                  <button
+                                    onClick={() => handleCaretakerApproval(approval.caretakerId._id, 'approved')}
+                                    className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center gap-2"
+                                  >
+                                    <span>✓</span> Accept
+                                  </button>
+                                  <button
+                                    onClick={() => handleCaretakerApproval(approval.caretakerId._id, 'rejected')}
+                                    className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center gap-2"
+                                  >
+                                    <span>✗</span> Reject
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+
+                      {/* Approval History */}
+                      {currentUser.caretakerApprovals.some(approval => approval.status !== 'pending') && (
+                        <div className="mt-8">
+                          <h5 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Approval History</h5>
+                          <div className="space-y-3">
+                            {currentUser.caretakerApprovals
+                              .filter(approval => approval.status !== 'pending')
+                              .map((approval, index) => (
+                                <div key={index} className="p-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-8 h-8 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center">
+                                        <User size={16} className="text-gray-600 dark:text-gray-400" />
+                                      </div>
+                                      <div>
+                                        <p className="font-medium text-gray-900 dark:text-white">
+                                          {approval.caretakerId?.name || 'Unknown Caretaker'}
+                                        </p>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                                          {approval.caretakerId?.userId || 'N/A'} • {new Date(approval.requestedAt).toLocaleDateString()}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${approval.status === 'approved'
+                                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                        }`}>
+                                        {approval.status === 'approved' ? '✓ Approved' : '✗ Rejected'}
+                                      </span>
+                                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                                        {approval.status === 'approved' && approval.approvedAt
+                                          ? new Date(approval.approvedAt).toLocaleDateString()
+                                          : approval.rejectedAt
+                                            ? new Date(approval.rejectedAt).toLocaleDateString()
+                                            : ''
+                                        }
+                                      </span>
+                                    </div>
                                   </div>
                                 </div>
                               ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="mb-6 p-6 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-900/20 dark:to-slate-900/20 border border-gray-200 dark:border-gray-800 rounded-xl">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                              <User size={24} className="text-gray-600 dark:text-gray-400" />
+                            </div>
+                            <div>
+                              <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200">No Caretaker Assigned</h4>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">You don't have a caretaker yet</p>
                             </div>
                           </div>
-                        )}
-
-                        {loadingCaretakers && availableCaretakers.length === 0 && (
-                          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                              <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
-                            </div>
-                            <h4 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
-                              Searching for caretakers...
-                            </h4>
-                            <p className="text-sm">Please wait while we find available caretakers for you.</p>
+                          <div className="space-y-2">
+                            <p className="text-gray-600 dark:text-gray-400">
+                              You don't have a caretaker assigned yet. You can:
+                            </p>
+                            <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1 ml-4">
+                              <li>• Search for available caretakers below</li>
+                              <li>• Wait for a caretaker to send you a request</li>
+                              <li>• Contact support for assistance</li>
+                            </ul>
                           </div>
-                        )}
+                        </div>
+                        <div className="text-gray-400 dark:text-gray-500 ml-4">
+                          <User size={48} className="opacity-60" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
-                        {availableCaretakers.length === 0 && !loadingCaretakers && (
-                          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                              <User size={32} className="opacity-50" />
-                            </div>
-                            <h4 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
-                              {caretakerSearchTerm ? 'No caretakers found' : 'No caretakers available'}
-                            </h4>
-                            {caretakerSearchTerm ? (
-                              <div className="space-y-2">
-                                <p className="text-sm">No caretakers match your search criteria.</p>
-                                <p className="text-sm">Try searching with different terms or contact support.</p>
-                                <button
-                                  onClick={() => {
-                                    setCaretakerSearchTerm('');
-                                    fetchCaretakers('');
-                                  }}
-                                  className="mt-3 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
-                                >
-                                  Clear Search
-                                </button>
-                              </div>
-                            ) : (
-                              <div className="space-y-2">
-                                <p className="text-sm">There are currently no caretakers available in the system.</p>
-                                <p className="text-sm">Please contact support or try again later.</p>
-                              </div>
-                            )}
+                  {/* Caretaker Search and Selection */}
+                  {!currentUser?.selectedCaretaker && (
+                    <div className="space-y-6">
+                      {/* Search Bar */}
+                      <div>
+                        <label className="block text-sm font-medium mb-3 text-gray-700 dark:text-gray-300">
+                          Search Caretakers
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            placeholder="Search by name, ID, or email..."
+                            value={caretakerSearchTerm}
+                            onChange={(e) => handleCaretakerSearch(e.target.value)}
+                            className={`w-full px-4 py-3 pl-10 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${theme === 'dark'
+                              ? 'bg-gray-700 border-gray-600 text-gray-100'
+                              : 'bg-white border-gray-300 text-gray-900'
+                              } transition-colors`}
+                          />
+                          <User size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        </div>
+                      </div>
+
+                      {/* Caretaker Selection Dropdown */}
+                      <div>
+                        <label className="block text-sm font-medium mb-3 text-gray-700 dark:text-gray-300">
+                          Select a Caretaker
+                        </label>
+                        <select
+                          value={currentUser?.selectedCaretaker?.caretakerUserId || ''}
+                          onChange={(e) => handleCaretakerChange(e.target.value)}
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-lg ${theme === 'dark'
+                            ? 'bg-gray-700 border-gray-600 text-gray-100'
+                            : 'bg-white border-gray-300 text-gray-900'
+                            } transition-colors`}
+                          disabled={loadingCaretakers}
+                        >
+                          <option value="">Choose a caretaker...</option>
+                          {availableCaretakers.map((caretaker) => (
+                            <option key={caretaker.userId} value={caretaker.userId}>
+                              {caretaker.name} ({caretaker.userId})
+                            </option>
+                          ))}
+                        </select>
+                        {loadingCaretakers && (
+                          <div className="flex items-center gap-2 mt-2 text-sm text-gray-500 dark:text-gray-400">
+                            <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+                            <span>Searching for caretakers...</span>
                           </div>
                         )}
                       </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
 
-            {/* Caretaker Requests Modal */}
-            {showCaretakerRequests && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-semibold">Caretaker Requests</h3>
-                    <button
-                      onClick={() => setShowCaretakerRequests(false)}
-                      className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                    >
-                      <span className="text-2xl">&times;</span>
-                    </button>
-                  </div>
-                  
-                  {caretakerRequests.filter(req => req.status === 'pending').length === 0 ? (
-                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                      <Bell size={48} className="mx-auto mb-4 opacity-50" />
-                      <p>No pending caretaker requests.</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {caretakerRequests
-                        .filter(req => req.status === 'pending')
-                        .map((request, index) => (
-                          <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <h4 className="font-semibold">{request.caretakerId?.name || 'Unknown Caretaker'}</h4>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                  Email: {request.caretakerId?.email || 'N/A'}
-                                </p>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                  Experience: {request.caretakerId?.experience || 'N/A'} years
-                                </p>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                  Requested: {new Date(request.requestedAt).toLocaleDateString()}
-                                </p>
+                      {/* Available Caretakers List */}
+                      {availableCaretakers.length > 0 && (
+                        <div>
+                          <h4 className="font-semibold mb-3 text-gray-700 dark:text-gray-300">
+                            Available Caretakers ({availableCaretakers.length})
+                          </h4>
+                          <div className="space-y-3 max-h-60 overflow-y-auto">
+                            {availableCaretakers.map((caretaker) => (
+                              <div key={caretaker.userId} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                <div className="flex justify-between items-start">
+                                  <div className="flex-1">
+                                    <h5 className="font-semibold text-gray-900 dark:text-white">{caretaker.name}</h5>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                      <strong>ID:</strong> {caretaker.userId}
+                                    </p>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                      <strong>Experience:</strong> {caretaker.experience} years
+                                    </p>
+                                    {caretaker.specializations && caretaker.specializations.length > 0 && (
+                                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                                        <strong>Specializations:</strong> {caretaker.specializations.join(', ')}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <button
+                                    onClick={() => handleCaretakerChange(caretaker.userId)}
+                                    className="ml-4 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
+                                  >
+                                    Select
+                                  </button>
+                                </div>
                               </div>
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => handleCaretakerApproval(request.caretakerId._id, 'approved')}
-                                  className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 text-sm"
-                                >
-                                  Approve
-                                </button>
-                                <button
-                                  onClick={() => handleCaretakerApproval(request.caretakerId._id, 'rejected')}
-                                  className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm"
-                                >
-                                  Reject
-                                </button>
-                              </div>
-                            </div>
+                            ))}
                           </div>
-                        ))}
+                        </div>
+                      )}
+
+                      {loadingCaretakers && availableCaretakers.length === 0 && (
+                        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                          <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+                          </div>
+                          <h4 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Searching for caretakers...
+                          </h4>
+                          <p className="text-sm">Please wait while we find available caretakers for you.</p>
+                        </div>
+                      )}
+
+                      {availableCaretakers.length === 0 && !loadingCaretakers && (
+                        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                          <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <User size={32} className="opacity-50" />
+                          </div>
+                          <h4 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            {caretakerSearchTerm ? 'No caretakers found' : 'No caretakers available'}
+                          </h4>
+                          {caretakerSearchTerm ? (
+                            <div className="space-y-2">
+                              <p className="text-sm">No caretakers match your search criteria.</p>
+                              <p className="text-sm">Try searching with different terms or contact support.</p>
+                              <button
+                                onClick={() => {
+                                  setCaretakerSearchTerm('');
+                                  fetchCaretakers('');
+                                }}
+                                className="mt-3 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
+                              >
+                                Clear Search
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              <p className="text-sm">There are currently no caretakers available in the system.</p>
+                              <p className="text-sm">Please contact support or try again later.</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+          )}
 
-            {/* Medicine Notification Modal */}
-            {showNotificationModal && selectedMedicine && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-md mx-4">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      Set Medicine Notifications
-                    </h3>
-                    <button
-                      onClick={() => setShowNotificationModal(false)}
-                      className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                    >
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
+          {/* Caretaker Requests Modal */}
+          {showCaretakerRequests && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xl font-semibold">Caretaker Requests</h3>
+                  <button
+                    onClick={() => setShowCaretakerRequests(false)}
+                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  >
+                    <span className="text-2xl">&times;</span>
+                  </button>
+                </div>
+
+                {caretakerRequests.filter(req => req.status === 'pending').length === 0 ? (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <Bell size={48} className="mx-auto mb-4 opacity-50" />
+                    <p>No pending caretaker requests.</p>
                   </div>
-
-                  <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                    <h4 className="font-medium text-blue-800 dark:text-blue-200">{selectedMedicine.name}</h4>
-                    <p className="text-sm text-blue-600 dark:text-blue-300">{selectedMedicine.dosage}</p>
-                    <p className="text-sm text-blue-600 dark:text-blue-300 mt-1">
-                      <span className="font-medium">Frequency:</span> {selectedMedicine.frequency || 'As prescribed'}
-                    </p>
-                  </div>
-
+                ) : (
                   <div className="space-y-4">
-                    {/* Frequency-based suggestions */}
-                    {selectedMedicine.frequency && (
-                      <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                        <div className="flex justify-between items-center mb-2">
-                          <h5 className="font-medium text-green-800 dark:text-green-200 text-sm">
-                            💡 Suggested timings for "{selectedMedicine.frequency}"
-                          </h5>
-                          <button
-                            onClick={() => setShowPresetOptions(!showPresetOptions)}
-                            className="text-xs text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200"
-                          >
-                            {showPresetOptions ? 'Hide' : 'Show'} options
-                          </button>
-                        </div>
-                        
-                        {showPresetOptions && (
-                          <div className="space-y-2">
-                            <div className="flex flex-wrap gap-2">
-                              {generateTimingSuggestions(selectedMedicine.frequency).map((suggestion, index) => (
-                                <span key={index} className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs rounded">
-                                  {suggestion.time} ({suggestion.label})
-                                </span>
-                              ))}
+                    {caretakerRequests
+                      .filter(req => req.status === 'pending')
+                      .map((request, index) => (
+                        <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h4 className="font-semibold">{request.caretakerId?.name || 'Unknown Caretaker'}</h4>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Email: {request.caretakerId?.email || 'N/A'}
+                              </p>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Experience: {request.caretakerId?.experience || 'N/A'} years
+                              </p>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Requested: {new Date(request.requestedAt).toLocaleDateString()}
+                              </p>
                             </div>
-                            <button
-                              onClick={() => applyPresetTimings('frequency-based')}
-                              className="w-full px-3 py-2 bg-green-500 text-white text-sm rounded-md hover:bg-green-600 transition-colors"
-                            >
-                              Apply These Timings
-                            </button>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleCaretakerApproval(request.caretakerId._id, 'approved')}
+                                className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 text-sm"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                onClick={() => handleCaretakerApproval(request.caretakerId._id, 'rejected')}
+                                className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm"
+                              >
+                                Reject
+                              </button>
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    )}
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Notification Times (HH:MM format)
-                      </label>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                        You'll receive notifications 30 minutes before and at the scheduled time
-                      </p>
-                      
-                      {notificationForm.times.map((time, index) => (
-                        <div key={index} className="flex items-center gap-2 mb-2">
-                          <input
-                            type="time"
-                            value={time.time}
-                            onChange={(e) => updateNotificationTime(index, 'time', e.target.value)}
-                            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                          />
-                          <input
-                            type="text"
-                            value={time.label}
-                            onChange={(e) => updateNotificationTime(index, 'label', e.target.value)}
-                            placeholder="Label (e.g., Morning)"
-                            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                          />
-                          <label className="flex items-center">
-                            <input
-                              type="checkbox"
-                              checked={time.isActive}
-                              onChange={(e) => updateNotificationTime(index, 'isActive', e.target.checked)}
-                              className="mr-1"
-                            />
-                            <span className="text-sm text-gray-600 dark:text-gray-400">Active</span>
-                          </label>
-                          {notificationForm.times.length > 1 && (
-                            <button
-                              onClick={() => removeNotificationTime(index)}
-                              className="text-red-500 hover:text-red-700"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
-                          )}
                         </div>
                       ))}
-                      
-                      <div className="flex gap-2">
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Medicine Notification Modal */}
+          {showNotificationModal && selectedMedicine && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-md mx-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Set Medicine Notifications
+                  </h3>
+                  <button
+                    onClick={() => setShowNotificationModal(false)}
+                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                  <h4 className="font-medium text-blue-800 dark:text-blue-200">{selectedMedicine.name}</h4>
+                  <p className="text-sm text-blue-600 dark:text-blue-300">{selectedMedicine.dosage}</p>
+                  <p className="text-sm text-blue-600 dark:text-blue-300 mt-1">
+                    <span className="font-medium">Frequency:</span> {selectedMedicine.frequency || 'As prescribed'}
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Frequency-based suggestions */}
+                  {selectedMedicine.frequency && (
+                    <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                      <div className="flex justify-between items-center mb-2">
+                        <h5 className="font-medium text-green-800 dark:text-green-200 text-sm">
+                          💡 Suggested timings for "{selectedMedicine.frequency}"
+                        </h5>
                         <button
-                          onClick={addNotificationTime}
-                          className="flex-1 px-3 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
+                          onClick={() => setShowPresetOptions(!showPresetOptions)}
+                          className="text-xs text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200"
                         >
-                          + Add Another Time
+                          {showPresetOptions ? 'Hide' : 'Show'} options
                         </button>
                       </div>
-                      
-                      {/* Quick preset options */}
-                      <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
-                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Quick Presets:</p>
-                        <div className="grid grid-cols-2 gap-2">
+
+                      {showPresetOptions && (
+                        <div className="space-y-2">
+                          <div className="flex flex-wrap gap-2">
+                            {generateTimingSuggestions(selectedMedicine.frequency).map((suggestion, index) => (
+                              <span key={index} className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs rounded">
+                                {suggestion.time} ({suggestion.label})
+                              </span>
+                            ))}
+                          </div>
                           <button
-                            onClick={() => setNotificationForm({
-                              times: [
-                                { time: '08:00', label: 'Morning', isActive: true },
-                                { time: '20:00', label: 'Evening', isActive: true }
-                              ]
-                            })}
-                            className="px-3 py-2 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                            onClick={() => applyPresetTimings('frequency-based')}
+                            className="w-full px-3 py-2 bg-green-500 text-white text-sm rounded-md hover:bg-green-600 transition-colors"
                           >
-                            2x Daily (8AM, 8PM)
-                          </button>
-                          <button
-                            onClick={() => setNotificationForm({
-                              times: [
-                                { time: '08:00', label: 'Morning', isActive: true },
-                                { time: '14:00', label: 'Afternoon', isActive: true },
-                                { time: '20:00', label: 'Evening', isActive: true }
-                              ]
-                            })}
-                            className="px-3 py-2 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
-                          >
-                            3x Daily (8AM, 2PM, 8PM)
-                          </button>
-                          <button
-                            onClick={() => setNotificationForm({
-                              times: [
-                                { time: '08:00', label: 'Morning', isActive: true },
-                                { time: '12:00', label: 'Noon', isActive: true },
-                                { time: '16:00', label: 'Afternoon', isActive: true },
-                                { time: '20:00', label: 'Evening', isActive: true }
-                              ]
-                            })}
-                            className="px-3 py-2 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
-                          >
-                            4x Daily (Every 4hrs)
-                          </button>
-                          <button
-                            onClick={() => setNotificationForm({
-                              times: [
-                                { time: '09:00', label: 'Morning', isActive: true }
-                              ]
-                            })}
-                            className="px-3 py-2 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
-                          >
-                            Once Daily (9AM)
+                            Apply These Timings
                           </button>
                         </div>
-                      </div>
+                      )}
                     </div>
-                  </div>
+                  )}
 
-                  <div className="flex gap-3 mt-6">
-                    <button
-                      onClick={() => setShowNotificationModal(false)}
-                      className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleNotificationSubmit}
-                      disabled={loading || notificationForm.times.every(time => !time.time.trim())}
-                      className="flex-1 px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 disabled:opacity-50"
-                    >
-                      {loading ? 'Saving...' : 'Save Notifications'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Notification Times (HH:MM format)
+                    </label>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                      You'll receive notifications 30 minutes before and at the scheduled time
+                    </p>
 
-            {/* Edit Medicine Modal */}
-            {showEditMedicineModal && editingMedicine && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      Edit Medicine: {editingMedicine.name}
-                    </h3>
-                    <button
-                      onClick={() => setShowEditMedicineModal(false)}
-                      className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                    >
-                      <X size={20} />
-                    </button>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Medicine Name
-                      </label>
-                      <input
-                        type="text"
-                        value={editMedicineForm.name}
-                        onChange={(e) => setEditMedicineForm({ ...editMedicineForm, name: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                        placeholder="Enter medicine name"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Dosage
-                        </label>
+                    {notificationForm.times.map((time, index) => (
+                      <div key={index} className="flex items-center gap-2 mb-2">
+                        <input
+                          type="time"
+                          value={time.time}
+                          onChange={(e) => updateNotificationTime(index, 'time', e.target.value)}
+                          className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        />
                         <input
                           type="text"
-                          value={editMedicineForm.dosage}
-                          onChange={(e) => setEditMedicineForm({ ...editMedicineForm, dosage: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                          placeholder="e.g., 500mg"
+                          value={time.label}
+                          onChange={(e) => updateNotificationTime(index, 'label', e.target.value)}
+                          placeholder="Label (e.g., Morning)"
+                          className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Frequency
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={time.isActive}
+                            onChange={(e) => updateNotificationTime(index, 'isActive', e.target.checked)}
+                            className="mr-1"
+                          />
+                          <span className="text-sm text-gray-600 dark:text-gray-400">Active</span>
                         </label>
-                        <input
-                          type="text"
-                          value={editMedicineForm.frequency}
-                          onChange={(e) => setEditMedicineForm({ ...editMedicineForm, frequency: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                          placeholder="e.g., Twice daily"
-                        />
+                        {notificationForm.times.length > 1 && (
+                          <button
+                            onClick={() => removeNotificationTime(index)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        )}
                       </div>
-                    </div>
+                    ))}
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Duration
-                      </label>
-                      <input
-                        type="text"
-                        value={editMedicineForm.duration}
-                        onChange={(e) => setEditMedicineForm({ ...editMedicineForm, duration: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                        placeholder="e.g., 7 days, As prescribed"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Food Timing
-                      </label>
-                      <select
-                        value={editMedicineForm.foodTiming}
-                        onChange={(e) => setEditMedicineForm({ ...editMedicineForm, foodTiming: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    <div className="flex gap-2">
+                      <button
+                        onClick={addNotificationTime}
+                        className="flex-1 px-3 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
                       >
-                        <option value="">Select timing</option>
-                        <option value="before">Before food</option>
-                        <option value="after">After food</option>
-                        <option value="with">With food</option>
-                        <option value="empty">Empty stomach</option>
-                      </select>
+                        + Add Another Time
+                      </button>
                     </div>
 
+                    {/* Quick preset options */}
+                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Quick Presets:</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => setNotificationForm({
+                            times: [
+                              { time: '08:00', label: 'Morning', isActive: true },
+                              { time: '20:00', label: 'Evening', isActive: true }
+                            ]
+                          })}
+                          className="px-3 py-2 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                        >
+                          2x Daily (8AM, 8PM)
+                        </button>
+                        <button
+                          onClick={() => setNotificationForm({
+                            times: [
+                              { time: '08:00', label: 'Morning', isActive: true },
+                              { time: '14:00', label: 'Afternoon', isActive: true },
+                              { time: '20:00', label: 'Evening', isActive: true }
+                            ]
+                          })}
+                          className="px-3 py-2 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                        >
+                          3x Daily (8AM, 2PM, 8PM)
+                        </button>
+                        <button
+                          onClick={() => setNotificationForm({
+                            times: [
+                              { time: '08:00', label: 'Morning', isActive: true },
+                              { time: '12:00', label: 'Noon', isActive: true },
+                              { time: '16:00', label: 'Afternoon', isActive: true },
+                              { time: '20:00', label: 'Evening', isActive: true }
+                            ]
+                          })}
+                          className="px-3 py-2 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                        >
+                          4x Daily (Every 4hrs)
+                        </button>
+                        <button
+                          onClick={() => setNotificationForm({
+                            times: [
+                              { time: '09:00', label: 'Morning', isActive: true }
+                            ]
+                          })}
+                          className="px-3 py-2 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                        >
+                          Once Daily (9AM)
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={() => setShowNotificationModal(false)}
+                    className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleNotificationSubmit}
+                    disabled={loading || notificationForm.times.every(time => !time.time.trim())}
+                    className="flex-1 px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 disabled:opacity-50"
+                  >
+                    {loading ? 'Saving...' : 'Save Notifications'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Edit Medicine Modal */}
+          {showEditMedicineModal && editingMedicine && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Edit Medicine: {editingMedicine.name}
+                  </h3>
+                  <button
+                    onClick={() => setShowEditMedicineModal(false)}
+                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Medicine Name
+                    </label>
+                    <input
+                      type="text"
+                      value={editMedicineForm.name}
+                      onChange={(e) => setEditMedicineForm({ ...editMedicineForm, name: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                      placeholder="Enter medicine name"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Instructions
+                        Dosage
                       </label>
-                      <textarea
-                        value={editMedicineForm.instructions}
-                        onChange={(e) => setEditMedicineForm({ ...editMedicineForm, instructions: e.target.value })}
+                      <input
+                        type="text"
+                        value={editMedicineForm.dosage}
+                        onChange={(e) => setEditMedicineForm({ ...editMedicineForm, dosage: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                        rows={3}
-                        placeholder="Special instructions for taking this medicine"
+                        placeholder="e.g., 500mg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Frequency
+                      </label>
+                      <input
+                        type="text"
+                        value={editMedicineForm.frequency}
+                        onChange={(e) => setEditMedicineForm({ ...editMedicineForm, frequency: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                        placeholder="e.g., Twice daily"
                       />
                     </div>
                   </div>
 
-                  <div className="flex gap-3 mt-6">
-                    <button
-                      onClick={() => setShowEditMedicineModal(false)}
-                      className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Duration
+                    </label>
+                    <input
+                      type="text"
+                      value={editMedicineForm.duration}
+                      onChange={(e) => setEditMedicineForm({ ...editMedicineForm, duration: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                      placeholder="e.g., 7 days, As prescribed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Food Timing
+                    </label>
+                    <select
+                      value={editMedicineForm.foodTiming}
+                      onChange={(e) => setEditMedicineForm({ ...editMedicineForm, foodTiming: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                     >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleEditMedicine}
-                      disabled={loading || !editMedicineForm.name.trim() || !editMedicineForm.dosage.trim()}
-                      className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
-                    >
-                      {loading ? 'Updating...' : 'Update Medicine'}
-                    </button>
+                      <option value="">Select timing</option>
+                      <option value="before">Before food</option>
+                      <option value="after">After food</option>
+                      <option value="with">With food</option>
+                      <option value="empty">Empty stomach</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Instructions
+                    </label>
+                    <textarea
+                      value={editMedicineForm.instructions}
+                      onChange={(e) => setEditMedicineForm({ ...editMedicineForm, instructions: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                      rows={3}
+                      placeholder="Special instructions for taking this medicine"
+                    />
                   </div>
                 </div>
+
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={() => setShowEditMedicineModal(false)}
+                    className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleEditMedicine}
+                    disabled={loading || !editMedicineForm.name.trim() || !editMedicineForm.dosage.trim()}
+                    className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
+                  >
+                    {loading ? 'Updating...' : 'Update Medicine'}
+                  </button>
+                </div>
               </div>
-            )}
-            
-            {/* Chatbot */}
-            <Chatbot dashboardContext={dashboardContext} />
-          </main>
-        </div>
+            </div>
+          )}
+
+          {/* Chatbot */}
+          <Chatbot dashboardContext={dashboardContext} />
+        </main>
       </div>
+    </div>
   );
 };
 
 export default PatientDashboard;
-

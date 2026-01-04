@@ -1,7 +1,21 @@
+// IMPORTANT: Load environment variables FIRST, before any other imports
+// This ensures environment variables are available when modules initialize
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+// Get current directory for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load environment variables from backend/.env
+// __dirname is backend/src, so ../.env points to backend/.env
+dotenv.config({ path: join(__dirname, '../.env') });
+
+// Now import other modules (they can now access process.env)
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import managementRoutes from './routes/managementRoutes.js';
@@ -19,12 +33,13 @@ import speechRoutes from './routes/speechRoutes.js';
 import { scheduleFollowUpReminders } from './services/followUpScheduler.js';
 import { schedulePatientMedicineReminders } from './services/patientMedicineScheduler.js';
 
-// Load environment variables
-dotenv.config();
-
-// Debug: Check if JWT_SECRET is loaded
+// Debug: Check if environment variables are loaded
 console.log('🔑 JWT_SECRET loaded:', process.env.JWT_SECRET ? 'YES' : 'NO');
 console.log('🔑 JWT_SECRET value:', process.env.JWT_SECRET ? process.env.JWT_SECRET.substring(0, 10) + '...' : 'NOT SET');
+console.log('🌐 GCLOUD_PROJECT_ID loaded:', process.env.GCLOUD_PROJECT_ID ? 'YES' : 'NO');
+console.log('🌐 GCLOUD_PROJECT_ID value:', process.env.GCLOUD_PROJECT_ID || 'NOT SET');
+console.log('🤖 GEMINI_API_KEY loaded:', process.env.GEMINI_API_KEY ? 'YES' : 'NO');
+console.log('🤖 GEMINI_API_KEY value:', process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.substring(0, 10) + '...' : 'NOT SET');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -36,13 +51,8 @@ app.use(express.json());
 // MongoDB connection
 const connectDB = async () => {
   try {
-    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/medalert';
-    await mongoose.connect(mongoURI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      useCreateIndex: true,
-      useFindAndModify: false
-    });
+    const mongoURI = process.env.MONGODB_URI || 'mongodb+srv://johnanish2874:00090@cluster0.on0nxrx.mongodb.net/medalert';
+    await mongoose.connect(mongoURI);
     console.log('✅ MongoDB connected successfully to medalert database');
   } catch (err) {
     console.error('❌ MongoDB connection error:', err.message);

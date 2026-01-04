@@ -35,6 +35,13 @@ class PatientRepository @Inject constructor(
     suspend fun login(email: String, password: String): Result<AuthResponse> {
         return try {
             android.util.Log.d("PatientRepository", "Attempting login for email: $email")
+            
+            // Check network connectivity first
+            if (!networkConnectivityManager.isConnected()) {
+                android.util.Log.e("PatientRepository", "No internet connection")
+                return Result.failure(Exception("No internet connection. Please check your network settings."))
+            }
+            
             val response = apiService.login(LoginRequest(email, password, "patient"))
             android.util.Log.d("PatientRepository", "Login response code: ${response.code()}")
             android.util.Log.d("PatientRepository", "Login response body: ${response.body()}")
@@ -49,12 +56,26 @@ class PatientRepository @Inject constructor(
                 // Sync will happen on first fetch
                 Result.success(authResponse)
             } else {
+                val errorBody = response.errorBody()?.string()
                 android.util.Log.e("PatientRepository", "Login failed: ${response.code()} - ${response.message()}")
-                Result.failure(Exception(response.message() ?: "Login failed"))
+                android.util.Log.e("PatientRepository", "Error body: $errorBody")
+                Result.failure(Exception(errorBody ?: response.message() ?: "Login failed"))
             }
+        } catch (e: java.net.UnknownHostException) {
+            android.util.Log.e("PatientRepository", "Cannot reach server: ${e.message}", e)
+            Result.failure(Exception("Cannot reach server. Please check if ngrok tunnel is active and open the URL in a browser first."))
+        } catch (e: java.net.SocketTimeoutException) {
+            android.util.Log.e("PatientRepository", "Request timed out: ${e.message}", e)
+            Result.failure(Exception("Request timed out. The server may be slow or unreachable. Please try again."))
+        } catch (e: java.net.ConnectException) {
+            android.util.Log.e("PatientRepository", "Connection refused: ${e.message}", e)
+            Result.failure(Exception("Cannot connect to server. Please check if the backend is running and ngrok tunnel is active."))
+        } catch (e: java.net.NoRouteToHostException) {
+            android.util.Log.e("PatientRepository", "No route to host: ${e.message}", e)
+            Result.failure(Exception("No route to host. Please open the ngrok URL in a browser first to bypass the warning page, then try again."))
         } catch (e: Exception) {
-            android.util.Log.e("PatientRepository", "Login exception: ${e.message}", e)
-            Result.failure(e)
+            android.util.Log.e("PatientRepository", "Login exception: ${e.javaClass.simpleName} - ${e.message}", e)
+            Result.failure(Exception("Login failed: ${e.message ?: e.javaClass.simpleName}"))
         }
     }
     
@@ -282,7 +303,9 @@ class PatientRepository @Inject constructor(
     suspend fun recordAdherence(
         medicineIndex: Int,
         taken: Boolean,
-        notes: String = ""
+        notes: String = "",
+        doseId: String? = null,
+        scheduledTime: String? = null
     ): Result<Boolean> {
         return try {
             // Check connectivity first
@@ -291,11 +314,22 @@ class PatientRepository @Inject constructor(
             val user = userPreferences.getUserData().first()
             if (user != null) {
                 val patientId = user.getPatientId()
-                val adherenceData = mapOf(
+                val adherenceData = mutableMapOf<String, Any>(
                     "taken" to taken,
-                    "timestamp" to System.currentTimeMillis(),
+                    "timestamp" to java.time.Instant.now().toString(),
                     "notes" to notes
                 )
+                
+                // Add doseId if provided
+                if (doseId != null) {
+                    adherenceData["doseId"] = doseId
+                }
+                
+                // Add scheduledTime if provided
+                if (scheduledTime != null) {
+                    adherenceData["scheduledTime"] = scheduledTime
+                }
+                
                 val response = apiService.recordAdherence(medicineIndex, adherenceData)
                 if (response.isSuccessful) {
                     Result.success(true)

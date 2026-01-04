@@ -45,7 +45,11 @@ android {
         debug {
             // Emulator default loopback to host machine
             // Using host LAN IP so physical devices on same Wi‑Fi can reach backend
-                buildConfigField "String", "API_BASE_URL", '"https://medalert123.loca.lt/api/"'
+            // For emulator: use http://10.0.2.2:5000/api/
+            // For physical device on same Wi-Fi: use http://192.168.29.72:5000/api/
+            // For ngrok tunnel (works from any network): https://rosalba-hatchable-unreversibly.ngrok-free.dev/api/
+            // ⚠️ Free ngrok URL changes each restart. For stable URL, upgrade to paid plan.
+            buildConfigField "String", "API_BASE_URL", '"https://rosalba-hatchable-unreversibly.ngrok-free.dev/api/"'
             buildConfigField "String", "GEMINI_API_KEY", '"YOUR_ACTUAL_GEMINI_API_KEY_HERE"'
         }
         release {
@@ -54,8 +58,10 @@ android {
             if (keystorePropertiesFile.exists()) {
                 signingConfig signingConfigs.release
             }
-            // For a real device over the same Wi-Fi, point to your host IP or production URL
-                buildConfigField "String", "API_BASE_URL", '"https://medalert123.loca.lt/api/"'
+            // For production, use your production backend URL
+            // For ngrok tunnel (works from any network): https://rosalba-hatchable-unreversibly.ngrok-free.dev/api/
+            // ⚠️ Free ngrok URL changes each restart. For stable URL, upgrade to paid plan.
+            buildConfigField "String", "API_BASE_URL", '"https://rosalba-hatchable-unreversibly.ngrok-free.dev/api/"'
             buildConfigField "String", "GEMINI_API_KEY", '"YOUR_ACTUAL_GEMINI_API_KEY_HERE"'
         }
     }

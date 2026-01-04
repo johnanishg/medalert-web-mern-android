@@ -198,9 +198,9 @@ class PatientViewModel @Inject constructor(
         }
     }
     
-    fun recordAdherence(medicineIndex: Int, taken: Boolean, notes: String = "") {
+    fun recordAdherence(medicineIndex: Int, taken: Boolean, notes: String = "", doseId: String? = null, scheduledTime: String? = null) {
         viewModelScope.launch {
-            repository.recordAdherence(medicineIndex, taken, notes)
+            repository.recordAdherence(medicineIndex, taken, notes, doseId, scheduledTime)
                 .onSuccess {
                     refreshAllData() // Refresh to get updated adherence data
                 }

@@ -5,21 +5,31 @@ class GeminiService {
         this.genAI = null;
         this.model = null;
         this.isInitialized = false;
-        this.initializeGemini();
+        this.warningShown = false; // Track if warning was already shown
+        // Don't initialize immediately - wait until first use
+        // This ensures environment variables are loaded
     }
 
     initializeGemini() {
+        // If already initialized, return
+        if (this.isInitialized) {
+            return;
+        }
+
         const apiKey = process.env.GEMINI_API_KEY;
         
         if (!apiKey || apiKey === 'your-gemini-api-key-here') {
-            console.warn('⚠️  Gemini API key not found. Chatbot will be disabled.');
+            if (!this.warningShown) {
+                console.warn('⚠️  Gemini API key not found. Chatbot will be disabled.');
+                this.warningShown = true;
+            }
             return;
         }
 
         try {
             this.genAI = new GoogleGenerativeAI(apiKey);
             this.model = this.genAI.getGenerativeModel({ 
-                model: "gemini-1.5-flash",
+                model: "gemini-2.5-flash",
                 generationConfig: {
                     temperature: 0.7,
                     topK: 40,
@@ -53,6 +63,9 @@ class GeminiService {
     }
 
     async sendMessage(message, context, chatHistory = []) {
+        // Lazy initialization - ensure Gemini is initialized before use
+        this.initializeGemini();
+        
         if (!this.isInitialized || !this.model) {
             return {
                 success: false,
@@ -96,6 +109,9 @@ Please provide a helpful response based on the MedAlert system context and the u
     }
 
     async analyzeHealthData(context) {
+        // Lazy initialization - ensure Gemini is initialized before use
+        this.initializeGemini();
+        
         if (!this.isInitialized || !this.model) {
             return {
                 success: false,
@@ -273,6 +289,8 @@ Provide a structured, comprehensive analysis that helps the patient understand t
     }
 
     isAvailable() {
+        // Lazy initialization check - try to initialize if not already done
+        this.initializeGemini();
         return this.isInitialized;
     }
 }
